@@ -16,4 +16,5 @@ export interface Post {
   likes: number
   comments: Comment[]
   createdAt: string
+  images?: string[]
 }

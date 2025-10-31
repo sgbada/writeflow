@@ -389,15 +389,16 @@ button {
         color: #ffffff !important;
         border-color: #0077cc !important;
     }
-
 .like-section {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 12px 0 20px 0;
+    justify-content: center;
+    margin: 25px 0;
 }
 
 .like-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     background: #fff;
     border: 1px solid #0077cc;
     color: #0077cc;
@@ -416,10 +417,201 @@ button {
         background: #0077cc;
         color: #fff;
         border-color: #0077cc;
-        cursor: default;
     }
 
-.like-count {
-    font-size: 15px;
-    color: #333;
+    .like-btn .like-count {
+        color: inherit;
+        font-size: 15px;
+    }
+
+
+.post-card {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
 }
+
+    .post-card img {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16/9;
+        object-fit: cover;
+    }
+
+    .post-card .content {
+        padding: 16px;
+    }
+
+.image-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+    .image-preview img {
+        width: 100px;
+        height: 100px;
+        border-radius: 6px;
+        object-fit: cover;
+        border: 1px solid #ccc;
+    }
+
+.post-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+    .post-images img {
+        width: 200px;
+        height: auto;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        object-fit: cover;
+    }
+
+
+/* ----- PostDetail 정렬 및 댓글 입력창 개선 ----- */
+
+/* 제목/날짜/본문 왼쪽 정렬 */
+.post-detail {
+    text-align: left;
+}
+
+    .post-detail h1 {
+        font-size: 26px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .post-detail .meta {
+        color: #777;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+/* 본문 내용 */
+.post-content {
+    line-height: 1.7;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* 구분선 */
+.post-divider {
+    border: none;
+    height: 1px;
+    background-color: #ddd;
+    margin: 25px 0;
+}
+
+/* 추천 영역 중앙 정렬 */
+.like-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 25px 0;
+}
+
+/* 댓글 작성 영역 */
+.comment-area {
+    margin-top: 40px;
+}
+
+    .comment-area h2 {
+        font-size: 18px;
+        font-weight: 600;
+        border-left: 4px solid #0077cc;
+        padding-left: 10px;
+        margin-bottom: 15px;
+    }
+
+/* 댓글 입력창 크기 키우기 */
+.comment-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+        "nick pwd"
+        "text text"
+        "btn btn";
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+    .comment-form input[type="text"],
+    .comment-form input[type="password"] {
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 15px;
+    }
+
+    .comment-form input[type="text"] {
+        grid-area: text;
+        height: 60px;
+    }
+
+    .comment-form button {
+        grid-area: btn;
+        padding: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+        background-color: #0077cc;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+        .comment-form button:hover {
+            background-color: #005fa3;
+        }
+
+
+/* 버튼 기본 상태 (밝은 배경일 때 글자 어둡게) */
+button {
+    background-color: white;
+    color: #333;
+    border: 1px solid #ccc;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+    /* 파란 배경(클릭 또는 활성)일 때 글자 하얗게 */
+    button:active,
+    button:focus,
+    button.liked,
+    button.clicked,
+    button.primary {
+        background-color: #0077cc !important;
+        color: #fff !important;
+        border-color: #0077cc !important;
+    }
+
+    /* 마우스 올렸을 때 (활성 전) */
+    button:hover:not(.liked):not(.primary):not(:active) {
+        background-color: #f0f0f0;
+        color: #000;
+    }
+.btn-toggle {
+    background: white;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .btn-toggle.active {
+        background: #0077cc !important;
+        color: #fff !important;
+        border-color: #0077cc !important;
+    }

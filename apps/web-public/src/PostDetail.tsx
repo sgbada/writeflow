@@ -10,7 +10,7 @@ export default function PostDetail() {
   const post = posts.find((p) => p.id === postId)
   const navigate = useNavigate()
 
-  // ✅ 추천 기능 상태 관리
+  // ✅ 추천 기능
   const [liked, setLiked] = useState<boolean>(() => {
     const likedPosts: number[] = JSON.parse(localStorage.getItem('likedPosts') || '[]')
     return likedPosts.includes(postId)
@@ -33,25 +33,21 @@ export default function PostDetail() {
   const [showEditPrompt, setShowEditPrompt] = useState(false)
   const [showDeletePrompt, setShowDeletePrompt] = useState(false)
   const [editError, setEditError] = useState('')
+  const [commentDeleteId, setCommentDeleteId] = useState<number | null>(null)
+  const [commentDeletePwd, setCommentDeletePwd] = useState('')
 
   if (!post) return <p>존재하지 않는 글입니다.</p>
 
-  // 수정 시 비밀번호 확인
   const handleEditConfirm = () => {
-    if (editPwd === post.password) {
-      navigate(`/edit/${postId}`)
-    } else {
-      setEditError('비밀번호가 올바르지 않습니다.')
-    }
+    if (editPwd === post.password) navigate(`/edit/${postId}`)
+    else setEditError('비밀번호가 올바르지 않습니다.')
   }
 
-  // 삭제 시 비밀번호 확인
   const handleDeleteConfirm = () => {
     deletePost(postId, deletePwd)
     navigate('/')
   }
 
-  // 댓글 등록
   const handleAddComment = (e: FormEvent) => {
     e.preventDefault()
     if (!comment.trim()) return
@@ -68,10 +64,6 @@ export default function PostDetail() {
     setCommentPwd('')
   }
 
-  // 댓글 삭제 확인
-  const [commentDeleteId, setCommentDeleteId] = useState<number | null>(null)
-  const [commentDeletePwd, setCommentDeletePwd] = useState('')
-
   const handleCommentDelete = (cid: number) => {
     deleteComment(postId, cid, commentDeletePwd)
     setCommentDeleteId(null)
@@ -79,32 +71,46 @@ export default function PostDetail() {
   }
 
   return (
-    <div className="container">
+    <div className="container post-detail">
       <h1>{post.title}</h1>
-      <div className="meta">
-        익명 | {new Date(post.createdAt).toLocaleString()}
-      </div>
-      <p className="content">{post.content}</p>
+      <div className="meta">익명 | {new Date(post.createdAt).toLocaleString()}</div>
 
-      {/* ✅ 추천 버튼 */}
+      <hr className="post-divider" />
+
+      {post.images && post.images.length > 0 && (
+        <div className="post-images">
+          {post.images.map((src, idx) => (
+            <img key={idx} src={src} alt={`uploaded-${idx}`} />
+          ))}
+        </div>
+      )}
+
+      <p className="post-content">{post.content}</p>
+
+      <hr className="post-divider" />
+
       <div className="like-section">
-        <button
-          className={`like-btn ${liked ? 'liked' : ''}`}
-          onClick={handleLike}
-          disabled={liked}
-        >
-          {liked ? '👍 추천됨' : '👍 추천하기'}
-        </button>
-        <span className="like-count">추천 수: {post.likes || 0}</span>
-      </div>
+  <button
+    className={`like-btn ${liked ? 'liked' : ''}`}
+    onClick={handleLike}
+    disabled={liked}
+  >
+    {liked ? '👍 추천됨' : '👍 추천하기'} <span className="like-count">{post.likes || 0}</span>
+  </button>
+</div>
 
-      {/* 수정/삭제 버튼 */}
+
       <div className="post-actions">
-        <button onClick={() => setShowEditPrompt(!showEditPrompt)}>✏️ 수정</button>
-        <button onClick={() => setShowDeletePrompt(!showDeletePrompt)}>🗑 삭제</button>
+        <button
+  onClick={() => setShowEditPrompt(!showEditPrompt)}
+  className={showEditPrompt ? 'btn-toggle active' : 'btn-toggle'}
+>✏️ 수정</button>
+        <button
+  onClick={() => setShowDeletePrompt(!showDeletePrompt)}
+  className={showDeletePrompt ? 'btn-toggle active' : 'btn-toggle'}
+>🗑 삭제</button>
       </div>
 
-      {/* 수정 비밀번호 입력 */}
       {showEditPrompt && (
         <div className="popup-box">
           <h4>글 수정 비밀번호 확인</h4>
@@ -119,7 +125,6 @@ export default function PostDetail() {
         </div>
       )}
 
-      {/* 삭제 비밀번호 입력 */}
       {showDeletePrompt && (
         <div className="popup-box">
           <h4>글 삭제 비밀번호 확인</h4>
@@ -134,8 +139,8 @@ export default function PostDetail() {
       )}
 
       {/* 댓글 섹션 */}
-      <div className="comments">
-        <h3>댓글</h3>
+      <div className="comment-area">
+        <h2>댓글</h2>
         <form onSubmit={handleAddComment} className="comment-form">
           <input
             type="text"
@@ -163,13 +168,12 @@ export default function PostDetail() {
           {(post.comments || []).slice().reverse().map((c) => (
             <li key={c.id} className="comment-item">
               <div className="c-head">
-                <strong>{c.author}</strong>
+                <strong>{c.author}</strong> ·{' '}
                 <span>{new Date(c.createdAt).toLocaleString()}</span>
                 <button onClick={() => setCommentDeleteId(c.id)}>삭제</button>
               </div>
               <div className="c-body">{c.text}</div>
 
-              {/* 댓글 삭제 입력창 */}
               {commentDeleteId === c.id && (
                 <div className="popup-box">
                   <input
@@ -178,9 +182,7 @@ export default function PostDetail() {
                     value={commentDeletePwd}
                     onChange={(e) => setCommentDeletePwd(e.target.value)}
                   />
-                  <button onClick={() => handleCommentDelete(c.id)}>
-                    삭제 확인
-                  </button>
+                  <button onClick={() => handleCommentDelete(c.id)}>삭제 확인</button>
                 </div>
               )}
             </li>
@@ -191,6 +193,7 @@ export default function PostDetail() {
         </ul>
       </div>
 
+      <hr className="post-divider" />
       <Link to="/">← 목록으로</Link>
     </div>
   )

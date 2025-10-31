@@ -1,4 +1,4 @@
-import { useEffect, useState, FormEvent } from 'react'
+import { useEffect, useState, FormEvent, ChangeEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { usePostsStore } from './store/posts'
 import type { Post } from './lib/types'
@@ -10,16 +10,29 @@ export default function WritePost() {
   const { posts, addPost, editPost } = usePostsStore()
   const existing = posts.find((p) => p.id === postId)
 
-  // ✅ 글 상태
-  const [title, setTitle] = useState<string>(existing?.title || '')
-  const [content, setContent] = useState<string>(existing?.content || '')
-  const [password, setPassword] = useState<string>(existing?.password || '')
-  const [board, setBoard] = useState<string>(existing?.board || '자유')
-  const [tags, setTags] = useState<string>(existing?.tags?.join(', ') || '')
+  const [title, setTitle] = useState(existing?.title || '')
+  const [content, setContent] = useState(existing?.content || '')
+  const [password, setPassword] = useState(existing?.password || '')
+  const [board, setBoard] = useState(existing?.board || '자유')
+  const [tags, setTags] = useState(existing?.tags?.join(', ') || '')
+  const [images, setImages] = useState<string[]>(existing?.images || [])
 
-  useEffect(() => {
-    // 나중에 권한 체크 가능
-  }, [postId, navigate])
+const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files
+  if (!files) return
+
+  const base64List: string[] = []
+  for (const file of Array.from(files)) {
+    const reader = new FileReader()
+    const base64 = await new Promise<string>((resolve) => {
+      reader.onload = () => resolve(reader.result as string)
+      reader.readAsDataURL(file)
+    })
+    base64List.push(base64)
+  }
+  setImages((prev) => [...prev, ...base64List])
+}
+
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -29,7 +42,7 @@ export default function WritePost() {
       .filter(Boolean)
 
     if (id) {
-      editPost(Number(id), { title, content, board, tags: tagList })
+      editPost(Number(id), { title, content, board, tags: tagList, images })
     } else {
       const newPost: Post = {
         id: Date.now(),
@@ -41,10 +54,10 @@ export default function WritePost() {
         password,
         likes: 0,
         comments: [],
+        images,
       }
       addPost(newPost)
     }
-
     navigate('/')
   }
 
@@ -53,10 +66,7 @@ export default function WritePost() {
       <h1>{id ? '글 수정' : '새 글 작성'}</h1>
 
       <form onSubmit={handleSubmit} className="form">
-        <select
-          value={board}
-          onChange={(e) => setBoard(e.target.value)}
-        >
+        <select value={board} onChange={(e) => setBoard(e.target.value)}>
           <option value="자유">자유게시판</option>
           <option value="유머">유머게시판</option>
           <option value="질문">질문게시판</option>
@@ -83,6 +93,23 @@ export default function WritePost() {
           value={tags}
           onChange={(e) => setTags(e.target.value)}
         />
+
+        {/* ✅ 이미지 첨부 */}
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleImageChange}
+        />
+
+        {/* ✅ 미리보기 */}
+        {images.length > 0 && (
+          <div className="image-preview">
+            {images.map((src, idx) => (
+              <img key={idx} src={src} alt={`preview-${idx}`} />
+            ))}
+          </div>
+        )}
 
         {!id && (
           <input
