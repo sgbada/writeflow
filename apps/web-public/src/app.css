@@ -1,442 +1,99 @@
+Ôªø@charset "UTF-8";
+
+/* =====================================
+   üåê GLOBAL BASE STYLES
+===================================== */
+
+:root {
+    --primary: #0077cc;
+    --primary-dark: #005fa3;
+    --bg: #f6f8fa;
+    --text: #222;
+    --muted: #666;
+    --border: #ccc;
+    --card-bg: #fff;
+    --accent-bg: #eef6ff;
+}
+
+/* Îã§ÌÅ¨Î™®Îìú (ÌÜ†Í∏ÄÎ°ú Ï†úÏñ¥ Í∞ÄÎä•) */
+[data-theme="dark"] {
+    --primary: #4ea0ff;
+    --primary-dark: #1c80e0;
+    --bg: #1e1e1e;
+    --text: #eee;
+    --muted: #aaa;
+    --border: #444;
+    --card-bg: #2a2a2a;
+    --accent-bg: #23344a;
+}
+
 body {
     font-family: "Pretendard", sans-serif;
-    background-color: #f6f8fa;
+    background-color: var(--bg);
+    color: var(--text);
     margin: 0;
     padding: 0;
-}
-
-.container {
-    max-width: 700px;
-    margin: 40px auto;
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-h1 {
-    margin-top: 0;
-}
-
-ul.post-list {
-    list-style: none;
-    padding: 0;
-}
-
-.post-item {
-    border-bottom: 1px solid #eee;
-    padding: 10px 0;
-}
-
-    .post-item .title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #0077cc;
-        text-decoration: none;
-    }
-
-        .post-item .title:hover {
-            text-decoration: underline;
-        }
-
-.meta {
-    color: #666;
-    font-size: 13px;
-}
-
-.form input, .form textarea {
-    width: 100%;
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 15px;
-}
-
-.form textarea {
-    height: 200px;
-    resize: none;
-}
-
-.filter-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
-select {
-    padding: 8px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background: white;
-}
-
-.tags {
-    margin-top: 6px;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 
-.tag {
-    display: inline-block;
-    background: #eef6ff;
-    color: #0077cc;
-    padding: 2px 6px;
-    border-radius: 6px;
-    font-size: 13px;
-    margin-right: 4px;
-}
-
-
-button {
-    padding: 10px 16px;
-    border: none;
-    border-radius: 8px;
-    background-color: #0077cc;
-    color: white;
-    cursor: pointer;
-}
-
-    button:hover {
-        background-color: #005fa3;
-    }
-
-.search-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.search-box {
-    flex: 1;
-    padding: 10px 12px;
-    font-size: 15px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-}
-
-.search-mode button {
-    padding: 8px 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: white;
-    cursor: pointer;
-}
-
-    .search-mode button.active {
-        background: #0077cc;
-        color: white;
-        border-color: #0077cc;
-    }
-
-
-
-.write-btn {
-    display: inline-block;
-    margin-bottom: 10px;
-    padding: 8px 12px;
-    background: #0077cc;
-    color: white;
-    border-radius: 8px;
-    text-decoration: none;
-}
-
-    .write-btn:hover {
-        background: #005fa3;
-    }
-
-.board-link {
-    color: #0077cc;
-    text-decoration: none;
-}
-
-    .board-link:hover {
-        text-decoration: underline;
-    }
-
-.board-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-    .board-tabs button {
-        padding: 8px 14px;
-        background: white;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-
-        .board-tabs button.active {
-            background: #0077cc;
-            color: white;
-            border-color: #0077cc;
-        }
-
-        .board-tabs button:hover {
-            background: #e9f3ff;
-        }
-
-.edit-section {
-    margin-top: 20px;
-    margin-bottom: 10px;
-}
-
-    .edit-section input {
-        margin-right: 8px;
-    }
-
-.error {
-    color: #c0392b;
-    margin-top: 5px;
-}
-
-.comment-form {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-
-    .comment-form input {
-        flex: 1;
-    }
-
-.comment-list {
-    list-style: none;
-    padding: 0;
-}
-
-.comment-item {
-    background: #fafafa;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 8px;
-}
-
-.c-head {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    font-size: 13px;
-    color: #666;
-}
-
-    .c-head strong {
-        color: #333;
-    }
-
-    .c-head button {
-        margin-left: auto;
-        background: #e74c3c;
-        color: white;
-    }
-
-
-    .post-actions {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.popup-box {
-  background: #f3f6fb;
-  padding: 10px;
-  border-radius: 8px;
-  margin: 8px 0;
-  border: 1px solid #cfd9e3;
-}
-
-.popup-box input {
-  padding: 6px 8px;
-  margin-right: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.comment-form input {
-  margin-right: 6px;
-  margin-bottom: 6px;
-}
-
-.comment-item {
-  border-bottom: 1px solid #eee;
-  padding: 8px 0;
-}
-
-.comment-item .c-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.comment-item .c-head strong {
-  color: #0077cc;
-}
-
-.comment-item .c-body {
-  margin-top: 4px;
-}
-
-.error {
-  color: red;
-  font-size: 14px;
-}
-
-/* ≈ÿΩ∫∆Æ ±‚∫ªªˆ */
-body, .container, input, textarea, select, button, a {
-    color: #222 !important; /* ¬£¿∫ »∏ªˆ¿∏∑Œ ≈Î¿œ */
-}
-
-/* ∏µ≈© ªˆªÛ */
 a {
+    color: var(--primary);
     text-decoration: none;
-    color: #0077cc;
 }
 
     a:hover {
         text-decoration: underline;
     }
 
-/* ≈¬±◊ ∏µ≈© */
-.tag-link {
-    background: #eef6ff;
-    color: #0077cc !important;
-    margin-right: 4px;
-    padding: 2px 6px;
-    border-radius: 6px;
-    font-size: 13px;
+/* Í≥µÌÜµ Ïª®ÌÖåÏù¥ÎÑà */
+.container {
+    max-width: 700px;
+    margin: 40px auto;
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-    .tag-link:hover {
-        background: #dbefff;
+/* Î∞òÏùëÌòï */
+@media (max-width: 768px) {
+    .container {
+        margin: 20px;
+        padding: 20px;
     }
-
-/* πˆ∆∞ ±€¿⁄ªˆ */
-button {
-    color: #fff;
 }
 
-    button.active {
-        color: #fff;
-    }
+/* =====================================
+   üì∞ POST LIST & CARD
+===================================== */
 
-
-.tab {
-    padding: 8px 14px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background: white;
-    color: black;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
+ul.post-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
 }
-
-    .tab.active {
-        background: #0077cc;
-        color: white;
-        border-color: #0077cc;
-    }
-
-    .tab:hover:not(.active) {
-        background: #f0f0f0;
-    }
-
-.board-tabs button,
-.tab {
-    padding: 8px 14px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background: white;
-    color: black;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-    .board-tabs button.active,
-    .tab.active,
-    .board-tabs button:active.active,
-    .tab:active.active,
-    .board-tabs button:focus.active,
-    .tab:focus.active {
-        background: #0077cc !important;
-        color: #ffffff !important;
-        border-color: #0077cc !important;
-        outline: none !important;
-    }
-
-    .board-tabs button:hover:not(.active),
-    .tab:hover:not(.active) {
-        background: #f0f0f0;
-        color: black;
-    }
-
-    /* ≈¨∏Ø Ω√ ±‚∫ª outline ¡¶∞≈ */
-    .board-tabs button:focus,
-    .tab:focus {
-        outline: none;
-    }
-
-    .search-mode button.active,
-    .board-tabs button.active,
-    .tab.active {
-        background: #0077cc !important;
-        color: #ffffff !important;
-        border-color: #0077cc !important;
-    }
-.like-section {
-    display: flex;
-    justify-content: center;
-    margin: 25px 0;
-}
-
-.like-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: #fff;
-    border: 1px solid #0077cc;
-    color: #0077cc;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-    .like-btn:hover {
-        background: #e8f2ff;
-    }
-
-    .like-btn.liked {
-        background: #0077cc;
-        color: #fff;
-        border-color: #0077cc;
-    }
-
-    .like-btn .like-count {
-        color: inherit;
-        font-size: 15px;
-    }
-
 
 .post-card {
     display: flex;
     flex-direction: column;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: var(--card-bg);
+    border-radius: 10px;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
+    .post-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
 
     .post-card img {
         width: 100%;
-        height: auto;
         aspect-ratio: 16/9;
         object-fit: cover;
     }
@@ -445,6 +102,53 @@ button {
         padding: 16px;
     }
 
+    .post-card .title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+        .post-card .title:hover {
+            text-decoration: underline;
+        }
+
+    .post-card .meta {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 6px;
+    }
+
+.reading-time {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* =====================================
+   ‚úçÔ∏è WRITE / FORM
+===================================== */
+
+.form input,
+.form textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 15px;
+    color: var(--text);
+    background: var(--card-bg);
+}
+
+.form textarea {
+    height: 200px;
+    resize: none;
+}
+
+/* Ïù¥ÎØ∏ÏßÄ ÎØ∏Î¶¨Î≥¥Í∏∞ */
 .image-preview {
     display: flex;
     flex-wrap: wrap;
@@ -457,28 +161,102 @@ button {
         height: 100px;
         border-radius: 6px;
         object-fit: cover;
-        border: 1px solid #ccc;
+        border: 1px solid var(--border);
     }
 
-.post-images {
+/* =====================================
+   üìë FILTER / SEARCH
+===================================== */
+
+.filter-row,
+.search-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 12px 0;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
-    .post-images img {
-        width: 200px;
-        height: auto;
-        border-radius: 6px;
-        border: 1px solid #ddd;
-        object-fit: cover;
+.search-box {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+}
+
+.search-mode button {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card-bg);
+    cursor: pointer;
+}
+
+    .search-mode button.active {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
     }
 
+/* =====================================
+   üè∑Ô∏è TAGS & BOARDS
+===================================== */
 
-/* ----- PostDetail ¡§∑ƒ π◊ ¥Ò±€ ¿‘∑¬√¢ ∞≥º± ----- */
+.tags {
+    margin-top: 6px;
+}
 
-/* ¡¶∏Ò/≥Ø¬•/∫ªπÆ øﬁ¬  ¡§∑ƒ */
+.tag,
+.tag-link {
+    display: inline-block;
+    background: var(--accent-bg);
+    color: var(--primary);
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-right: 4px;
+}
+
+    .tag-link:hover {
+        background: #dbefff;
+    }
+
+.board-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+    .board-tabs button,
+    .tab {
+        padding: 8px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+        .board-tabs button.active,
+        .tab.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .board-tabs button:hover:not(.active),
+        .tab:hover:not(.active) {
+            background: #f0f0f0;
+        }
+
+/* =====================================
+   üí¨ POST DETAIL & COMMENT AREA
+===================================== */
+
 .post-detail {
     text-align: left;
 }
@@ -495,15 +273,14 @@ button {
         margin-bottom: 20px;
     }
 
-/* ∫ªπÆ ≥ªøÎ */
 .post-content {
     line-height: 1.7;
     font-size: 16px;
-    color: #333;
+    color: var(--text);
     margin-bottom: 20px;
 }
 
-/* ±∏∫–º± */
+
 .post-divider {
     border: none;
     height: 1px;
@@ -511,7 +288,20 @@ button {
     margin: 25px 0;
 }
 
-/* √ﬂ√µ øµø™ ¡ﬂæ” ¡§∑ƒ */
+/* Í¥ÄÎ†®Í∏Ä ÏÑπÏÖò */
+.related-posts {
+    margin-top: 30px;
+}
+
+    .related-posts h3 {
+        font-size: 18px;
+        font-weight: 600;
+        border-left: 4px solid var(--primary);
+        padding-left: 10px;
+        margin-bottom: 10px;
+    }
+
+/* Ï¢ãÏïÑÏöî */
 .like-section {
     display: flex;
     flex-direction: column;
@@ -520,7 +310,31 @@ button {
     margin: 25px 0;
 }
 
-/* ¥Ò±€ ¿€º∫ øµø™ */
+.like-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card-bg);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    .like-btn:hover {
+        background: #e8f2ff;
+    }
+
+    .like-btn.liked {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+    }
+
+/* ÎåìÍ∏Ä ÏûÖÎ†• ÏòÅÏó≠ */
 .comment-area {
     margin-top: 40px;
 }
@@ -528,12 +342,12 @@ button {
     .comment-area h2 {
         font-size: 18px;
         font-weight: 600;
-        border-left: 4px solid #0077cc;
+        border-left: 4px solid var(--primary);
         padding-left: 10px;
         margin-bottom: 15px;
     }
 
-/* ¥Ò±€ ¿‘∑¬√¢ ≈©±‚ ≈∞øÏ±‚ */
+/* grid Í∏∞Î∞ò ÎåìÍ∏Ä Ìèº */
 .comment-form {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -549,8 +363,9 @@ button {
     .comment-form input[type="password"] {
         padding: 12px;
         border-radius: 8px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--border);
         font-size: 15px;
+        color: var(--text);
     }
 
     .comment-form input[type="text"] {
@@ -564,7 +379,7 @@ button {
         font-size: 16px;
         font-weight: 600;
         border-radius: 8px;
-        background-color: #0077cc;
+        background-color: var(--primary);
         color: white;
         border: none;
         cursor: pointer;
@@ -572,38 +387,80 @@ button {
     }
 
         .comment-form button:hover {
-            background-color: #005fa3;
+            background-color: var(--primary-dark);
         }
 
-
-/* πˆ∆∞ ±‚∫ª ªÛ≈¬ (π‡¿∫ πË∞Ê¿œ ∂ß ±€¿⁄ æÓµ”∞‘) */
-button {
-    background-color: white;
-    color: #333;
-    border: 1px solid #ccc;
-    transition: background 0.2s ease, color 0.2s ease;
+/* ÎåìÍ∏Ä Î¶¨Ïä§Ìä∏ */
+.comment-list {
+    list-style: none;
+    padding: 0;
 }
 
-    /* ∆ƒ∂ı πË∞Ê(≈¨∏Ø ∂«¥¬ »∞º∫)¿œ ∂ß ±€¿⁄ «œæÈ∞‘ */
-    button:active,
-    button:focus,
-    button.liked,
-    button.clicked,
-    button.primary {
-        background-color: #0077cc !important;
-        color: #fff !important;
-        border-color: #0077cc !important;
+.comment-item {
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+    .comment-item .c-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--muted);
     }
 
-    /* ∏∂øÏΩ∫ ø√∑»¿ª ∂ß (»∞º∫ ¿¸) */
-    button:hover:not(.liked):not(.primary):not(:active) {
+        .comment-item .c-head strong {
+            color: var(--primary);
+        }
+
+    .comment-item .c-body {
+        margin-top: 4px;
+        color: var(--text);
+    }
+
+/* =====================================
+   üîò BUTTONS (ÌÜµÌï©)
+===================================== */
+
+button {
+    background-color: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+}
+
+    button:hover:not(.liked):not(.primary):not(.active) {
         background-color: #f0f0f0;
         color: #000;
     }
+
+    button.active,
+    button.liked,
+    button.primary {
+        background-color: var(--primary) !important;
+        color: #fff !important;
+        border-color: var(--primary) !important;
+    }
+
+    button:focus-visible {
+        outline: 2px solid #99c8ff;
+        outline-offset: 2px;
+    }
+
+    button:active:not(.active):not(.liked):not(.primary) {
+        background-color: #e6e6e6;
+    }
+
 .btn-toggle {
-    background: white;
-    color: #333;
-    border: 1px solid #ccc;
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 8px 14px;
     cursor: pointer;
@@ -611,7 +468,108 @@ button {
 }
 
     .btn-toggle.active {
-        background: #0077cc !important;
+        background: var(--primary) !important;
         color: #fff !important;
-        border-color: #0077cc !important;
+        border-color: var(--primary) !important;
     }
+
+/* =====================================
+   ‚öôÔ∏è POPUP / UTILITY
+===================================== */
+
+.popup-box {
+    background: #f3f6fb;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 8px 0;
+    border: 1px solid #cfd9e3;
+}
+
+    .popup-box input {
+        padding: 6px 8px;
+        margin-right: 8px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+    }
+
+/* =====================================
+   üåÄ ANIMATION / EFFECTS
+===================================== */
+
+/* Ïä§ÏºàÎ†àÌÜ§ Î°úÎî© */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 37%, #f0f0f0 63%);
+    animation: shimmer 1.2s infinite;
+    background-size: 400% 100%;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -400px 0;
+    }
+
+    100% {
+        background-position: 400px 0;
+    }
+}
+
+/* ÌéòÏù¥Îìú Ïù∏ */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+    .fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+/* =====================================
+   ‚ö†Ô∏è ERROR TEXT
+===================================== */
+.error {
+    color: #c0392b;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+/* ÏÉÅÎã® Ìó§Îçî */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.site-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0;
+}
+
+/* ÌÖåÎßà ÌÜ†Í∏Ä Î≤ÑÌäº */
+.theme-toggle {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+    .theme-toggle:hover {
+        background: #e9f3ff;
+    }
+
+[data-theme="dark"] .theme-toggle:hover {
+    background: #2f3c4f;
+}

@@ -1,12 +1,26 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import PostsList from './PostsList'
-import PostDetail from './PostDetail'
-import WritePost from './WritePost'
-import NotFound from './NotFound'
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom"
+import PostsList from "./PostsList"
+import PostDetail from "./PostDetail"
+import WritePost from "./WritePost"
+import NotFound from "./NotFound"
+import ThemeToggle from "./ThemeToggle"
+
+function Layout() {
+  return (
+    <>
+      <header className="app-header">
+        <h1 className="site-title">WriteFlow</h1>
+        <ThemeToggle />
+      </header>
+      <main>
+        <AppRoutes />
+      </main>
+    </>
+  )
+}
 
 function AppRoutes() {
   const location = useLocation()
-
   return (
     <Routes>
       <Route path="/" element={<PostsList key="home" />} />
@@ -23,7 +37,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppRoutes />
+      <Layout />
     </BrowserRouter>
   )
 }
