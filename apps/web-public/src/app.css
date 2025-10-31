@@ -886,3 +886,59 @@ button {
     gap: 6px;
     margin-top: 20px;
 }
+
+.editor-wrapper {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.ql-container {
+    min-height: 500px !important;
+    font-size: 16px;
+}
+
+.ql-editor {
+    min-height: 480px !important;
+    line-height: 1.7;
+    padding: 16px;
+}
+
+.ql-toolbar.ql-snow {
+    border-radius: 8px 8px 0 0;
+}
+
+/* ✅ 표 스타일 */
+.ql-editor table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+}
+
+    .ql-editor table td,
+    .ql-editor table th {
+        border: 1px solid #ccc;
+        padding: 6px 8px;
+    }
+
+    .ql-editor table th {
+        background: #f5f5f5;
+        font-weight: 600;
+    }
+
+/* ✅ 수식 스타일 */
+.ql-editor .ql-formula {
+    background: #eef6ff;
+    padding: 3px 5px;
+    border-radius: 4px;
+}
+
+/* ✅ 코드 블록 */
+.ql-editor pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: monospace;
+    overflow-x: auto;
+}
+

@@ -94,22 +94,35 @@ export const usePostsStore = create<PostsStore>((set, get) => ({
       return { posts: updated }
     }),
 
-  deleteComment: (postId, commentId, password) =>
-    set((state) => {
-      const updated = state.posts.map((p) => {
-        if (p.id !== postId) return p
-        const comments = (p.comments || []).filter((c) => {
-          if (c.id === commentId) {
-            if (!password || c.password !== password) return true // 비밀번호 불일치 시 삭제 안 함
-            return false
+  deleteComment: (postId, commentId, password) => {
+  let success = false
+
+  set((state) => {
+    const updated = state.posts.map((p) => {
+      if (p.id !== postId) return p
+
+      const comments = (p.comments || []).filter((c) => {
+        if (c.id === commentId) {
+          if (!password || c.password !== password) {
+            success = false // ❌ 비밀번호 불일치
+            return true     // 삭제 안 함
           }
-          return true
-        })
-        return { ...p, comments }
+          success = true     // ✅ 삭제 성공
+          return false
+        }
+        return true
       })
-      persist(updated)
-      return { posts: updated }
-    }),
+
+      return { ...p, comments }
+    })
+
+    persist(updated)
+    return { posts: updated }
+  })
+
+  return success
+},
+
 
   canEdit: (postId) => !!getTokens()[postId],
 

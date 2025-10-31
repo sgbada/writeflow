@@ -4,6 +4,8 @@ import PostDetail from "./PostDetail"
 import WritePost from "./WritePost"
 import NotFound from "./NotFound"
 import ThemeToggle from "./ThemeToggle"
+import 'react-quill/dist/quill.snow.css'
+
 
 function Layout() {
   return (

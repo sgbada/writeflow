@@ -1,7 +1,31 @@
-import { useEffect, useState, FormEvent, ChangeEvent } from 'react'
+import { useState, useRef, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { usePostsStore } from './store/posts'
 import type { Post } from './lib/types'
+
+import ReactQuill, { Quill } from 'react-quill-new'
+import 'react-quill-new/dist/quill.snow.css'
+import 'katex/dist/katex.min.css'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
+
+if (typeof window !== 'undefined') {
+  window.katex = katex
+}
+
+// 🔧 모듈 import
+import ImageResize from 'quill-image-resize-module-react'
+import QuillBetterTable from 'quill-better-table'
+
+// ✅ Quill에 모듈 등록
+if (typeof window !== 'undefined' && Quill) {
+  if (!Quill.imports['modules/better-table']) {
+    Quill.register({
+      'modules/imageResize': ImageResize,
+      'modules/better-table': QuillBetterTable,
+    }, true)
+  }
+}
 
 export default function WritePost() {
   const navigate = useNavigate()
@@ -17,47 +41,108 @@ export default function WritePost() {
   const [tags, setTags] = useState(existing?.tags?.join(', ') || '')
   const [images, setImages] = useState<string[]>(existing?.images || [])
 
-const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
-  const files = e.target.files
-  if (!files) return
+  const quillRef = useRef<any>(null)
 
-  const base64List: string[] = []
-  for (const file of Array.from(files)) {
+  const [isInsertingImage, setIsInsertingImage] = useState(false)
+
+const imageHandler = () => {
+  if (isInsertingImage) return // 방어코드
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.click()
+
+  input.onchange = () => {
+    const file = input.files?.[0]
+    if (!file) return
+
     const reader = new FileReader()
-    const base64 = await new Promise<string>((resolve) => {
-      reader.onload = () => resolve(reader.result as string)
-      reader.readAsDataURL(file)
-    })
-    base64List.push(base64)
+    reader.onload = () => {
+      const quill = quillRef.current?.getEditor()
+      const range = quill?.getSelection(true)
+      if (range) {
+        const imageUrl = reader.result as string
+
+        // 🚫 삽입 중엔 onChange 방지
+        setIsInsertingImage(true)
+        quill.insertEmbed(range.index, 'image', imageUrl, 'user')
+        quill.setSelection(range.index + 1)
+
+        // 저장용 배열 업데이트
+        setImages((prev) =>
+          prev.includes(imageUrl) ? prev : [...prev, imageUrl]
+        )
+
+        // ⏱ 약간의 지연 후 다시 허용
+        setTimeout(() => setIsInsertingImage(false), 300)
+      }
+    }
+    reader.readAsDataURL(file)
   }
-  setImages((prev) => [...prev, ...base64List])
 }
 
 
+  // ✅ Quill 모듈 설정
+  const modules = {
+    toolbar: {
+      container: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+        [{ color: [] }, { background: [] }],
+        [{ align: [] }],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['link', 'image', 'video', 'formula', 'code-block', 'clean'],
+        ['table'],
+      ],
+      handlers: { image: imageHandler },
+    },
+    imageResize: { parchment: Quill.import('parchment') },
+    'better-table': {
+      operationMenu: {
+        items: {
+          unmergeCells: true,
+          insertColumnRight: true,
+          insertColumnLeft: true,
+          insertRowUp: true,
+          insertRowDown: true,
+          deleteColumn: true,
+          deleteRow: true,
+        },
+      },
+    },
+  }
+
+  // ✅ 수식 모듈 활성화
+  useEffect(() => {
+    const quill = quillRef.current?.getEditor()
+    if (!quill) return
+
+    // formula 모듈이 없다면 추가
+    const Formula = Quill.import('formats/formula')
+    if (Formula && !quill.getModule('formula')) {
+      quill.root.addEventListener('click', () => {})
+    }
+  }, [])
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    const tagList = tags
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean)
+    const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean)
 
-    if (id) {
-      editPost(Number(id), { title, content, board, tags: tagList, images })
-    } else {
-      const newPost: Post = {
-        id: Date.now(),
-        title,
-        content,
-        board,
-        tags: tagList,
-        createdAt: new Date().toISOString(),
-        password,
-        likes: 0,
-        comments: [],
-        images,
-      }
-      addPost(newPost)
+    const newPost: Post = {
+      id: postId || Date.now(),
+      title,
+      content,
+      board,
+      tags: tagList,
+      createdAt: new Date().toISOString(),
+      password,
+      likes: 0,
+      comments: [],
+      images,
     }
+
+    if (id) editPost(postId!, newPost)
+    else addPost(newPost)
     navigate('/')
   }
 
@@ -80,12 +165,19 @@ const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
           required
         />
 
-        <textarea
-          placeholder="내용"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          required
-        />
+        <div className="editor-wrapper">
+          <ReactQuill
+  ref={quillRef}
+  theme="snow"
+  value={content}
+  onChange={(value) => {
+    if (!isInsertingImage) setContent(value)
+  }}
+  modules={modules}
+  placeholder="내용을 입력하세요."
+/>
+
+        </div>
 
         <input
           type="text"
@@ -93,23 +185,6 @@ const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
           value={tags}
           onChange={(e) => setTags(e.target.value)}
         />
-
-        {/* ✅ 이미지 첨부 */}
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleImageChange}
-        />
-
-        {/* ✅ 미리보기 */}
-        {images.length > 0 && (
-          <div className="image-preview">
-            {images.map((src, idx) => (
-              <img key={idx} src={src} alt={`preview-${idx}`} />
-            ))}
-          </div>
-        )}
 
         {!id && (
           <input
