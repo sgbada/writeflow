@@ -10,7 +10,6 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post("/signup", response_model=UserOut, status_code=201)
 async def signup(payload: SignupIn, session: AsyncSession = Depends(get_session)):
-    print("PWD_DEBUG", repr(payload.password), len(payload.password.encode("utf-8")))
     if await services.find_user_by_email(session, payload.email):
         raise HTTPException(status_code=400, detail="Email already registered")
     user = await services.create_user(session, payload.email, payload.password, payload.role)
