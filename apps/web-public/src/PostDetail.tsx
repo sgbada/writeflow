@@ -139,59 +139,64 @@ export default function PostDetail() {
       )}
 
       {/* 댓글 섹션 */}
-      <div className="comment-area">
-        <h2>댓글</h2>
-        <form onSubmit={handleAddComment} className="comment-form">
-          <input
-            type="text"
-            placeholder="닉네임 (선택)"
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="비밀번호 (삭제용)"
-            value={commentPwd}
-            onChange={(e) => setCommentPwd(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="댓글을 입력하세요"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            required
-          />
-          <button type="submit">등록</button>
-        </form>
+<div className="comment-area">
+  <h2>댓글</h2>
 
-        <ul className="comment-list">
-          {(post.comments || []).slice().reverse().map((c) => (
-            <li key={c.id} className="comment-item">
-              <div className="c-head">
-                <strong>{c.author}</strong> ·{' '}
-                <span>{new Date(c.createdAt).toLocaleString()}</span>
-                <button onClick={() => setCommentDeleteId(c.id)}>삭제</button>
-              </div>
-              <div className="c-body">{c.text}</div>
+  {/* ✅ 댓글 목록 먼저 */}
+  <ul className="comment-list">
+    {(post.comments || []).slice().reverse().map((c) => (
+      <li key={c.id} className="comment-item">
+        <div className="c-head">
+          <strong>{c.author}</strong> ·{' '}
+          <span>{new Date(c.createdAt).toLocaleString()}</span>
+          <button onClick={() => setCommentDeleteId(c.id)}>삭제</button>
+        </div>
+        <div className="c-body">{c.text}</div>
 
-              {commentDeleteId === c.id && (
-                <div className="popup-box">
-                  <input
-                    type="password"
-                    placeholder="댓글 비밀번호 입력"
-                    value={commentDeletePwd}
-                    onChange={(e) => setCommentDeletePwd(e.target.value)}
-                  />
-                  <button onClick={() => handleCommentDelete(c.id)}>삭제 확인</button>
-                </div>
-              )}
-            </li>
-          ))}
-          {(!post.comments || post.comments.length === 0) && (
-            <p>첫 댓글을 남겨보세요.</p>
-          )}
-        </ul>
-      </div>
+        {commentDeleteId === c.id && (
+          <div className="popup-box">
+            <input
+              type="password"
+              placeholder="댓글 비밀번호 입력"
+              value={commentDeletePwd}
+              onChange={(e) => setCommentDeletePwd(e.target.value)}
+            />
+            <button onClick={() => handleCommentDelete(c.id)}>삭제 확인</button>
+          </div>
+        )}
+      </li>
+    ))}
+
+    {(!post.comments || post.comments.length === 0) && (
+      <p>첫 댓글을 남겨보세요.</p>
+    )}
+  </ul>
+
+  {/* ✅ 댓글 입력창을 아래로 이동 */}
+  <form onSubmit={handleAddComment} className="comment-form">
+    <input
+      type="text"
+      placeholder="닉네임 (선택)"
+      value={nickname}
+      onChange={(e) => setNickname(e.target.value)}
+    />
+    <input
+      type="password"
+      placeholder="비밀번호 (삭제용)"
+      value={commentPwd}
+      onChange={(e) => setCommentPwd(e.target.value)}
+    />
+    <input
+      type="text"
+      placeholder="댓글을 입력하세요"
+      value={comment}
+      onChange={(e) => setComment(e.target.value)}
+      required
+    />
+    <button type="submit">등록</button>
+  </form>
+</div>
+
 
       <hr className="post-divider" />
       <Link to="/">← 목록으로</Link>

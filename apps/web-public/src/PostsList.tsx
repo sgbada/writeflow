@@ -14,8 +14,9 @@ export default function PostsList() {
   const [mode, setMode] = useState<'all' | 'title' | 'content' | 'tag'>(
     tagName ? 'tag' : 'all'
   )
+  const [page, setPage] = useState<number>(1)
+  const postsPerPage = 10
 
-  // ✅ boardName, tagName 바뀔 때만 상태 갱신
   useEffect(() => {
     setBoard(boardName || '전체')
     if (tagName) {
@@ -25,16 +26,15 @@ export default function PostsList() {
       setQuery('')
       setMode('all')
     }
+    setPage(1)
   }, [boardName, tagName, location.pathname])
 
-  // ✅ query 변경 시 자동 navigate 금지 (직접 타이핑용)
   useEffect(() => {
     if (!query.startsWith('#')) {
       if (location.pathname.startsWith('/tag/')) navigate('/')
     }
   }, [query, navigate, location.pathname])
 
-  // ✅ 태그 클릭 시 navigate만 수행
   const handleTagClick = (tag: string) => {
     navigate(`/tag/${tag}`)
   }
@@ -57,11 +57,39 @@ export default function PostsList() {
     return boardMatch && match
   })
 
+  const totalPages = Math.ceil(filtered.length / postsPerPage)
+  const start = (page - 1) * postsPerPage
+  const end = start + postsPerPage
+  const currentPosts = filtered.slice().reverse().slice(start, end)
+
   const handleBoardChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const selected = e.target.value
     setBoard(selected)
     if (selected === '전체') navigate('/')
     else navigate(`/board/${selected}`)
+  }
+
+  // ✅ 날짜 포맷 함수
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const isToday =
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      date.getDate() === now.getDate()
+
+    if (isToday) {
+      return date.toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+    } else {
+      return date.toLocaleDateString('ko-KR', {
+        month: '2-digit',
+        day: '2-digit',
+      })
+    }
   }
 
   return (
@@ -124,42 +152,54 @@ export default function PostsList() {
         ✏️ 새 글 작성
       </Link>
 
-      <ul className="post-list">
-        {filtered.length === 0 ? (
-          <p>검색 결과가 없습니다.</p>
-        ) : (
-          filtered
-            .slice()
-            .reverse()
-            .map((p) => (
-              <li key={p.id} className="post-item">
-                <Link to={`/post/${p.id}`} className="title">
-                  {p.title}
-                </Link>
-                <div className="meta">
-                  <Link to={`/board/${p.board}`} className="board-link">
-                    {p.board}
-                  </Link>{' '}
-                  | 익명 | <span>{new Date(p.createdAt).toLocaleString()}</span>
-                </div>
-                {p.tags?.length > 0 && (
-                  <div className="tags">
-                    {p.tags.map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        className="tag tag-link"
-                        onClick={() => handleTagClick(tag)}
-                      >
-                        #{tag}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </li>
-            ))
-        )}
-      </ul>
+      {/* 게시글 표 헤더 */}
+<div className="post-table">
+  <div className="post-table-header">
+    <div className="col-num">번호</div>
+    <div className="col-board">말머리</div>
+    <div className="col-title">제목</div>
+    <div className="col-writer">글쓴이</div>
+    <div className="col-date">작성일</div>
+    <div className="col-views">조회</div>
+    <div className="col-likes">추천</div>
+  </div>
+
+  {/* 게시글 리스트 */}
+  {currentPosts.map((p, idx) => (
+    <div key={p.id} className="post-row">
+      <div className="col-num">{filtered.length - (start + idx)}</div>
+      <div className="col-board">[{p.board}]</div>
+      <div className="col-title">
+        <Link to={`/post/${p.id}`} className="title-link">
+          {p.title}
+          {p.comments?.length > 0 && (
+            <span className="comment-count">[{p.comments.length}]</span>
+          )}
+        </Link>
+      </div>
+      <div className="col-writer">익명</div>
+      <div className="col-date">{formatDate(p.createdAt)}</div>
+      <div className="col-views">{p.views ?? 0}</div>
+      <div className="col-likes">{p.likes ?? 0}</div>
+    </div>
+  ))}
+</div>
+
+
+      {/* 페이지네이션 */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          {Array.from({ length: totalPages }).map((_, i) => (
+            <button
+              key={i}
+              className={page === i + 1 ? 'active' : ''}
+              onClick={() => setPage(i + 1)}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
