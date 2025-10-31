@@ -1,0 +1,425 @@
+body {
+    font-family: "Pretendard", sans-serif;
+    background-color: #f6f8fa;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 700px;
+    margin: 40px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+h1 {
+    margin-top: 0;
+}
+
+ul.post-list {
+    list-style: none;
+    padding: 0;
+}
+
+.post-item {
+    border-bottom: 1px solid #eee;
+    padding: 10px 0;
+}
+
+    .post-item .title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #0077cc;
+        text-decoration: none;
+    }
+
+        .post-item .title:hover {
+            text-decoration: underline;
+        }
+
+.meta {
+    color: #666;
+    font-size: 13px;
+}
+
+.form input, .form textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+}
+
+.form textarea {
+    height: 200px;
+    resize: none;
+}
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+select {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: white;
+}
+
+.tags {
+    margin-top: 6px;
+}
+
+
+.tag {
+    display: inline-block;
+    background: #eef6ff;
+    color: #0077cc;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-right: 4px;
+}
+
+
+button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: #0077cc;
+    color: white;
+    cursor: pointer;
+}
+
+    button:hover {
+        background-color: #005fa3;
+    }
+
+.search-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-box {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.search-mode button {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+}
+
+    .search-mode button.active {
+        background: #0077cc;
+        color: white;
+        border-color: #0077cc;
+    }
+
+
+
+.write-btn {
+    display: inline-block;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background: #0077cc;
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+    .write-btn:hover {
+        background: #005fa3;
+    }
+
+.board-link {
+    color: #0077cc;
+    text-decoration: none;
+}
+
+    .board-link:hover {
+        text-decoration: underline;
+    }
+
+.board-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+    .board-tabs button {
+        padding: 8px 14px;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+        .board-tabs button.active {
+            background: #0077cc;
+            color: white;
+            border-color: #0077cc;
+        }
+
+        .board-tabs button:hover {
+            background: #e9f3ff;
+        }
+
+.edit-section {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+    .edit-section input {
+        margin-right: 8px;
+    }
+
+.error {
+    color: #c0392b;
+    margin-top: 5px;
+}
+
+.comment-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+    .comment-form input {
+        flex: 1;
+    }
+
+.comment-list {
+    list-style: none;
+    padding: 0;
+}
+
+.comment-item {
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+.c-head {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+    color: #666;
+}
+
+    .c-head strong {
+        color: #333;
+    }
+
+    .c-head button {
+        margin-left: auto;
+        background: #e74c3c;
+        color: white;
+    }
+
+
+    .post-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.popup-box {
+  background: #f3f6fb;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 8px 0;
+  border: 1px solid #cfd9e3;
+}
+
+.popup-box input {
+  padding: 6px 8px;
+  margin-right: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.comment-form input {
+  margin-right: 6px;
+  margin-bottom: 6px;
+}
+
+.comment-item {
+  border-bottom: 1px solid #eee;
+  padding: 8px 0;
+}
+
+.comment-item .c-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comment-item .c-head strong {
+  color: #0077cc;
+}
+
+.comment-item .c-body {
+  margin-top: 4px;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+}
+
+/* 텍스트 기본색 */
+body, .container, input, textarea, select, button, a {
+    color: #222 !important; /* 짙은 회색으로 통일 */
+}
+
+/* 링크 색상 */
+a {
+    text-decoration: none;
+    color: #0077cc;
+}
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+/* 태그 링크 */
+.tag-link {
+    background: #eef6ff;
+    color: #0077cc !important;
+    margin-right: 4px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+    .tag-link:hover {
+        background: #dbefff;
+    }
+
+/* 버튼 글자색 */
+button {
+    color: #fff;
+}
+
+    button.active {
+        color: #fff;
+    }
+
+
+.tab {
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    color: black;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+    .tab.active {
+        background: #0077cc;
+        color: white;
+        border-color: #0077cc;
+    }
+
+    .tab:hover:not(.active) {
+        background: #f0f0f0;
+    }
+
+.board-tabs button,
+.tab {
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    color: black;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+    .board-tabs button.active,
+    .tab.active,
+    .board-tabs button:active.active,
+    .tab:active.active,
+    .board-tabs button:focus.active,
+    .tab:focus.active {
+        background: #0077cc !important;
+        color: #ffffff !important;
+        border-color: #0077cc !important;
+        outline: none !important;
+    }
+
+    .board-tabs button:hover:not(.active),
+    .tab:hover:not(.active) {
+        background: #f0f0f0;
+        color: black;
+    }
+
+    /* 클릭 시 기본 outline 제거 */
+    .board-tabs button:focus,
+    .tab:focus {
+        outline: none;
+    }
+
+    .search-mode button.active,
+    .board-tabs button.active,
+    .tab.active {
+        background: #0077cc !important;
+        color: #ffffff !important;
+        border-color: #0077cc !important;
+    }
+
+.like-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0 20px 0;
+}
+
+.like-btn {
+    background: #fff;
+    border: 1px solid #0077cc;
+    color: #0077cc;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    .like-btn:hover {
+        background: #e8f2ff;
+    }
+
+    .like-btn.liked {
+        background: #0077cc;
+        color: #fff;
+        border-color: #0077cc;
+        cursor: default;
+    }
+
+.like-count {
+    font-size: 15px;
+    color: #333;
+}
