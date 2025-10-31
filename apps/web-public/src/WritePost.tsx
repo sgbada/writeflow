@@ -1,7 +1,7 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { usePostsStore } from '../store/posts'
-import type { Post } from '../lib/types'
+import { usePostsStore } from './store/posts'
+import type { Post } from './lib/types'
 
 export default function WritePost() {
   const navigate = useNavigate()

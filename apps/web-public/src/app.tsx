@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import PostsList from './pages/PostsList'
-import PostDetail from './pages/PostDetail'
-import WritePost from './pages/WritePost'
-import NotFound from './pages/NotFound'
+import PostsList from './PostsList'
+import PostDetail from './PostDetail'
+import WritePost from './WritePost'
+import NotFound from './NotFound'
 
 function AppRoutes() {
   const location = useLocation()

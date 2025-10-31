@@ -1,7 +1,7 @@
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { usePostsStore } from '../store/posts'
+import { usePostsStore } from './store/posts'
 import { useState, useEffect, ChangeEvent } from 'react'
-import type { Post } from '../lib/types'
+import type { Post } from './lib/types'
 
 export default function PostsList() {
   const { boardName, tagName } = useParams<{ boardName?: string; tagName?: string }>()
