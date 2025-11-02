@@ -33,6 +33,7 @@ export default function PostDetail() {
   const [deletePwd, setDeletePwd] = useState('')
   const [showEditPrompt, setShowEditPrompt] = useState(false)
   const [showDeletePrompt, setShowDeletePrompt] = useState(false)
+  const [showAllTags, setShowAllTags] = useState(false)
 
   // ✅ 조회수 증가 (1시간 중복 방지 + 내 글 제외)
   useEffect(() => {
@@ -50,7 +51,7 @@ export default function PostDetail() {
     incrementViews(postId)
     viewedPosts[postId] = now
     localStorage.setItem('viewedPosts', JSON.stringify(viewedPosts))
-  }, [postId])
+  }, [postId, post, incrementViews])
 
   if (!post) return <p>존재하지 않는 글입니다.</p>
 
@@ -108,31 +109,51 @@ export default function PostDetail() {
   return (
     <div className="container post-detail">
       <h1>{post.title}</h1>
+
       <div className="meta">
-        익명 | {new Date(post.createdAt).toLocaleString()} | 조회 {post.views ?? 0} | 추천{' '}
-        {post.likes ?? 0}
+        익명 | {new Date(post.createdAt).toLocaleString()} | 조회 {post.views ?? 0} | 추천 {post.likes ?? 0}
       </div>
 
       <hr className="post-divider" />
 
-      <div
-        className="post-content"
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      ></div>
+      <div className="post-content" dangerouslySetInnerHTML={{ __html: post.content }} />
 
-      <hr className="post-divider" />
-
+      {/* 👍 추천 버튼 */}
       <div className="like-section">
         <button
           className={`like-btn ${liked ? 'liked' : ''}`}
           onClick={handleLike}
           disabled={liked}
         >
-          {liked ? '👍 추천됨' : '👍 추천하기'}{' '}
-          <span className="like-count">{post.likes || 0}</span>
+          {liked ? '👍 추천됨' : '👍 추천하기'} <span className="like-count">{post.likes || 0}</span>
         </button>
       </div>
 
+{post.tags && post.tags.length > 0 && (
+  <div className="post-tags">
+    {(showAllTags ? post.tags : post.tags.slice(0, 10)).map((tag, i) => (
+      <Link
+        key={i}
+        to={`/search?q=%23${encodeURIComponent(tag)}`}
+        className="tag-link small"
+      >
+        #{tag}
+      </Link>
+    ))}
+
+    {post.tags.length > 10 && (
+      <button
+        className="tag-more"
+        onClick={() => setShowAllTags((prev) => !prev)}
+      >
+        {showAllTags ? '접기 ▲' : `+${post.tags.length - 10}개 더보기 ▼`}
+      </button>
+    )}
+  </div>
+)}
+
+
+      {/* ✏️ 수정 / 삭제 버튼 */}
       <div className="post-actions">
         <button
           onClick={() => setShowEditPrompt(!showEditPrompt)}
@@ -148,7 +169,7 @@ export default function PostDetail() {
         </button>
       </div>
 
-      {/* ✏️ 수정 비밀번호 입력창 */}
+      {/* 수정 비밀번호 */}
       {showEditPrompt && (
         <div className="inline-password-box">
           <input
@@ -162,7 +183,7 @@ export default function PostDetail() {
         </div>
       )}
 
-      {/* 🗑 삭제 비밀번호 입력창 */}
+      {/* 삭제 비밀번호 */}
       {showDeletePrompt && (
         <div className="inline-password-box">
           <input
@@ -175,13 +196,12 @@ export default function PostDetail() {
         </div>
       )}
 
-
-      {/* ✅ 댓글 영역 */}
+      {/* 💬 댓글 영역 */}
       <div className="comment-area">
         <h2>댓글</h2>
 
         <ul className="comment-list">
-          {(post.comments || []).slice().reverse().map((c) => (
+          {(post.comments || []).map((c) => (
             <li key={c.id} className="comment-item">
               <div className="c-head">
                 <strong>{c.author}</strong> ·{' '}
@@ -199,39 +219,43 @@ export default function PostDetail() {
                     onChange={(e) => setCommentDeletePwd(e.target.value)}
                   />
                   <button onClick={() => handleCommentDelete(c.id)}>삭제 확인</button>
-                  {commentDeleteError && (
-                    <p className="error">{commentDeleteError}</p>
-                  )}
+                  {commentDeleteError && <p className="error">{commentDeleteError}</p>}
                 </div>
               )}
             </li>
           ))}
-          {(!post.comments || post.comments.length === 0) && (
-            <p>첫 댓글을 남겨보세요.</p>
-          )}
+          {(!post.comments || post.comments.length === 0) && <p>첫 댓글을 남겨보세요.</p>}
         </ul>
 
+        {/* 댓글 입력창 */}
         <form onSubmit={handleAddComment} className="comment-form">
-          <input
-            type="text"
-            placeholder="닉네임 (선택)"
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="비밀번호 (삭제용)"
-            value={commentPwd}
-            onChange={(e) => setCommentPwd(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="댓글을 입력하세요"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            required
-          />
-          <button type="submit">등록</button>
+          <div className="comment-side">
+            <input
+              type="text"
+              placeholder="닉네임 (최대 10자)"
+              value={nickname}
+              onChange={(e) => {
+                if (e.target.value.length <= 10) setNickname(e.target.value)
+              }}
+              maxLength={10}
+            />
+            <input
+              type="password"
+              placeholder="비밀번호"
+              value={commentPwd}
+              onChange={(e) => setCommentPwd(e.target.value)}
+            />
+          </div>
+
+          <div className="comment-main">
+            <textarea
+              placeholder="댓글을 입력하세요."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              required
+            ></textarea>
+            <button type="submit">등록</button>
+          </div>
         </form>
       </div>
 

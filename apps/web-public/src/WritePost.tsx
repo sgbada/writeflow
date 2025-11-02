@@ -124,6 +124,23 @@ const imageHandler = () => {
     }
   }, [])
 
+  // 🔧 태그 입력 처리 함수
+  const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value
+
+    // 입력 시 실시간 파싱
+    const tagList = input
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean)
+
+    // ✅ 중복 제거 + 최대 30개 제한
+    const uniqueTags = Array.from(new Set(tagList)).slice(0, 30)
+
+    // 다시 문자열로 조합
+    setTags(uniqueTags.join(', '))
+  }
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean)
@@ -159,9 +176,12 @@ const imageHandler = () => {
 
         <input
           type="text"
-          placeholder="제목"
+          placeholder="제목 (최대 50자)"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => {
+            if (e.target.value.length <= 50) setTitle(e.target.value)
+          }}
+          maxLength={50}
           required
         />
 
@@ -181,7 +201,7 @@ const imageHandler = () => {
 
         <input
           type="text"
-          placeholder="태그 (쉼표로 구분)"
+          placeholder="태그 (쉼표로 구분, 최대 30개)"
           value={tags}
           onChange={(e) => setTags(e.target.value)}
         />

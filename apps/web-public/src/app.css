@@ -382,170 +382,195 @@ ul.post-list + .pagination {
 /* =====================================
    💬 POST DETAIL & COMMENT AREA
 ===================================== */
-
-.post-detail {
-    text-align: left;
+/* 💬 댓글 입력창을 디시 스타일로 가로 정렬 */
+.comment-form {
+  display: flex;
+  flex-direction: row; /* ✅ 가로 배치 */
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
 }
 
-    .post-detail h1 {
-        font-size: 26px;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
+/* 좌측: 닉네임 + 비밀번호 */
+.comment-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 180px;
+}
 
-    .post-detail .meta {
-        color: #777;
-        font-size: 14px;
-        margin-bottom: 20px;
-    }
+.comment-side input {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--card-bg);
+}
 
-.post-content {
-    line-height: 1.7;
-    font-size: 16px;
-    color: var(--text);
-    margin-bottom: 20px;
+/* 우측: 댓글 입력창 + 등록 버튼 */
+.comment-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comment-main textarea {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--card-bg);
+  line-height: 1.5;
+}
+
+.comment-main button {
+  align-self: flex-end;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.comment-main button:hover {
+  background: var(--primary-dark);
+}
+
+/* 🌙 다크모드 대응 */
+[data-theme="dark"] .comment-form input,
+[data-theme="dark"] .comment-form textarea {
+  background: #2a2a2a;
+  border: 1px solid #555;
+  color: #eee;
 }
 
 
-.post-divider {
-    border: none;
-    height: 1px;
-    background-color: #ddd;
-    margin: 25px 0;
-}
-
-/* 관련글 섹션 */
-.related-posts {
-    margin-top: 30px;
-}
-
-    .related-posts h3 {
-        font-size: 18px;
-        font-weight: 600;
-        border-left: 4px solid var(--primary);
-        padding-left: 10px;
-        margin-bottom: 10px;
-    }
-
-/* 좋아요 */
-.like-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    margin: 25px 0;
-}
-
-.like-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--card-bg);
-    border: 1px solid var(--primary);
-    color: var(--primary);
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-    .like-btn:hover {
-        background: #e8f2ff;
-    }
-
-    .like-btn.liked {
-        background: var(--primary);
-        color: #fff;
-        border-color: var(--primary);
-    }
+/* =====================================
+   💬 POST DETAIL & COMMENT AREA
+===================================== */
 
 /* 댓글 입력 영역 */
 .comment-area {
-    margin-top: 40px;
+  margin-top: 40px;
 }
 
-    .comment-area h2 {
-        font-size: 18px;
-        font-weight: 600;
-        border-left: 4px solid var(--primary);
-        padding-left: 10px;
-        margin-bottom: 15px;
-    }
+.comment-area h2 {
+  font-size: 18px;
+  font-weight: 600;
+  border-left: 4px solid var(--primary);
+  padding-left: 10px;
+  margin-bottom: 15px;
+}
 
-/* grid 기반 댓글 폼 */
+/* ✅ 댓글 입력 폼 (textarea 대응 + 세로 정렬) */
 .comment-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-        "nick pwd"
-        "text text"
-        "btn btn";
-    gap: 10px;
-    margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
 }
 
-    .comment-form input[type="text"],
-    .comment-form input[type="password"] {
-        padding: 12px;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        font-size: 15px;
-        color: var(--text);
-    }
+.comment-form input,
+.comment-form textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 15px;
+  color: var(--text);
+  background: var(--card-bg);
+  box-sizing: border-box;
+}
 
-    .comment-form input[type="text"] {
-        grid-area: text;
-        height: 60px;
-    }
+/* ✅ textarea 자동 줄바꿈 및 세로 크기 조절 */
+.comment-form textarea {
+  min-height: 80px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  resize: vertical; /* 사용자가 높이 조절 가능 */
+  overflow-y: auto;
+}
 
-    .comment-form button {
-        grid-area: btn;
-        padding: 12px;
-        font-size: 16px;
-        font-weight: 600;
-        border-radius: 8px;
-        background-color: var(--primary);
-        color: white;
-        border: none;
-        cursor: pointer;
-        transition: background 0.2s ease;
-    }
+/* ✅ 등록 버튼 (오른쪽 정렬) */
+.comment-form button {
+  align-self: flex-end;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
 
-        .comment-form button:hover {
-            background-color: var(--primary-dark);
-        }
+.comment-form button:hover {
+  background: var(--primary-dark);
+}
 
-/* 댓글 리스트 */
+/* ✅ 댓글 리스트 */
 .comment-list {
-    list-style: none;
-    padding: 0;
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
 }
 
 .comment-item {
-    background: #fafafa;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  transition: background 0.2s;
 }
 
-    .comment-item .c-head {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 13px;
-        color: var(--muted);
-    }
+.comment-item .c-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
 
-        .comment-item .c-head strong {
-            color: var(--primary);
-        }
+.comment-item .c-head strong {
+  color: var(--primary);
+}
 
-    .comment-item .c-body {
-        margin-top: 4px;
-        color: var(--text);
-    }
+.comment-item .c-body {
+  margin-top: 6px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ✅ 다크모드 댓글 영역 보정 */
+[data-theme="dark"] .comment-form input,
+[data-theme="dark"] .comment-form textarea {
+  background: #2a2a2a;
+  color: #eee;
+  border: 1px solid #555;
+}
+
+[data-theme="dark"] .comment-form input::placeholder,
+[data-theme="dark"] .comment-form textarea::placeholder {
+  color: #aaa;
+}
+
+[data-theme="dark"] .comment-item {
+  background: #2b2b2b;
+  border: 1px solid #444;
+}
 
 /* =====================================
    🔘 BUTTONS (통합)
@@ -1085,4 +1110,296 @@ button {
   color: #c0392b;
   font-size: 13px;
   margin-left: 8px;
+}
+
+
+/* ✅ 본문 하단 태그 (좋아요 아래) */
+.post-tags {
+  margin-top: 10px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ✅ 태그 칩 스타일 */
+.tag-chip {
+  display: inline-block;
+  background: var(--accent-bg); /* 밝은 하늘색/회색 계열 */
+  color: var(--primary);
+  font-size: 13px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tag-chip:hover {
+  background: #d8ebff;
+  color: var(--primary-dark);
+}
+
+/* 🌙 다크모드 댓글 입력창 보정 */
+[data-theme="dark"] .comment-form input[type="text"],
+[data-theme="dark"] .comment-form input[type="password"],
+[data-theme="dark"] .comment-form textarea {
+  background: #2a2a2a;
+  color: #eee;
+  border: 1px solid #555;
+}
+
+[data-theme="dark"] .comment-form input::placeholder,
+[data-theme="dark"] .comment-form textarea::placeholder {
+  color: #aaa;
+}
+
+[data-theme="dark"] .comment-form button {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+}
+
+[data-theme="dark"] .comment-item {
+  background: #2a2a2a;
+  border: 1px solid #444;
+}
+
+/* ✅ 댓글 입력창 레이아웃 — 디시인사이드 스타일 */
+.comment-form {
+  display: flex !important;       /* 💥 우선순위 높이기 */
+  flex-direction: row !important; /* 💥 가로 정렬 강제 */
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.comment-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 180px;
+}
+
+.comment-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comment-main textarea {
+  width: 100%;
+  min-height: 95px;
+  resize: vertical;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--card-bg);
+  line-height: 1.5;
+}
+
+.comment-main button {
+  align-self: flex-end;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.comment-main button:hover {
+  background: var(--primary-dark);
+}
+
+/* ✅ 추천 버튼 중앙 정렬 — 우선순위 강제 */
+.like-section {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  margin: 50px 0 25px !important;
+  width: 100%;
+}
+
+/* ✅ 추천 버튼 기본 스타일 */
+.like-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card-bg);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.like-btn:hover {
+  background: #e8f2ff;
+}
+
+.like-btn.liked {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 20px;
+}
+
+.tag-link {
+  background: #f0f4ff;
+  color: #3366cc;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.tag-link:hover {
+  background: #dbe6ff;
+}
+
+.tag-more {
+  background: none;
+  border: none;
+  color: #777;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 5px;
+}
+
+/* 🌙 다크모드용 */
+[data-theme="dark"] .tag-link {
+  background: #2e3a5a;
+  color: #a8c5ff;
+}
+
+[data-theme="dark"] .tag-link:hover {
+  background: #3b4a6b;
+}
+
+[data-theme="dark"] .tag-more {
+  color: #bbb;
+}
+
+/* ✅ 본문 제목 줄바꿈 처리 */
+.post-detail h1 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.3;
+  word-break: break-word;      /* 긴 단어도 줄바꿈 */
+  overflow-wrap: break-word;   /* URL 등도 줄바꿈 */
+  white-space: normal;         /* 한 줄 고정 방지 */
+  color: var(--text);
+}
+
+/* ✅ 다크모드에서도 제목 색상 가독성 보정 */
+[data-theme="dark"] .post-detail h1 {
+  color: #e8e8e8;
+}
+
+.post-detail .meta {
+  color: #777;
+  font-size: 14px;
+  margin-bottom: 24px; /* ✅ 기존보다 살짝 띄움 */
+}
+
+.post-content {
+  line-height: 1.7;
+  font-size: 16px;
+  color: var(--text);
+  margin-top: 24px; /* ✅ 글 정보와 간격 확보 */
+  margin-bottom: 32px;
+}
+
+[data-theme="dark"] .post-detail .meta {
+  color: #aaa;
+}
+
+/* ✅ 비밀번호 입력 박스 */
+.inline-password-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px 0 6px;
+  max-width: 360px;
+  flex-wrap: wrap; /* ✅ 에러 메시지 줄바꿈 가능 */
+}
+
+/* 입력창 */
+.inline-password-box input {
+  flex: 1;
+  min-width: 160px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--card-bg);
+}
+
+.inline-password-box input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(0, 119, 204, 0.2);
+}
+
+/* 확인 버튼 */
+.inline-password-box button {
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.inline-password-box button:hover {
+  background: var(--primary-dark);
+}
+
+/* ✅ 에러 메시지 스타일 (아래로 분리 표시) */
+.inline-password-box .error {
+  width: 100%;
+  color: #c0392b;
+  font-size: 13px;
+  margin-top: 6px;
+  margin-left: 2px;
+}
+
+/* 🌙 다크모드 보정 */
+[data-theme="dark"] .inline-password-box {
+  background: #2a2a2a;
+  border-color: #555;
+}
+
+[data-theme="dark"] .inline-password-box input {
+  background: #1e1e1e;
+  color: #eee;
+  border-color: #555;
+}
+
+[data-theme="dark"] .inline-password-box .error {
+  color: #ff6b6b;
 }
