@@ -28,6 +28,7 @@ function AppRoutes() {
       <Route path="/" element={<PostsList key="home" />} />
       <Route path="/board/:boardName" element={<PostsList key={location.pathname} />} />
       <Route path="/tag/:tagName" element={<PostsList key={location.pathname} />} />
+      <Route path="/popular" element={<PostsList key="popular" />} />  
       <Route path="/post/:id" element={<PostDetail key={location.pathname} />} />
       <Route path="/write" element={<WritePost />} />
       <Route path="/edit/:id" element={<WritePost />} />

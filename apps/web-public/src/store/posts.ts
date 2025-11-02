@@ -19,6 +19,7 @@ interface PostsStore {
   editPost: (id: number, newData: Partial<Post>) => void
   deletePost: (id: number, password: string) => void
   likePost: (postId: number) => void
+  incrementViews: (postId: number, viewerId?: string) => void
   addComment: (
     postId: number,
     data: { author?: string; password?: string; text: string }
@@ -40,6 +41,11 @@ export const usePostsStore = create<PostsStore>((set, get) => ({
         { ...post, comments: post.comments ?? [], likes: post.likes ?? 0 },
       ]
       persist(updated)
+      const myPosts = JSON.parse(localStorage.getItem('myPosts') || '[]') as number[]
+    if (!myPosts.includes(post.id)) {
+      myPosts.push(post.id)
+      localStorage.setItem('myPosts', JSON.stringify(myPosts))
+    }
       return { posts: updated }
     }),
 
@@ -67,6 +73,16 @@ export const usePostsStore = create<PostsStore>((set, get) => ({
       const updated = state.posts.map((p) =>
         p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p
       )
+      persist(updated)
+      return { posts: updated }
+    }),
+
+    incrementViews: (postId: number, viewerId?: string) =>
+    set((state) => {
+      const updated = state.posts.map((p) => {
+        if (p.id !== postId) return p
+        return { ...p, views: (p.views ?? 0) + 1 }
+      })
       persist(updated)
       return { posts: updated }
     }),
