@@ -25,13 +25,21 @@ function AppRoutes() {
   const location = useLocation()
   return (
     <Routes>
+      {/* 기본 라우트 */}
       <Route path="/" element={<PostsList key="home" />} />
       <Route path="/board/:boardName" element={<PostsList key={location.pathname} />} />
       <Route path="/tag/:tagName" element={<PostsList key={location.pathname} />} />
-      <Route path="/popular" element={<PostsList key="popular" />} />  
+      <Route path="/popular" element={<PostsList key="popular" />} />
+
+      {/* ✅ 추가된 검색 라우트 */}
+      <Route path="/search" element={<PostsList key={`search-${location.search}`} />} />
+
+      {/* 상세/작성/수정 */}
       <Route path="/post/:id" element={<PostDetail key={location.pathname} />} />
       <Route path="/write" element={<WritePost />} />
       <Route path="/edit/:id" element={<WritePost />} />
+
+      {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   )
