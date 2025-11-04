@@ -1623,3 +1623,78 @@ select:hover,
 .read-page .ql-editor img {
   cursor: auto !important;
 }
+
+
+/* =====================================
+   📝 WRITE PAGE BUTTONS
+===================================== */
+
+.write-btn-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
+/* 왼쪽 버튼들 */
+.write-btn-left {
+  display: flex;
+  gap: 10px;
+}
+
+.write-btn-left button {
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.write-btn-left button:hover {
+  background: #f2f2f2;
+}
+
+/* 오른쪽 영역 */
+.write-btn-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto; /* ✅ 오른쪽 끝으로 붙이기 */
+}
+
+/* 자동 저장 시각 */
+.auto-save-time {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* 댓글 등록 버튼 스타일 그대로 사용 */
+.comment-submit-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.comment-submit-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* 🌙 다크모드 대응 */
+[data-theme="dark"] .write-btn-left button {
+  background: #2a2a2a;
+  color: #eee;
+  border-color: #555;
+}
+
+[data-theme="dark"] .write-btn-left button:hover {
+  background: #333;
+}

@@ -6,6 +6,7 @@ import PostDetail from "./PostDetail"
 import WritePost from "./WritePost"
 import NotFound from "./NotFound"
 import ThemeToggle from "./ThemeToggle"
+import ScrollToTop from './ScrollToTop'
 import 'react-quill/dist/quill.snow.css'
 
 function Layout() {
@@ -37,6 +38,8 @@ function Layout() {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+
 
   // ✅ 로그아웃
   const handleLogout = () => {
@@ -119,6 +122,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
+    <ScrollToTop />
       <Layout />
     </BrowserRouter>
   )

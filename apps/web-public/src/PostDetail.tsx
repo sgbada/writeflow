@@ -45,12 +45,11 @@ export default function PostDetail() {
   const [showDeletePrompt, setShowDeletePrompt] = useState(false)
   const [showAllTags, setShowAllTags] = useState(false)
 
-  // ✅ 조회수 증가 (1시간 중복 방지 + 내 글 제외)
+  // ✅ 조회수 증가 (1시간 중복 방지)
   useEffect(() => {
     if (!post) return
 
     const myPosts = JSON.parse(localStorage.getItem('myPosts') || '[]') as number[]
-    if (myPosts.includes(postId)) return // 내가 쓴 글이면 조회수 증가 X
 
     const viewedPosts = JSON.parse(localStorage.getItem('viewedPosts') || '{}') as Record<
       number,
