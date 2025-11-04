@@ -17,6 +17,11 @@ if (typeof window !== 'undefined') {
 import ImageResize from 'quill-image-resize-module-react'
 Quill.register('modules/imageResize', ImageResize)
 
+// ✅ 이미지 이동/정렬용 BlotFormatter 등록
+import BlotFormatter from 'quill-blot-formatter'
+Quill.register('modules/blotFormatter', BlotFormatter)
+
+
 export default function WritePost() {
   const navigate = useNavigate()
   const { id } = useParams<{ id?: string }>()
@@ -44,6 +49,7 @@ export default function WritePost() {
         ['link', 'image', 'video', 'formula', 'code-block', 'clean'],
       ],
     },
+    blotFormatter: {},
     imageResize: {
       parchment: Quill.import('parchment'),
       modules: ['Resize', 'DisplaySize', 'Toolbar'],
