@@ -786,118 +786,89 @@ button {
 .tags {
     margin-top: 4px;
 }
-
 /* ✅ 표 정렬 완전 고정 버전 */
-.post-table-header,
-.post-row {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start; /* ✅ 공간 균등 분배 금지 */
-    text-align: left;
-    font-size: 15px;
+/* ✅ 반응형 그리드 기반 게시글 표 */
+.post-table .post-table-header,
+.post-table .post-row {
+  display: grid;
+  grid-template-columns: 60px 60px 1fr 120px 120px 80px 80px;
+  align-items: center;
+  gap: 4px;
+  text-align: left;
+  font-size: 15px;
+  padding: 8px 10px;
 }
 
-/* ✅ 헤더 */
-.post-table-header {
-    font-weight: 700;
-    border-bottom: 2px solid var(--primary);
-    padding: 8px 4px;
-    background: var(--card-bg);
+.post-table .post-table-header {
+  font-weight: 700;
+  border-bottom: 2px solid var(--primary);
+  background: var(--card-bg);
 }
 
-/* ✅ 각 행 */
-.post-row {
-    border-bottom: 1px solid var(--border);
-    padding: 8px 4px;
-    transition: background 0.15s ease;
+.post-table .post-row {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s ease;
 }
 
-    .post-row:hover {
-        background: rgba(0, 0, 0, 0.05);
-    }
-
-/* ✅ 열별 폭 및 정렬 (헤더/본문 통일) */
-.col-num {
-    width: 70px;
-    flex-shrink: 0;
-    text-align: center;
+.post-table .post-row:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
-.col-board {
-    width: 100px;
-    flex-shrink: 0;
-    text-align: center;
+/* ✅ 제목은 줄바꿈/말줄임 처리 */
+.post-table .col-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.col-title {
-    flex: 1;
-    text-align: left;
-    padding-left: 12px;
+/* ✅ 제목 링크 색상 보정 (💥 미디어쿼리 밖으로 이동) */
+.post-table .col-title a,
+.post-table .title-link {
+  color: var(--text);
+  text-decoration: none;
 }
 
-.col-writer {
-    width: 120px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.post-table .col-title a:hover,
+.post-table .title-link:hover {
+  color: var(--primary);
+  text-decoration: underline;
 }
 
-.col-date {
-    width: 140px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* ✅ 모바일 대응 (768px 이하) */
+@media (max-width: 768px) {
+  .post-table .post-table-header {
+    display: none;
+  }
+
+  .post-table .post-row {
+    grid-template-columns: 1fr 80px;
+    grid-template-areas:
+      "title writer"
+      "meta meta";
+    gap: 6px;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .post-table .col-num,
+  .post-table .col-board,
+  .post-table .col-date,
+  .post-table .col-views,
+  .post-table .col-likes {
+    display: none;
+  }
+
+  .post-table .col-title {
+    grid-area: title;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .post-table .col-writer {
+    grid-area: writer;
+    justify-self: end;
+  }
 }
-
-.col-views {
-    width: 80px;
-    flex-shrink: 0;
-    text-align: center;
-}
-
-.col-likes {
-    width: 80px;
-    flex-shrink: 0;
-    text-align: center;
-}
-
-/* ✅ 제목 링크 */
-.title-link {
-    color: var(--text);
-    text-decoration: none;
-    display: inline-block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100%;
-}
-
-    .title-link:hover {
-        color: var(--primary);
-        text-decoration: underline;
-    }
-
-/* ✅ 댓글 수 색상 */
-.comment-count {
-    color: var(--primary);
-    margin-left: 4px;
-}
-
-/* ✅ 호버 시 색상 유지 */
-[data-theme="dark"] .post-row:hover {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-
-/* ✅ 글쓴이와 날짜의 수직 중앙 정렬 */
-.col-writer, .col-date {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 
 .comment-count {
     color: var(--primary);
@@ -1402,4 +1373,253 @@ button {
 
 [data-theme="dark"] .inline-password-box .error {
   color: #ff6b6b;
+}
+
+.header-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-buttons a {
+  color: var(--primary);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.auth-buttons a:hover {
+  background-color: var(--accent-bg);
+}
+
+.mypage-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: var(--card-bg);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  border-radius: 6px;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.dropdown-menu a,
+.dropdown-menu button {
+  background: none;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  padding: 8px 16px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.dropdown-menu a:hover,
+.dropdown-menu button:hover {
+  background-color: var(--accent-bg);
+}
+
+/* ===============================
+   🌙 Dark Mode - Quill Editor (통합)
+================================= */
+
+/* 에디터 배경/텍스트 */
+[data-theme="dark"] .ql-container.ql-snow {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+  border: 1px solid #555 !important;
+}
+
+[data-theme="dark"] .ql-editor {
+  background-color: #1e1e1e !important;
+  color: #f5f5f5 !important;
+}
+
+/* 툴바 배경 */
+[data-theme="dark"] .ql-toolbar.ql-snow {
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+}
+
+/* 일반 SVG 아이콘 (굵게, 기울임, 정렬 등) */
+[data-theme="dark"] .ql-toolbar button svg {
+  filter: invert(0.85) brightness(1.2); /* ✅ 밝게 유지 */
+  stroke: none !important;
+  fill: none !important;
+}
+
+/* Hover 시 약간 밝게 */
+[data-theme="dark"] .ql-toolbar button:hover svg {
+  filter: invert(0.9) brightness(1.5);
+}
+
+/* 활성(active) 버튼 파란색 강조 */
+[data-theme="dark"] .ql-toolbar button.ql-active svg {
+  filter: invert(0.7) sepia(1) saturate(6) hue-rotate(190deg); /* 파란빛 강조 */
+}
+
+/* 텍스트 메뉴 (Normal, Header 등) */
+[data-theme="dark"] .ql-toolbar .ql-picker-label,
+[data-theme="dark"] .ql-toolbar .ql-picker-item {
+  color: #f5f5f5 !important;
+}
+
+/* 드롭다운 메뉴 배경 */
+[data-theme="dark"] .ql-picker-options {
+  background-color: #2b2b2b !important;
+  border: 1px solid #555 !important;
+}
+
+/* 선택된 헤더 메뉴 */
+[data-theme="dark"] .ql-picker-label.ql-active {
+  color: #4ea0ff !important;
+}
+
+/* 툴팁 */
+[data-theme="dark"] .ql-tooltip {
+  background-color: #2a2a2a !important;
+  color: #f5f5f5 !important;
+  border: 1px solid #444 !important;
+}
+
+/* 선택된 텍스트 하이라이트 */
+[data-theme="dark"] .ql-editor ::selection {
+  background-color: #3b82f6;
+  color: #fff;
+}
+
+/* ===============================
+   📋 Board / Search Select Styling (완전 수정)
+================================= */
+
+select,
+.search-select {
+  background-color: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 36px 8px 12px;
+  font-size: 15px;
+  outline: none;
+  transition: background 0.3s, border 0.3s;
+  appearance: none;
+
+  /* ✅ 단일 SVG 화살표 (반복 제거) */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path fill='%23666' d='M0 0l5 6 5-6z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px 6px;
+}
+
+select:hover,
+.search-select:hover {
+  border-color: var(--primary);
+  background-color: var(--accent-bg);
+}
+
+/* 🌙 다크모드 */
+[data-theme="dark"] select,
+[data-theme="dark"] .search-select {
+  background-color: #2a2a2a;
+  color: #eee;
+  border-color: #555;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path fill='%23ccc' d='M0 0l5 6 5-6z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+[data-theme="dark"] select:hover,
+[data-theme="dark"] .search-select:hover {
+  background-color: #333;
+  border-color: #4ea0ff;
+}
+
+
+/* ===============================
+   🌙 Dark Mode - Quill Color & Background Picker Fix
+================================= */
+
+/* 팔레트 안의 색상칸(글자색/배경색)을 전체적으로 밝게 */
+[data-theme="dark"] .ql-color-picker .ql-picker-options span,
+[data-theme="dark"] .ql-background-picker .ql-picker-options span {
+  border: 1px solid #444 !important;
+  box-shadow: 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+/* hover 시 테두리 밝게 */
+[data-theme="dark"] .ql-color-picker .ql-picker-options span:hover,
+[data-theme="dark"] .ql-background-picker .ql-picker-options span:hover {
+  border-color: #4ea0ff !important;
+  box-shadow: 0 0 3px #4ea0ff;
+}
+
+/* 선택된 색상칸(현재 선택 중인 글자색/배경색) 강조 */
+[data-theme="dark"] .ql-picker-options .ql-selected {
+  outline: 1px solid #4ea0ff !important;
+  box-shadow: 0 0 3px #4ea0ff;
+}
+
+/* 선택된 색상표시 점(label) 밝게 */
+[data-theme="dark"] .ql-color-picker .ql-picker-label svg,
+[data-theme="dark"] .ql-background-picker .ql-picker-label svg {
+  filter: invert(0.8) brightness(1.2);
+}
+
+/* 정렬 아이콘 (left/center/right/justify) 밝게 */
+[data-theme="dark"] .ql-toolbar .ql-align {
+  filter: invert(0.85) brightness(1.3);
+}
+
+/* Hover 시 조금 더 밝게 */
+[data-theme="dark"] .ql-toolbar .ql-align:hover {
+  filter: invert(0.9) brightness(1.6);
+}
+
+/* 선택(active)된 정렬 아이콘은 파란색 톤 */
+[data-theme="dark"] .ql-toolbar .ql-align.ql-active {
+  filter: invert(0.7) sepia(1) saturate(6) hue-rotate(190deg);
+}
+
+/* 이미지 리사이즈 핸들 표시 */
+.ql-image-resize-overlay,
+.ql-image-resize-handle {
+  z-index: 9999 !important;
+}
+
+[data-theme="dark"] .ql-image-resize-handle {
+  background: #4ea0ff !important;
+  border-color: #fff !important;
+}
+
+/* 다크모드 수식 대비 */
+[data-theme="dark"] .katex,
+[data-theme="dark"] .katex * {
+  color: #f5f5f5 !important;
+  fill: #f5f5f5 !important;
+  stroke: #f5f5f5 !important;
+  background: transparent !important;
+}
+
+/* ✍️ 작성 페이지에서만 크기 조절 커서 유지 */
+.write-page .ql-editor img {
+  cursor: nwse-resize !important;
+}
+
+/* 📖 읽기(본문) 페이지에서는 기본 커서로 */
+.post-content img,
+.read-page .ql-editor img {
+  cursor: auto !important;
 }

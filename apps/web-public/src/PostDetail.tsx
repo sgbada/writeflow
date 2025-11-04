@@ -4,7 +4,8 @@ import { usePostsStore } from './store/posts'
 import type { Comment } from './lib/types'
 
 export default function PostDetail() {
-  const { id } = useParams<{ id: string }>()
+  // ✅ id와 slug 둘 다 가져옴
+  const { id, slug } = useParams<{ id: string; slug?: string }>()
   const postId = Number(id)
   const navigate = useNavigate()
   const {
@@ -17,11 +18,20 @@ export default function PostDetail() {
   } = usePostsStore()
   const post = posts.find((p) => p.id === postId)
 
+  // ✅ 슬러그 불일치 시 URL 정규화 (SEO friendly)
+  useEffect(() => {
+    if (post && slug !== post.slug) {
+      navigate(`/post/${post.id}/${post.slug}`, { replace: true })
+    }
+  }, [post, slug, navigate])
+
+  // ✅ 좋아요 상태
   const [liked, setLiked] = useState<boolean>(() => {
     const likedPosts: number[] = JSON.parse(localStorage.getItem('likedPosts') || '[]')
     return likedPosts.includes(postId)
   })
 
+  // ✅ 댓글/수정/삭제 상태 관리
   const [nickname, setNickname] = useState('')
   const [comment, setComment] = useState('')
   const [commentPwd, setCommentPwd] = useState('')
@@ -42,7 +52,10 @@ export default function PostDetail() {
     const myPosts = JSON.parse(localStorage.getItem('myPosts') || '[]') as number[]
     if (myPosts.includes(postId)) return // 내가 쓴 글이면 조회수 증가 X
 
-    const viewedPosts = JSON.parse(localStorage.getItem('viewedPosts') || '{}') as Record<number, number>
+    const viewedPosts = JSON.parse(localStorage.getItem('viewedPosts') || '{}') as Record<
+      number,
+      number
+    >
     const now = Date.now()
     const HOUR_MS = 60 * 60 * 1000 // 1시간
 
@@ -111,47 +124,59 @@ export default function PostDetail() {
       <h1>{post.title}</h1>
 
       <div className="meta">
-        익명 | {new Date(post.createdAt).toLocaleString()} | 조회 {post.views ?? 0} | 추천 {post.likes ?? 0}
+        익명 | {new Date(post.createdAt).toLocaleString()} | 조회 {post.views ?? 0} | 추천{' '}
+        {post.likes ?? 0}
       </div>
 
       <hr className="post-divider" />
+
+      {/* ✅ Lazy 이미지 + 크기 예약 */}
+      {post.coverImageUrl && (
+        <img
+          src={post.coverImageUrl}
+          alt={post.title}
+          loading="lazy"
+          width="600"
+          height="400"
+          style={{
+            objectFit: 'cover',
+            aspectRatio: '3/2',
+            display: 'block',
+            margin: '1rem auto',
+            borderRadius: '8px',
+          }}
+        />
+      )}
 
       <div className="post-content" dangerouslySetInnerHTML={{ __html: post.content }} />
 
       {/* 👍 추천 버튼 */}
       <div className="like-section">
-        <button
-          className={`like-btn ${liked ? 'liked' : ''}`}
-          onClick={handleLike}
-          disabled={liked}
-        >
+        <button className={`like-btn ${liked ? 'liked' : ''}`} onClick={handleLike} disabled={liked}>
           {liked ? '👍 추천됨' : '👍 추천하기'} <span className="like-count">{post.likes || 0}</span>
         </button>
       </div>
 
-{post.tags && post.tags.length > 0 && (
-  <div className="post-tags">
-    {(showAllTags ? post.tags : post.tags.slice(0, 10)).map((tag, i) => (
-      <Link
-        key={i}
-        to={`/search?q=%23${encodeURIComponent(tag)}`}
-        className="tag-link small"
-      >
-        #{tag}
-      </Link>
-    ))}
+      {/* 🔖 태그 */}
+      {post.tags && post.tags.length > 0 && (
+        <div className="post-tags">
+          {(showAllTags ? post.tags : post.tags.slice(0, 10)).map((tag, i) => (
+            <Link
+              key={i}
+              to={`/search?q=%23${encodeURIComponent(tag)}`}
+              className="tag-link small"
+            >
+              #{tag}
+            </Link>
+          ))}
 
-    {post.tags.length > 10 && (
-      <button
-        className="tag-more"
-        onClick={() => setShowAllTags((prev) => !prev)}
-      >
-        {showAllTags ? '접기 ▲' : `+${post.tags.length - 10}개 더보기 ▼`}
-      </button>
-    )}
-  </div>
-)}
-
+          {post.tags.length > 10 && (
+            <button className="tag-more" onClick={() => setShowAllTags((prev) => !prev)}>
+              {showAllTags ? '접기 ▲' : `+${post.tags.length - 10}개 더보기 ▼`}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ✏️ 수정 / 삭제 버튼 */}
       <div className="post-actions">
