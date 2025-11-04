@@ -8,6 +8,7 @@ import 'react-quill/dist/quill.snow.css'
 import 'katex/dist/katex.min.css'
 import katex from 'katex'
 
+// ✅ 수식 렌더링용
 if (typeof window !== 'undefined') {
   // @ts-ignore
   window.katex = katex
@@ -20,7 +21,6 @@ Quill.register('modules/imageResize', ImageResize)
 // ✅ 이미지 이동/정렬용 BlotFormatter 등록
 import BlotFormatter from 'quill-blot-formatter'
 Quill.register('modules/blotFormatter', BlotFormatter)
-
 
 export default function WritePost() {
   const navigate = useNavigate()
@@ -74,26 +74,55 @@ export default function WritePost() {
     return () => observer.disconnect()
   }, [])
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean)
-    const newPost: Post = {
-      id: postId || Date.now(),
-      title,
-      content,
-      board,
-      tags: tagList,
-      slug: title.trim().toLowerCase().replace(/[^\w가-힣]+/g, '-'),
-      createdAt: new Date().toISOString(),
-      password,
-      likes: existing?.likes ?? 0,
-      comments: existing?.comments ?? [],
-      images,
-    }
-    if (id) editPost(postId!, newPost)
-    else addPost(newPost)
-    navigate('/')
+  // ✅ 태그 입력 시 중복 제거 & 자동 정리
+  const [tagInput, setTagInput] = useState(existing?.tags?.join(', ') || '')
+
+const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const input = e.target.value
+  setTagInput(input) // ✅ 일단 입력 그대로 반영
+
+  // 입력 중간에서도 파싱 로직은 별도로
+  const tagList = input
+    .split(/[\s,]+/) // 쉼표/공백 모두 구분자로 처리
+    .map((t) => t.trim().replace(/^#/, ''))
+    .filter(Boolean)
+
+  const uniqueTags = Array.from(new Set(tagList)).slice(0, 30)
+  setTags(uniqueTags)
+}
+
+const handleSubmit = (e: FormEvent) => {
+  e.preventDefault()
+
+  // ✅ tags는 이미 배열 상태이므로 그대로 정제만 하면 됨
+  const uniqueTags = Array.from(
+    new Set(
+      (Array.isArray(tags) ? tags : tags.split(/[\s,]+/))
+        .map((t) => t.trim().replace(/^#/, ''))
+        .filter(Boolean)
+    )
+  )
+
+  const newPost: Post = {
+    id: postId || Date.now(),
+    title,
+    content,
+    board,
+    tags: uniqueTags, // ✅ 중복 없는 태그만 저장
+    slug: title.trim().toLowerCase().replace(/[^\w가-힣]+/g, '-'),
+    createdAt: new Date().toISOString(),
+    password,
+    likes: existing?.likes ?? 0,
+    comments: existing?.comments ?? [],
+    images,
   }
+
+  if (id) editPost(postId!, newPost)
+  else addPost(newPost)
+
+  navigate('/')
+}
+
 
   return (
     <div className="container write-page">
@@ -127,11 +156,12 @@ export default function WritePost() {
         </div>
 
         <input
-          type="text"
-          placeholder="태그 (쉼표로 구분, 최대 30개)"
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-        />
+  type="text"
+  placeholder="태그 (쉼표나 띄어쓰기로 구분, 최대 30개)"
+  value={tagInput}
+  onChange={handleTagChange}
+/>
+
 
         {!id && (
           <input
