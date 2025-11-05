@@ -1,7 +1,8 @@
-import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { usePostsStore } from './store/posts'
-import { useState, useEffect, ChangeEvent, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import type { Post } from './lib/types'
+
 const slugify = (title: string) =>
   title
     ? title
@@ -28,12 +29,22 @@ export default function PostsList() {
   const [board, setBoard] = useState(boardName || '전체')
   const [query, setQuery] = useState(tagName ? `#${tagName}` : '')
   const [mode, setMode] = useState<'all' | 'title' | 'content' | 'tag'>(tagName ? 'tag' : 'all')
-  const [page, setPage] = useState(1)
+
+  // ✅ 페이지 번호를 URL 쿼리와 동기화
+  const [searchParams, setSearchParams] = useSearchParams()
+  const pageParam = Number(searchParams.get('page')) || 1
+  const [page, setPage] = useState(pageParam)
+
   const postsPerPage = 15
-  //const TITLE_LIMIT = 25
   const isPopular = location.pathname.startsWith('/popular')
   const [inputValue, setInputValue] = useState('')
   const POPULAR_THRESHOLD = 1
+
+  // ✅ URL의 page 쿼리 변화 감지 → 상태 반영
+  useEffect(() => {
+    const current = Number(searchParams.get('page')) || 1
+    setPage(current)
+  }, [searchParams])
 
   // ✅ 검색어 및 경로 상태 동기화
   useEffect(() => {
@@ -50,29 +61,22 @@ export default function PostsList() {
       setQuery('')
       setInputValue('')
       setMode('all')
-    } 
-    // ✅ 카테고리 페이지
-    else if (categorySlug) {
+    } else if (categorySlug) {
       setBoard(`카테고리: ${categorySlug}`)
       setQuery('')
       setInputValue('')
       setMode('all')
-    } 
-    // ✅ 태그 페이지 (/tag/:slug)
-    else if (slug) {
+    } else if (slug) {
       setBoard(`태그: #${slug}`)
       setQuery(`#${slug}`)
       setInputValue(`#${slug}`)
       setMode('tag')
-    } 
-    // ✅ 작성자 페이지 (/author/:id)
-    else if (id) {
+    } else if (id) {
       setBoard(`작성자 ${id}`)
       setQuery('')
       setInputValue('')
       setMode('all')
-    }
-    else {
+    } else {
       setBoard(boardName || '전체')
       if (tagName) {
         setQuery(`#${tagName}`)
@@ -85,8 +89,21 @@ export default function PostsList() {
       }
     }
 
-    setPage(1)
-  }, [location.pathname, location.search, boardName, tagName, categorySlug, slug, id, isPopular])
+    // ✅ URL에 page가 없는 경우만 1페이지로 초기화
+    if (!searchParams.get('page')) {
+      setPage(1)
+    }
+  }, [
+    location.pathname,
+    location.search,
+    boardName,
+    tagName,
+    categorySlug,
+    slug,
+    id,
+    isPopular,
+    searchParams,
+  ])
 
   // ✅ 검색 제출 시 query 갱신
   const handleSearchSubmit = (e: FormEvent) => {
@@ -100,21 +117,17 @@ export default function PostsList() {
     const isSearchPage = location.pathname.startsWith('/search')
     const q = (isSearchPage ? query : '').replace(/^#/, '').toLowerCase()
 
-    // ✅ board 필터
     const boardMatch =
       isPopular || isSearchPage || categorySlug || slug || id
         ? true
         : board === '전체' || p.board === board
 
-    // ✅ category 필터
     const categoryMatch = categorySlug ? p.category?.toLowerCase() === categorySlug.toLowerCase() : true
-
-    // ✅ author 필터
     const authorMatch = id ? String(p.authorId) === id : true
 
     if (!q && !slug) return boardMatch && categoryMatch && authorMatch
 
-    // ✅ 태그 페이지
+    // ✅ 태그 검색
     if (slug || mode === 'tag' || query.startsWith('#')) {
       const tagToMatch = slug || query.replace(/^#/, '')
       return (
@@ -226,15 +239,17 @@ export default function PostsList() {
               <div className="col-num">{filtered.length - (start + idx)}</div>
               <div className="col-board">[{p.board}]</div>
               <div className="col-title">
-                <Link to={`/post/${p.id}/${slugify(p.title || String(p.id))}`} className="title-link">
-                  {(p.likes ?? 0) >= POPULAR_THRESHOLD && <span className="badge-hot">🔥 인기</span>}
-                  {p.title}
-                  {p.comments?.length > 0 && <span className="comment-count">[{p.comments.length}]</span>}
-                </Link>
-
-
+                <Link
+                    to={`/post/${p.id}/${slugify(p.title || String(p.id))}`}
+                    state={{ fromPage: page }}   // ✅ 현재 페이지 상태 전달
+                    className="title-link"
+                    onClick={() => window.scrollTo(0, 0)}
+                  >
+                    {(p.likes ?? 0) >= POPULAR_THRESHOLD && <span className="badge-hot">🔥 인기</span>}
+                    {p.title}
+                    {p.comments?.length > 0 && <span className="comment-count">[{p.comments.length}]</span>}
+                  </Link>
               </div>
-              {/* ✅ 작성자 페이지 링크 */}
               <div className="col-writer">
                 {p.authorId ? (
                   <Link to={`/author/${p.authorId}`}>{p.authorName ?? '작성자'}</Link>
@@ -242,7 +257,6 @@ export default function PostsList() {
                   <span>익명</span>
                 )}
               </div>
-
               <div className="col-date">{formatDate(p.createdAt)}</div>
               <div className="col-views">{p.views ?? 0}</div>
               <div className="col-likes">{p.likes ?? 0}</div>
@@ -252,26 +266,68 @@ export default function PostsList() {
       )}
 
       {/* 페이지네이션 */}
-      {totalPages > 1 && (
-        <div className="pagination">
-          {Array.from({ length: totalPages }).map((_, i) => (
+    {totalPages > 1 && (
+      <div className="pagination">
+        {/* 이전 그룹 */}
+        {page > 10 && (
+          <button
+            className="arrow"
+            onClick={() => {
+              const prevGroup = Math.floor((page - 1) / 10) * 10
+              setPage(prevGroup)
+              setSearchParams({ page: String(prevGroup) })
+              window.scrollTo({ top: 0 })
+            }}
+          >
+            ◀
+          </button>
+        )}
+
+        {/* 현재 그룹의 페이지 번호 10개 */}
+        {Array.from({ length: Math.min(10, totalPages - Math.floor((page - 1) / 10) * 10) }).map((_, i) => {
+          const start = Math.floor((page - 1) / 10) * 10 + 1
+          const num = start + i
+          return (
             <button
-              key={i}
-              className={page === i + 1 ? 'active' : ''}
-              onClick={() => setPage(i + 1)}
+              key={num}
+              className={page === num ? 'active' : ''}
+              onClick={() => {
+                setPage(num)
+                setSearchParams({ page: String(num) })
+                window.scrollTo({ top: 0 })
+              }}
             >
-              {i + 1}
+              {num}
             </button>
-          ))}
-        </div>
-      )}
+          )
+        })}
+
+        {/* 다음 그룹 */}
+        {Math.floor((page - 1) / 10) * 10 + 10 < totalPages && (
+          <button
+            className="arrow"
+            onClick={() => {
+              const nextGroup = Math.floor((page - 1) / 10) * 10 + 11
+              setPage(nextGroup)
+              setSearchParams({ page: String(nextGroup) })
+              window.scrollTo({ top: 0 })
+            }}
+          >
+            ▶
+          </button>
+        )}
+      </div>
+    )}
+
 
       {/* 검색창 */}
       <div className="search-area">
         <form onSubmit={handleSearchSubmit} className="search-form">
           <select
             value={mode}
-            onChange={(e) => setMode(e.target.value as 'all' | 'title' | 'content' | 'tag')}
+            onChange={(e) =>
+              setMode(e.target.value as 'all' | 'title' | 'content' | 'tag')
+            }
             className="search-select"
           >
             <option value="all">전체</option>
@@ -287,7 +343,9 @@ export default function PostsList() {
             className="search-box"
           />
 
-          <button type="submit" className="search-btn">🔍 검색</button>
+          <button type="submit" className="search-btn">
+            🔍 검색
+          </button>
         </form>
       </div>
     </div>

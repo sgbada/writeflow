@@ -858,10 +858,13 @@ button {
     display: none;
   }
 
+  /* ✅ 제목 한 줄로 고정 + 말줄임 처리 */
   .post-table .col-title {
     grid-area: title;
-    white-space: normal;
-    word-break: break-word;
+    min-width: 0;             /* flex/grid 안에서 필수 */
+    white-space: nowrap;      /* 줄바꿈 금지 */
+    overflow: hidden;         /* 넘침 숨기기 */
+    text-overflow: ellipsis;  /* ... 표시 */
   }
 
   .post-table .col-writer {
@@ -869,6 +872,7 @@ button {
     justify-self: end;
   }
 }
+
 
 .comment-count {
     color: var(--primary);

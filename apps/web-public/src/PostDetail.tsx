@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom' //
 import { useState, FormEvent, useEffect } from 'react'
 import { usePostsStore } from './store/posts'
 import type { Comment } from './lib/types'
@@ -17,6 +17,8 @@ export default function PostDetail() {
     incrementViews, // ✅ 조회수 함수
   } = usePostsStore()
   const post = posts.find((p) => p.id === postId)
+  const location = useLocation()
+  const fromPage = location.state?.fromPage || 1
 
   // ✅ 슬러그 불일치 시 URL 정규화 (SEO friendly)
   useEffect(() => {
@@ -284,7 +286,15 @@ export default function PostDetail() {
       </div>
 
       <hr className="post-divider" />
-      <Link to="/">← 목록으로</Link>
+      <button
+        onClick={() => {
+          if (window.history.state && window.history.state.idx > 0) navigate(-1)
+          else navigate(`/?page=${fromPage}`)
+        }}
+      >
+        ← 목록으로
+      </button>
+
     </div>
   )
 }
