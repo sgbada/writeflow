@@ -1716,156 +1716,78 @@ select:hover,
   color: var(--muted);
 }
 
-/* 댓글 등록 버튼 스타일 그대로 사용 */
-.comment-submit-btn {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.comment-submit-btn:hover {
-  background: var(--primary-dark);
-}
-
-/* 🌙 다크모드 대응 */
-[data-theme="dark"] .write-btn-left button {
-  background: #2a2a2a;
-  color: #eee;
-  border-color: #555;
-}
-
-[data-theme="dark"] .write-btn-left button:hover {
-  background: #333;
-}
-
-.comment-pagination {
-  margin-top: 12px;
-}
-
-
-/* 🌙 다크모드일 때도 수식 텍스트는 검정으로 고정 */
-[data-theme="dark"] .ql-editor .katex {
-  color: #000 !important;
-}
-
-[data-theme="dark"] .ql-editor .katex .base,
-[data-theme="dark"] .ql-editor .katex .mord,
-[data-theme="dark"] .ql-editor .katex .mord .text,
-[data-theme="dark"] .ql-editor .katex .mord .mathnormal {
-  color: #000 !important;
-}
-.reply-btn {
-  background: none;
-  border: none;
-  font-size: 15px;
-  cursor: pointer;
-  color: var(--muted);
-  transition: color 0.2s ease;
-}
-.reply-btn:hover {
-  color: var(--primary);
-}
-
-/* 답글 입력폼 */
-.reply-form {
-  margin-top: 10px;
-  border-left: 3px solid var(--primary);
-  padding-left: 1rem;
-}
-.reply-fields {
-  display: flex;
-  gap: 8px;
-}
-.reply-left {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  width: 120px;
-}
-.reply-right {
-  flex: 1;
-  display: flex;
-  gap: 6px;
-}
-.reply-right textarea {
-  flex: 1;
-  min-height: 55px;
-  resize: vertical;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 6px 8px;
-}
-.reply-right button {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 10px;
-  cursor: pointer;
-}
-.reply-right button:hover {
-  background: var(--primary-dark);
-}
-
-/* 🧩 답글 영역 */
+/* ✅ 댓글 리스트 공통 */
+.comment-list,
 .reply-list {
-  margin-top: 8px;
-  margin-left: 20px;
-  position: relative;
-  padding-left: 20px;
-}
-.reply-item {
-  position: relative;
-  margin-top: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-/* 답글 왼쪽 연결선 */
-.reply-line {
-  position: absolute;
-  left: -12px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--border);
-  border-radius: 1px;
-}
-
-/* 답글 박스 */
-.reply-box {
-  background: var(--card-bg, #fafafa);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border: 1px solid var(--border, #ddd);
-}
-.reply-box:hover {
-  background: rgba(0, 0, 0, 0.08);
-}
-
-/* 답글 안의 작성자 */
-.badge-writer {
-  background: var(--primary);
-  color: white;
-  border-radius: 4px;
-  font-size: 11px;
-  padding: 1px 4px;
-  margin-left: 4px;
-}
-
+/* ✅ 댓글 기본 */
 .comment-item {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
 }
 
-/* ✅ 답글 버튼 (⤷ 고정) */
+/* ✅ 답글 리스트 */
+.reply-list {
+  margin-left: 0;
+  border-left: none;
+  padding-left: 0;
+}
+
+/* ✅ 각 답글은 회색 가로선으로 위를 구분 */
+.reply-item {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+/* ✅ 깊이에 따른 배경 색 (점점 진해짐) */
+.reply-box {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.reply-list .reply-list .reply-box {
+  background: rgba(0, 0, 0, 0.05);
+}
+.reply-list .reply-list .reply-list .reply-box {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+/* ✅ 다크모드 대응 */
+[data-theme="dark"] .reply-box {
+  background: rgba(255, 255, 255, 0.05);
+}
+[data-theme="dark"] .reply-list .reply-list .reply-box {
+  background: rgba(255, 255, 255, 0.08);
+}
+[data-theme="dark"] .reply-list .reply-list .reply-list .reply-box {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ✅ 닉네임 앞 ⤷ 표시 */
+.reply-box .c-author::before {
+  content: "⤷ ";
+  color: var(--muted);
+  font-size: 13px;
+  margin-right: 2px;
+}
+
+/* ✅ 댓글 본문 */
+.c-body {
+  margin-top: 4px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ✅ 답글 달기 버튼 */
 .reply-btn {
   background: none;
   border: none;
@@ -1878,52 +1800,11 @@ select:hover,
   color: var(--primary);
 }
 
-/* ✅ 답글 영역 구분 */
-.comment-list,
-.reply-list {
-  list-style: none; /* ✅ 점, 사각형, 원 제거 */
-  margin: 0;
-  padding-left: 0;
-}
-
-.comment-item,
-.reply-item {
-  margin-bottom: 1rem;
-}
-
-.reply-line {
-  position: absolute;
-  left: -1.2rem;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--border);
-  border-radius: 2px;
-}
-
-/* ✅ 답글 박스: 어두운 배경 */
-.reply-box {
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 6px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  transition: background 0.2s ease;
-}
-[data-theme="dark"] .reply-box {
-  background: rgba(255, 255, 255, 0.08);
-}
-.reply-box:hover {
-  background: rgba(0, 0, 0, 0.12);
-}
-[data-theme="dark"] .reply-box:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-/* ✅ 답글 입력창 */
+/* ✅ 답글 입력폼 */
 .reply-form {
   margin-top: 10px;
-  padding-left: 1rem;
-  border-left: 3px solid var(--primary);
+  padding: 10px 0;
+  border-top: 1px solid var(--primary);
 }
 .reply-fields {
   display: flex;
@@ -1970,73 +1851,17 @@ select:hover,
   margin-left: 4px;
 }
 
-/* 댓글 전체 기본 박스 */
-.comment-item {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  transition: background 0.2s ease;
-}
-
-/* 답글 리스트 전체 들여쓰기 */
-.reply-list {
-  margin-left: 28px; /* ✅ 부모보다 들여쓰기 */
-  border-left: 3px solid var(--border);
-  padding-left: 16px;
-}
-
-/* 개별 답글 박스 */
-.reply-box {
-  background: rgba(0, 0, 0, 0.06); /* ✅ 살짝 어두운 배경 */
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  transition: background 0.2s ease;
-}
-
-.reply-box:hover {
-  background: rgba(0, 0, 0, 0.09);
-}
-
-/* 다크모드일 때 답글 박스 */
-[data-theme="dark"] .reply-box {
-  background: rgba(255, 255, 255, 0.08);
-}
-[data-theme="dark"] .reply-box:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-/* 답글 달기 버튼 (⤷) */
-.reply-btn {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 18px;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-.reply-btn:hover {
-  color: var(--primary);
-}
-
-/* 답글 입력창도 들여쓰기 */
-.reply-form {
-  margin-top: 10px;
-  margin-left: 28px;
-  padding-left: 14px;
-  border-left: 3px solid var(--primary);
-}
-
-.c-body {
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.c-body a,
+/* ✅ 멘션 강조 */
 .c-body span.mention {
-  color: #2d7ff9;
+  color: var(--primary);
   font-weight: 500;
+}
+
+/* ✅ 닉네임 앞 ⤷ 표시 (답글 전용) */
+.reply-item .c-author::before {
+  content: "⤷ ";
+  color: var(--muted);
+  font-size: 13px;
+  margin-right: 3px;
+  opacity: 0.8;
 }
