@@ -1,9 +1,11 @@
 export interface Comment {
   id: number
   author: string
+  authorId: string // ✅ 추가
   text: string
   password?: string
   createdAt: string
+  parentId?: number
 }
 
 export interface Post {
@@ -18,7 +20,6 @@ export interface Post {
   comments: Comment[]
   createdAt: string
   images?: string[]
-
-  // ✅ 작성자 이름(혹은 ID)을 추가
   author: string
+  authorId: string // ✅ 추가
 }

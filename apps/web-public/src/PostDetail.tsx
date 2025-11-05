@@ -25,6 +25,8 @@ export default function PostDetail() {
   const [commentPwd, setCommentPwd] = useState('')
   const [commentDeletePwd, setCommentDeletePwd] = useState('')
   const [commentDeleteId, setCommentDeleteId] = useState<number | null>(null)
+  const [anonymousMap, setAnonymousMap] = useState<Record<string, number>>({})
+  const [replyInputs, setReplyInputs] = useState<Record<number, { nickname: string; password: string; text: string }>>({})
   const [commentDeleteError, setCommentDeleteError] = useState('')
   const [editPwd, setEditPwd] = useState('')
   const [editError, setEditError] = useState('')
@@ -51,6 +53,7 @@ export default function PostDetail() {
     (commentPage - 1) * commentsPerPage,
     commentPage * commentsPerPage
   )
+  const [replyToId, setReplyToId] = useState<number | null>(null)
 
   // ✅ 슬러그 정규화
   useEffect(() => {
@@ -101,20 +104,41 @@ export default function PostDetail() {
     navigate('/')
   }
 
-  // ✅ 댓글 추가 / 삭제
-  const handleAddComment = (e: FormEvent) => {
-    e.preventDefault()
-    if (!comment.trim()) return
-    const newComment: Omit<Comment, 'id' | 'createdAt'> & { password?: string } = {
-      author: nickname || '익명',
-      text: comment.trim(),
-      password: commentPwd || undefined,
-    }
-    addComment(postId, newComment)
+const handleAddComment = (e: FormEvent, parentId?: number) => {
+  e.preventDefault()
+  const input = parentId
+    ? replyInputs[parentId]
+    : { nickname, password: commentPwd, text: comment }
+  if (!input.text.trim()) return
+
+  const userId = localStorage.getItem('userId') || crypto.randomUUID()
+  localStorage.setItem('userId', userId)
+
+  // ✅ 실제 저장 (언급 제거 버전)
+addComment(postId, {
+  author: input.nickname || '익명',
+  authorId: userId,
+  text: input.text.trim(), // ✅ @닉네임 제거
+  password: input.password || undefined,
+  parentId,
+})
+
+
+  // ✅ 입력 초기화
+  if (parentId) {
+    setReplyInputs((prev) => ({
+      ...prev,
+      [parentId]: { nickname: '', password: '', text: '' },
+    }))
+    setReplyToId(null)
+  } else {
     setComment('')
     setNickname('')
     setCommentPwd('')
   }
+}
+
+
   const handleCommentDelete = (cid: number) => {
     const success = deleteComment(postId, cid, commentDeletePwd)
     if (!success) setCommentDeleteError('비밀번호가 올바르지 않습니다.')
@@ -124,6 +148,122 @@ export default function PostDetail() {
       setCommentDeletePwd('')
     }
   }
+  const renderReplies = (parentId: number): JSX.Element | null => {
+  const childReplies = sortedComments.filter((r) => r.parentId === parentId)
+  if (childReplies.length === 0) return null
+
+  return (
+    <ul className="reply-list">
+      {childReplies.map((r) => {
+        const isReplyWriter = r.authorId && post.authorId && r.authorId === post.authorId
+        return (
+          <li key={r.id} className="reply-item">
+            <div className="reply-box">
+              <div className="c-head">
+                <div className="c-info">
+                  <strong className="c-author">
+                    {getDisplayName(r)}
+                    {isReplyWriter && <span className="badge-writer">작성자</span>}
+                  </strong>
+                  <span className="c-time">{new Date(r.createdAt).toLocaleString()}</span>
+                </div>
+                <div className="c-actions">
+                  <button className="reply-btn" onClick={() => setReplyToId(r.id)}>
+                    ⤷
+                  </button>
+                  <button className="c-delete" onClick={() => setCommentDeleteId(r.id)}>
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              <div
+                className="c-body"
+                dangerouslySetInnerHTML={{
+                  __html: r.text.replace(
+                    /@([^\s]+)/g,
+                    '<span class="mention">@$1</span>'
+                  ),
+                }}
+              />
+
+              {/* ✅ 답글 입력창 */}
+              {replyToId === r.id && (
+                <form onSubmit={(e) => handleAddComment(e, r.id)} className="reply-form">
+                  <div className="replying-info">
+                    💬 {getDisplayName(r)}님에게 답글 작성 중...
+                    <button
+                      type="button"
+                      onClick={() => setReplyToId(null)}
+                      className="cancel-reply"
+                    >
+                      취소
+                    </button>
+                  </div>
+                  <div className="reply-fields">
+                    <div className="reply-left">
+                      <input
+                        type="text"
+                        placeholder="닉네임"
+                        value={replyInputs[r.id]?.nickname || ''}
+                        onChange={(e) =>
+                          setReplyInputs((prev) => ({
+                            ...prev,
+                            [r.id]: { ...(prev[r.id] || {}), nickname: e.target.value },
+                          }))
+                        }
+                      />
+                      <input
+                        type="password"
+                        placeholder="비밀번호"
+                        value={replyInputs[r.id]?.password || ''}
+                        onChange={(e) =>
+                          setReplyInputs((prev) => ({
+                            ...prev,
+                            [r.id]: { ...(prev[r.id] || {}), password: e.target.value },
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="reply-right">
+                      <textarea
+                        placeholder="답글을 입력하세요."
+                        value={replyInputs[r.id]?.text || ''}
+                        onChange={(e) =>
+                          setReplyInputs((prev) => ({
+                            ...prev,
+                            [r.id]: { ...(prev[r.id] || {}), text: e.target.value },
+                          }))
+                        }
+                        required
+                      />
+                      <button type="submit">등록</button>
+                    </div>
+                  </div>
+                </form>
+              )}
+
+              {/* 🔁 하위 답글 재귀 렌더링 */}
+              {renderReplies(r.id)}
+            </div>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+  // ✅ 익명 넘버링 함수
+const getDisplayName = (c: Comment): string => {
+  if (c.author !== '익명') return c.author
+  if (!c.authorId) return '익명'
+  if (!anonymousMap[c.authorId]) {
+    const next = Object.keys(anonymousMap).length + 1
+    setAnonymousMap((prev) => ({ ...prev, [c.authorId]: next }))
+    return `익명${next}`
+  }
+  return `익명${anonymousMap[c.authorId]}`
+}
+
 
   return (
     <div className="container post-detail">
@@ -224,34 +364,54 @@ export default function PostDetail() {
         </div>
       )}
 
-      {/* 💬 댓글 영역 */}
-      <div className="comment-area">
-        <h2>댓글</h2>
+{/* 💬 댓글 영역 */}
+<div className="comment-area">
+  <h2>댓글</h2>
 
-        {/* 정렬 버튼 */}
-        <div className="comment-sort">
-          <button
-            className={sortOrder === 'oldest' ? 'active' : ''}
-            onClick={() => setSortOrder('oldest')}
-          >
-            등록순
-          </button>
-          <button
-            className={sortOrder === 'newest' ? 'active' : ''}
-            onClick={() => setSortOrder('newest')}
-          >
-            최신순
-          </button>
-        </div>
+  {/* 정렬 버튼 */}
+  <div className="comment-sort">
+    <button
+      className={sortOrder === 'oldest' ? 'active' : ''}
+      onClick={() => setSortOrder('oldest')}
+    >
+      등록순
+    </button>
+    <button
+      className={sortOrder === 'newest' ? 'active' : ''}
+      onClick={() => setSortOrder('newest')}
+    >
+      최신순
+    </button>
+  </div>
 
-        <ul className="comment-list">
-          {currentComments.map((c) => (
-            <li key={c.id} className="comment-item">
-              <div className="c-head">
-                <div className="c-info">
-                  <strong className="c-author">{c.author}</strong>
-                  <span className="c-time">{new Date(c.createdAt).toLocaleString()}</span>
-                </div>
+  <ul className="comment-list">
+    {sortedComments
+      .filter((c) => !c.parentId) // 부모 댓글만
+      .map((c) => {
+        const isWriter = c.authorId && post.authorId && c.authorId === post.authorId
+        const replies = sortedComments.filter((r) => r.parentId === c.id)
+
+        return (
+          <li key={c.id} className="comment-item">
+            <div className="c-head">
+              <div className="c-info">
+                <strong className="c-author">
+                  {getDisplayName(c)}
+                  {isWriter && <span className="badge-writer">작성자</span>}
+                </strong>
+
+                <span className="c-time">
+                  {new Date(c.createdAt).toLocaleString()}
+                </span>
+              </div>
+              <div className="c-actions">
+                <button
+                  className="reply-btn"
+                  onClick={() => setReplyToId(c.id)}
+                  title="답글 달기"
+                >
+                  ⤷
+                </button>
                 <button
                   className="c-delete"
                   onClick={() => setCommentDeleteId(c.id)}
@@ -260,84 +420,118 @@ export default function PostDetail() {
                   ✕
                 </button>
               </div>
-
-              <div className="c-body">{c.text}</div>
-
-              {commentDeleteId === c.id && (
-                <div className="popup-box">
-                  <input
-                    type="password"
-                    placeholder="댓글 비밀번호 입력"
-                    value={commentDeletePwd}
-                    onChange={(e) => setCommentDeletePwd(e.target.value)}
-                  />
-                  <button onClick={() => handleCommentDelete(c.id)}>삭제 확인</button>
-                  {commentDeleteError && <p className="error">{commentDeleteError}</p>}
-                </div>
-              )}
-            </li>
-          ))}
-          {totalComments === 0 && <p>첫 댓글을 남겨보세요.</p>}
-        </ul>
-
-        {/* 페이지네이션 */}
-        {totalCommentPages > 1 && (
-          <div className="pagination comment-pagination">
-            {groupStart > 1 && (
-              <button className="arrow" onClick={() => setCommentPage(groupStart - 10)}>
-                ◀
-              </button>
-            )}
-            {Array.from({ length: groupEnd - groupStart + 1 }).map((_, i) => {
-              const pageNum = groupStart + i
-              return (
-                <button
-                  key={pageNum}
-                  className={commentPage === pageNum ? 'active' : ''}
-                  onClick={() => setCommentPage(pageNum)}
-                >
-                  {pageNum}
-                </button>
-              )
-            })}
-            {groupEnd < totalCommentPages && (
-              <button className="arrow" onClick={() => setCommentPage(groupEnd + 1)}>
-                ▶
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* 댓글 작성 */}
-        <form onSubmit={handleAddComment} className="comment-form">
-          <div className="comment-side">
-            <input
-              type="text"
-              placeholder="닉네임 (최대 10자)"
-              value={nickname}
-              onChange={(e) => {
-                if (e.target.value.length <= 10) setNickname(e.target.value)
+            </div>
+            <div
+              className="c-body"
+              dangerouslySetInnerHTML={{
+                __html: c.text.replace(
+                  /@([^\s]+)/g,
+                  '<span class="mention">@$1</span>'
+                ),
               }}
-              maxLength={10}
             />
-            <input
-              type="password"
-              placeholder="비밀번호"
-              value={commentPwd}
-              onChange={(e) => setCommentPwd(e.target.value)}
-            />
-          </div>
-          <div className="comment-main">
-            <textarea
-              placeholder="댓글을 입력하세요."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              required
-            ></textarea>
-            <button type="submit">등록</button>
-          </div>
-        </form>
-      </div>
+
+
+            {/* ✅ 답글 입력창 */}
+            {replyToId === c.id && (
+                <form onSubmit={(e) => handleAddComment(e, c.id)} className="reply-form">
+                  <div className="replying-info">
+                    💬 {getDisplayName(c)}님에게 답글 작성 중...
+                    <button
+                      type="button"
+                      onClick={() => setReplyToId(null)}
+                      className="cancel-reply"
+                    >
+                      취소
+                    </button>
+                  </div>
+                  <div className="reply-fields">
+                    <div className="reply-left">
+                      <input
+                        type="text"
+                        placeholder="닉네임"
+                        value={replyInputs[c.id]?.nickname || ''}
+                        onChange={(e) =>
+                          setReplyInputs((prev) => ({
+                            ...prev,
+                            [c.id]: { ...(prev[c.id] || {}), nickname: e.target.value },
+                          }))
+                        }
+                      />
+
+                      <input
+                        type="password"
+                        placeholder="비밀번호"
+                        value={replyInputs[c.id]?.password || ''}
+                        onChange={(e) =>
+                          setReplyInputs((prev) => ({
+                            ...prev,
+                            [c.id]: { ...(prev[c.id] || {}), password: e.target.value },
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="reply-right">
+                      <textarea
+                        placeholder="답글을 입력하세요."
+                        value={replyInputs[c.id]?.text || ''}
+                        onChange={(e) =>
+                          setReplyInputs((prev) => ({
+                            ...prev,
+                            [c.id]: { ...(prev[c.id] || {}), text: e.target.value },
+                          }))
+                        }
+                        required
+                      />
+                      <button type="submit">등록</button>
+                    </div>
+                  </div>
+                </form>
+              )}
+             
+            {/* ✅ 답글 목록 (무한 계층) */}
+{renderReplies(c.id)}
+
+          </li>
+        )
+      })}
+  </ul>
+
+  {/* ✅ 일반 댓글 입력창 */}
+  <form onSubmit={(e) => handleAddComment(e)} className="comment-form">
+
+
+    <div className="comment-side">
+      <input
+        type="text"
+        placeholder="닉네임 (최대 10자)"
+        value={nickname}
+        onChange={(e) => {
+          if (e.target.value.length <= 10) setNickname(e.target.value)
+        }}
+        maxLength={10}
+      />
+      <input
+        type="password"
+        placeholder="비밀번호"
+        value={commentPwd}
+        onChange={(e) => setCommentPwd(e.target.value)}
+      />
+    </div>
+    <div className="comment-main">
+      <textarea
+        placeholder="댓글을 입력하세요."
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        required
+      ></textarea>
+      <button type="submit">등록</button>
+    </div>
+  </form>
+</div>
+
+
 
       <hr className="post-divider" />
       <button
