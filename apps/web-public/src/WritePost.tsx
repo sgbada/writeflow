@@ -167,6 +167,10 @@ export default function WritePost() {
           .filter(Boolean)
       )
     )
+
+    // ✅ 작성자 설정: 로그인 유저명 or 익명
+    const currentUser = localStorage.getItem('username') || '익명'
+
     const newPost: Post = {
       id: postId || Date.now(),
       title,
@@ -179,12 +183,16 @@ export default function WritePost() {
       likes: existing?.likes ?? 0,
       comments: existing?.comments ?? [],
       images,
+      author: existing?.author || currentUser, // ✅ 수정 시엔 기존 작성자 유지
     }
+
     if (id) editPost(postId!, newPost)
     else addPost(newPost)
+
     localStorage.removeItem('tempPost')
     navigate('/')
   }
+
 
   return (
     <div className="container write-page">

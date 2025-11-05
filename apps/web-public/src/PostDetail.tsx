@@ -1,39 +1,25 @@
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom' //
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, FormEvent, useEffect } from 'react'
 import { usePostsStore } from './store/posts'
 import type { Comment } from './lib/types'
 
 export default function PostDetail() {
-  // ✅ id와 slug 둘 다 가져옴
   const { id, slug } = useParams<{ id: string; slug?: string }>()
   const postId = Number(id)
   const navigate = useNavigate()
-  const {
-    posts,
-    deletePost,
-    likePost,
-    addComment,
-    deleteComment,
-    incrementViews, // ✅ 조회수 함수
-  } = usePostsStore()
+  const { posts, deletePost, likePost, addComment, deleteComment, incrementViews } = usePostsStore()
   const post = posts.find((p) => p.id === postId)
   const location = useLocation()
   const fromPage = location.state?.fromPage || 1
 
-  // ✅ 슬러그 불일치 시 URL 정규화 (SEO friendly)
-  useEffect(() => {
-    if (post && slug !== post.slug) {
-      navigate(`/post/${post.id}/${post.slug}`, { replace: true })
-    }
-  }, [post, slug, navigate])
+  // ✅ 현재 로그인한 사용자명 (없으면 익명)
+  const currentUser = localStorage.getItem('username') || '익명'
 
-  // ✅ 좋아요 상태
+  // ✅ 상태들
   const [liked, setLiked] = useState<boolean>(() => {
     const likedPosts: number[] = JSON.parse(localStorage.getItem('likedPosts') || '[]')
     return likedPosts.includes(postId)
   })
-
-  // ✅ 댓글/수정/삭제 상태 관리
   const [nickname, setNickname] = useState('')
   const [comment, setComment] = useState('')
   const [commentPwd, setCommentPwd] = useState('')
@@ -47,21 +33,40 @@ export default function PostDetail() {
   const [showDeletePrompt, setShowDeletePrompt] = useState(false)
   const [showAllTags, setShowAllTags] = useState(false)
 
+  // ✅ 댓글 정렬 및 페이지네이션
+  const [sortOrder, setSortOrder] = useState<'oldest' | 'newest'>('oldest')
+  const sortedComments = [...(post?.comments || [])].sort((a, b) => {
+    if (sortOrder === 'newest')
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  })
+
+  const commentsPerPage = 15
+  const [commentPage, setCommentPage] = useState(1)
+  const totalComments = sortedComments.length
+  const totalCommentPages = Math.ceil(totalComments / commentsPerPage)
+  const groupStart = Math.floor((commentPage - 1) / 10) * 10 + 1
+  const groupEnd = Math.min(groupStart + 9, totalCommentPages)
+  const currentComments = sortedComments.slice(
+    (commentPage - 1) * commentsPerPage,
+    commentPage * commentsPerPage
+  )
+
+  // ✅ 슬러그 정규화
+  useEffect(() => {
+    if (post && slug !== post.slug) navigate(`/post/${post.id}/${post.slug}`, { replace: true })
+  }, [post, slug, navigate])
+
   // ✅ 조회수 증가 (1시간 중복 방지)
   useEffect(() => {
     if (!post) return
-
-    const myPosts = JSON.parse(localStorage.getItem('myPosts') || '[]') as number[]
-
     const viewedPosts = JSON.parse(localStorage.getItem('viewedPosts') || '{}') as Record<
       number,
       number
     >
     const now = Date.now()
-    const HOUR_MS = 60 * 60 * 1000 // 1시간
-
-    if (viewedPosts[postId] && now - viewedPosts[postId] < HOUR_MS) return // 1시간 이내 중복 방지
-
+    const HOUR_MS = 60 * 60 * 1000
+    if (viewedPosts[postId] && now - viewedPosts[postId] < HOUR_MS) return
     incrementViews(postId)
     viewedPosts[postId] = now
     localStorage.setItem('viewedPosts', JSON.stringify(viewedPosts))
@@ -69,8 +74,15 @@ export default function PostDetail() {
 
   if (!post) return <p>존재하지 않는 글입니다.</p>
 
+  // ✅ 자신이 쓴 글인지 확인
+  const isAuthor = post.author === currentUser
+
   // ✅ 좋아요
   const handleLike = () => {
+    if (isAuthor) {
+      alert('자신의 글은 추천할 수 없습니다!')
+      return
+    }
     if (liked) return
     likePost(postId)
     setLiked(true)
@@ -79,41 +91,34 @@ export default function PostDetail() {
     localStorage.setItem('likedPosts', JSON.stringify(likedPosts))
   }
 
-  // ✅ 수정
+  // ✅ 수정 / 삭제
   const handleEditConfirm = () => {
     if (editPwd === post.password) navigate(`/edit/${postId}`)
     else setEditError('비밀번호가 올바르지 않습니다.')
   }
-
-  // ✅ 삭제
   const handleDeleteConfirm = () => {
     deletePost(postId, deletePwd)
     navigate('/')
   }
 
-  // ✅ 댓글 추가
+  // ✅ 댓글 추가 / 삭제
   const handleAddComment = (e: FormEvent) => {
     e.preventDefault()
     if (!comment.trim()) return
-
     const newComment: Omit<Comment, 'id' | 'createdAt'> & { password?: string } = {
       author: nickname || '익명',
       text: comment.trim(),
       password: commentPwd || undefined,
     }
-
     addComment(postId, newComment)
     setComment('')
     setNickname('')
     setCommentPwd('')
   }
-
-  // ✅ 댓글 삭제
   const handleCommentDelete = (cid: number) => {
     const success = deleteComment(postId, cid, commentDeletePwd)
-    if (success === false) {
-      setCommentDeleteError('비밀번호가 올바르지 않습니다.')
-    } else {
+    if (!success) setCommentDeleteError('비밀번호가 올바르지 않습니다.')
+    else {
       setCommentDeleteError('')
       setCommentDeleteId(null)
       setCommentDeletePwd('')
@@ -125,13 +130,13 @@ export default function PostDetail() {
       <h1>{post.title}</h1>
 
       <div className="meta">
-        익명 | {new Date(post.createdAt).toLocaleString()} | 조회 {post.views ?? 0} | 추천{' '}
+        {post.author || '익명'} | {new Date(post.createdAt).toLocaleString()} | 조회 {post.views ?? 0} | 추천{' '}
         {post.likes ?? 0}
       </div>
 
       <hr className="post-divider" />
 
-      {/* ✅ Lazy 이미지 + 크기 예약 */}
+      {/* ✅ 이미지 */}
       {post.coverImageUrl && (
         <img
           src={post.coverImageUrl}
@@ -151,10 +156,14 @@ export default function PostDetail() {
 
       <div className="post-content" dangerouslySetInnerHTML={{ __html: post.content }} />
 
-      {/* 👍 추천 버튼 */}
+      {/* 👍 추천 */}
       <div className="like-section">
-        <button className={`like-btn ${liked ? 'liked' : ''}`} onClick={handleLike} disabled={liked}>
-          {liked ? '👍 추천됨' : '👍 추천하기'} <span className="like-count">{post.likes || 0}</span>
+        <button
+          className={`like-btn ${liked ? 'liked' : ''}`}
+          onClick={handleLike}
+        >
+          {liked ? '👍 추천됨' : '👍 추천하기'}{' '}
+          <span className="like-count">{post.likes || 0}</span>
         </button>
       </div>
 
@@ -162,24 +171,19 @@ export default function PostDetail() {
       {post.tags && post.tags.length > 0 && (
         <div className="post-tags">
           {(showAllTags ? post.tags : post.tags.slice(0, 10)).map((tag, i) => (
-            <Link
-              key={i}
-              to={`/search?q=%23${encodeURIComponent(tag)}`}
-              className="tag-link small"
-            >
+            <Link key={i} to={`/search?q=%23${encodeURIComponent(tag)}`} className="tag-link small">
               #{tag}
             </Link>
           ))}
-
           {post.tags.length > 10 && (
-            <button className="tag-more" onClick={() => setShowAllTags((prev) => !prev)}>
+            <button className="tag-more" onClick={() => setShowAllTags((p) => !p)}>
               {showAllTags ? '접기 ▲' : `+${post.tags.length - 10}개 더보기 ▼`}
             </button>
           )}
         </div>
       )}
 
-      {/* ✏️ 수정 / 삭제 버튼 */}
+      {/* ✏️ 수정 / 삭제 */}
       <div className="post-actions">
         <button
           onClick={() => setShowEditPrompt(!showEditPrompt)}
@@ -195,7 +199,6 @@ export default function PostDetail() {
         </button>
       </div>
 
-      {/* 수정 비밀번호 */}
       {showEditPrompt && (
         <div className="inline-password-box">
           <input
@@ -209,7 +212,6 @@ export default function PostDetail() {
         </div>
       )}
 
-      {/* 삭제 비밀번호 */}
       {showDeletePrompt && (
         <div className="inline-password-box">
           <input
@@ -226,14 +228,39 @@ export default function PostDetail() {
       <div className="comment-area">
         <h2>댓글</h2>
 
+        {/* 정렬 버튼 */}
+        <div className="comment-sort">
+          <button
+            className={sortOrder === 'oldest' ? 'active' : ''}
+            onClick={() => setSortOrder('oldest')}
+          >
+            등록순
+          </button>
+          <button
+            className={sortOrder === 'newest' ? 'active' : ''}
+            onClick={() => setSortOrder('newest')}
+          >
+            최신순
+          </button>
+        </div>
+
         <ul className="comment-list">
-          {(post.comments || []).map((c) => (
+          {currentComments.map((c) => (
             <li key={c.id} className="comment-item">
               <div className="c-head">
-                <strong>{c.author}</strong> ·{' '}
-                <span>{new Date(c.createdAt).toLocaleString()}</span>
-                <button onClick={() => setCommentDeleteId(c.id)}>삭제</button>
+                <div className="c-info">
+                  <strong className="c-author">{c.author}</strong>
+                  <span className="c-time">{new Date(c.createdAt).toLocaleString()}</span>
+                </div>
+                <button
+                  className="c-delete"
+                  onClick={() => setCommentDeleteId(c.id)}
+                  title="댓글 삭제"
+                >
+                  ✕
+                </button>
               </div>
+
               <div className="c-body">{c.text}</div>
 
               {commentDeleteId === c.id && (
@@ -250,10 +277,38 @@ export default function PostDetail() {
               )}
             </li>
           ))}
-          {(!post.comments || post.comments.length === 0) && <p>첫 댓글을 남겨보세요.</p>}
+          {totalComments === 0 && <p>첫 댓글을 남겨보세요.</p>}
         </ul>
 
-        {/* 댓글 입력창 */}
+        {/* 페이지네이션 */}
+        {totalCommentPages > 1 && (
+          <div className="pagination comment-pagination">
+            {groupStart > 1 && (
+              <button className="arrow" onClick={() => setCommentPage(groupStart - 10)}>
+                ◀
+              </button>
+            )}
+            {Array.from({ length: groupEnd - groupStart + 1 }).map((_, i) => {
+              const pageNum = groupStart + i
+              return (
+                <button
+                  key={pageNum}
+                  className={commentPage === pageNum ? 'active' : ''}
+                  onClick={() => setCommentPage(pageNum)}
+                >
+                  {pageNum}
+                </button>
+              )
+            })}
+            {groupEnd < totalCommentPages && (
+              <button className="arrow" onClick={() => setCommentPage(groupEnd + 1)}>
+                ▶
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 댓글 작성 */}
         <form onSubmit={handleAddComment} className="comment-form">
           <div className="comment-side">
             <input
@@ -272,7 +327,6 @@ export default function PostDetail() {
               onChange={(e) => setCommentPwd(e.target.value)}
             />
           </div>
-
           <div className="comment-main">
             <textarea
               placeholder="댓글을 입력하세요."
@@ -294,7 +348,6 @@ export default function PostDetail() {
       >
         ← 목록으로
       </button>
-
     </div>
   )
 }

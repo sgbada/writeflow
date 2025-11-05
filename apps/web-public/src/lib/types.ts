@@ -18,4 +18,7 @@ export interface Post {
   comments: Comment[]
   createdAt: string
   images?: string[]
+
+  // ✅ 작성자 이름(혹은 ID)을 추가
+  author: string
 }
