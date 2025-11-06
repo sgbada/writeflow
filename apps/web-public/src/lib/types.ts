@@ -21,5 +21,6 @@ export interface Post {
   createdAt: string
   images?: string[]
   author: string
-  authorId: string // ✅ 추가
+  authorId: string
+  isRegisteredUser?: boolean
 }

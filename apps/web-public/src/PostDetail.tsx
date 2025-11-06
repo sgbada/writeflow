@@ -77,8 +77,10 @@ export default function PostDetail() {
 
   if (!post) return <p>존재하지 않는 글입니다.</p>
 
-  // ✅ 자신이 쓴 글인지 확인
-  const isAuthor = post.author === currentUser
+  const currentUserId = localStorage.getItem('userId')
+const isAuthor =
+  (post.authorId && post.authorId === currentUserId) ||
+  (!post.authorId && post.author === currentUser) // old post fallback
 
   // ✅ 좋아요
   const handleLike = () => {
@@ -93,6 +95,7 @@ export default function PostDetail() {
     likedPosts.push(postId)
     localStorage.setItem('likedPosts', JSON.stringify(likedPosts))
   }
+
 
   // ✅ 수정 / 삭제
   const handleEditConfirm = () => {
@@ -113,6 +116,10 @@ const handleAddComment = (e: FormEvent, parentId?: number) => {
 
   const userId = localStorage.getItem('userId') || crypto.randomUUID()
   localStorage.setItem('userId', userId)
+  const currentUserId = localStorage.getItem('userId')
+  const isAuthor =
+  (post.authorId && post.authorId === currentUserId) ||
+  (!post.authorId && post.author === currentUser)
 
   // ✅ 실제 저장 (언급 제거 버전)
 addComment(postId, {

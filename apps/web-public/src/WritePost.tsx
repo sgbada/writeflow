@@ -18,6 +18,11 @@ if (typeof window !== 'undefined') {
   // @ts-ignore
   window.katex = katex
 }
+// ✅ 유저 고유 ID를 localStorage에 한 번만 생성
+if (!localStorage.getItem('userId')) {
+  localStorage.setItem('userId', crypto.randomUUID())
+}
+
 
 
 export default function WritePost() {
@@ -26,7 +31,7 @@ export default function WritePost() {
   const postId = id ? Number(id) : null
   const { posts, addPost, editPost } = usePostsStore()
   const existing = posts.find((p) => p.id === postId)
-
+  const [author, setAuthor] = useState(existing?.author || '')
   const [title, setTitle] = useState(existing?.title || '')
   const [content, setContent] = useState(existing?.content || '')
   const [password, setPassword] = useState(existing?.password || '')
@@ -156,6 +161,13 @@ export default function WritePost() {
     setIsSaved(true)
     alert('📝 임시 저장 완료! (새로고침해도 유지됩니다)')
   }
+  const existingAuthorId = existing?.authorId || localStorage.getItem('userId')!
+  // ✅ 항상 userId를 먼저 확보
+let userId = localStorage.getItem('userId')
+if (!userId) {
+  userId = crypto.randomUUID()
+  localStorage.setItem('userId', userId)
+}
 
   // ✅ 최종 제출
   const handleSubmit = (e: FormEvent) => {
@@ -170,6 +182,9 @@ export default function WritePost() {
 
     // ✅ 작성자 설정: 로그인 유저명 or 익명
     const currentUser = localStorage.getItem('username') || '익명'
+    const isLoggedIn = !!localStorage.getItem('username')
+
+    const userId = localStorage.getItem('userId')!
 
     const newPost: Post = {
       id: postId || Date.now(),
@@ -178,13 +193,17 @@ export default function WritePost() {
       board,
       tags: uniqueTags,
       slug: title.trim().toLowerCase().replace(/[^\w가-힣]+/g, '-'),
-      createdAt: new Date().toISOString(),
+      createdAt: existing?.createdAt || new Date().toISOString(),
       password,
       likes: existing?.likes ?? 0,
       comments: existing?.comments ?? [],
       images,
-      author: existing?.author || currentUser, // ✅ 수정 시엔 기존 작성자 유지
+      author: author.trim() || currentUser,
+      authorId: existing?.authorId || userId, // ✅ 항상 포함됨
+      isRegisteredUser: !!localStorage.getItem('username'),
     }
+
+
 
     if (id) editPost(postId!, newPost)
     else addPost(newPost)
@@ -204,6 +223,24 @@ export default function WritePost() {
           <option value="유머">유머게시판</option>
           <option value="질문">질문게시판</option>
         </select>
+        {/* 🔹 닉네임 + 비밀번호 한 줄 입력 */}
+<div className="nickname-password-row">
+  <input
+    type="text"
+    placeholder="닉네임 (최대 10자)"
+    value={author}
+    onChange={(e) => setAuthor(e.target.value.slice(0, 10))}
+    maxLength={10}
+  />
+  <input
+    type="password"
+    placeholder="비밀번호 (최대 20자)"
+    value={password}
+    onChange={(e) => setPassword(e.target.value.slice(0, 20))}
+    maxLength={20}
+    required={!id}
+  />
+</div>
 
         <input
           type="text"
@@ -231,16 +268,6 @@ export default function WritePost() {
           value={tagInput}
           onChange={handleTagChange}
         />
-
-        {!id && (
-          <input
-            type="password"
-            placeholder="비밀번호"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        )}
 
         {/* 📝 하단 버튼 영역 */}
         <div className="write-btn-row">

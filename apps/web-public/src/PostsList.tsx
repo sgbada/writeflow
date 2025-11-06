@@ -250,13 +250,17 @@ export default function PostsList() {
                     {p.comments?.length > 0 && <span className="comment-count">[{p.comments.length}]</span>}
                   </Link>
               </div>
-              <div className="col-writer">
-                {p.authorId ? (
-                  <Link to={`/author/${p.authorId}`}>{p.authorName ?? '작성자'}</Link>
-                ) : (
-                  <span>익명</span>
-                )}
-              </div>
+             <div className="col-writer">
+              {/* 로그인한 사용자만 링크로 연결 */}
+              {p.authorId && p.isRegisteredUser ? (
+                <Link to={`/author/${p.authorId}`} className="writer-link">
+                  {p.author}
+                </Link>
+              ) : (
+                <span className="writer-anon">{p.author || '익명'}</span>
+              )}
+            </div>
+
               <div className="col-date">{formatDate(p.createdAt)}</div>
               <div className="col-views">{p.views ?? 0}</div>
               <div className="col-likes">{p.likes ?? 0}</div>

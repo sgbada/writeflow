@@ -1857,11 +1857,107 @@ select:hover,
   font-weight: 500;
 }
 
-/* ✅ 닉네임 앞 ⤷ 표시 (답글 전용) */
 .reply-item .c-author::before {
   content: "⤷ ";
   color: var(--muted);
   font-size: 13px;
   margin-right: 3px;
-  opacity: 0.8;
+  position: relative;
+  top: -1px;
+  opacity: 0.7;
+}
+
+/* =====================================
+   ⏳ SPINNER
+===================================== */
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  animation: spin 0.8s linear infinite;
+  margin: 60px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* =====================================
+   ✍️ 닉네임 + 비밀번호 입력 줄 (WRITEPOST)
+===================================== */
+.nickname-password-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 1px;
+  max-width: 600px; /* 제목 입력창과 비슷한 폭 */
+}
+
+/* 입력창 공통 */
+.nickname-password-row input {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: inherit; /* ✅ 추가: 상위(본문) 폰트 상속 */
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+
+/* 닉네임 입력칸 */
+.nickname-password-row input:first-child {
+  flex: 0.45;
+}
+
+/* 비밀번호 입력칸 (조금 더 넓게) */
+.nickname-password-row input:last-child {
+  flex: 0.55;
+  font-family: inherit;
+}
+
+
+/* 🌙 다크모드 대응 */
+[data-theme="dark"] .nickname-password-row input {
+  background: #2a2a2a;
+  color: #eee;
+  border-color: #555;
+}
+
+
+/* =====================================
+   ✍️ 글쓴이 닉네임 한 줄로 표시 (... 처리)
+===================================== */
+.writer-link,
+.writer-anon {
+  display: inline-block;
+  max-width: 100px; /* ✅ 닉네임 영역 폭 (조정 가능) */
+  white-space: nowrap; /* 줄바꿈 금지 */
+  overflow: hidden; /* 넘친 글자 숨기기 */
+  text-overflow: ellipsis; /* ... 처리 */
+  vertical-align: middle;
+}
+
+/* 다크모드 대응 */
+[data-theme="dark"] .writer-link,
+[data-theme="dark"] .writer-anon {
+  color: #ddd;
+}
+
+/* 링크 스타일 */
+.writer-link {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.writer-link:hover {
+  text-decoration: underline;
 }
