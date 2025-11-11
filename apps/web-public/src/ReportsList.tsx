@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+
 
 interface Report {
   postId: number
@@ -10,19 +12,23 @@ interface Report {
   reason: string
   detail?: string
   createdAt: string
+  isRegisteredUser?: boolean
 }
 
 interface BannedUser {
   authorId: string
   author?: string
   expiresAt: number
+  isRegisteredUser?: boolean
 }
 
 export default function ReportsList() {
   const [reports, setReports] = useState<Report[]>([])
   const [bannedUsers, setBannedUsers] = useState<BannedUser[]>([])
+  const [page, setPage] = useState(1)
+  const itemsPerPage = 10
 
-  // ✅ 신고 내역 불러오기
+  // ✅ 신고 내역 및 정지 내역 불러오기
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('reports') || '[]')
     setReports(saved)
@@ -38,17 +44,17 @@ export default function ReportsList() {
     localStorage.setItem('reports', JSON.stringify(updated))
   }
 
-  // ✅ 사용자 정지 (익명 포함)
-const handleBanUser = (authorId?: string, author?: string) => {
+  // ✅ 사용자 정지 (중복 방지 + 해당 신고 자동 삭제)
+const handleBanUser = (authorId?: string, author?: string, index?: number) => {
   if (!authorId) {
-    alert('식별할 수 없는 사용자입니다.')
+    alert('🚫 식별할 수 없는 사용자입니다. (authorId 없음)')
     return
   }
 
   const banned = JSON.parse(localStorage.getItem('bannedUsers') || '[]')
   const already = banned.find((b: BannedUser) => b.authorId === authorId)
   if (already && Date.now() < already.expiresAt) {
-    alert('이미 정지 중인 사용자입니다.')
+    alert('⚠️ 이미 정지 중인 사용자입니다.')
     return
   }
 
@@ -60,11 +66,24 @@ const handleBanUser = (authorId?: string, author?: string) => {
     return
   }
 
+  // ✅ 추가: 정지 사유 입력
+  const reason = prompt('정지 사유를 입력하세요 (예: 욕설, 도배, 불법광고 등)', '이용 약관 위반') || '사유 없음'
+
   const expiresAt = Date.now() + days * 24 * 60 * 60 * 1000
-  const updated = [...banned, { authorId, author, expiresAt }]
-  localStorage.setItem('bannedUsers', JSON.stringify(updated))
-  alert(`✅ ${author || '익명 사용자'}가 ${days}일간 정지되었습니다.`)
+  const updatedBanned = [...banned, { authorId, author, expiresAt, reason }]
+  localStorage.setItem('bannedUsers', JSON.stringify(updatedBanned))
+  setBannedUsers(updatedBanned)
+
+  alert(`✅ ${author || '익명 사용자'}가 ${days}일간 정지되었습니다.\n사유: ${reason}`)
+
+  // ✅ 해당 신고 자동 삭제
+  if (typeof index === 'number') {
+    const updatedReports = reports.filter((_, i) => i !== index)
+    setReports(updatedReports)
+    localStorage.setItem('reports', JSON.stringify(updatedReports))
+  }
 }
+
 
   // ✅ 정지 해제
   const handleUnbanUser = (authorId: string) => {
@@ -85,6 +104,22 @@ const handleBanUser = (authorId?: string, author?: string) => {
     }
   }, [bannedUsers])
 
+  // ✅ 남은 시간 계산
+  const getRemaining = (expiresAt: number) => {
+    const diff = expiresAt - Date.now()
+    if (diff <= 0) return '만료됨'
+    const days = Math.floor(diff / (24 * 60 * 60 * 1000))
+    const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
+    const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000))
+    if (days > 0) return `${days}일 ${hours}시간 남음`
+    if (hours > 0) return `${hours}시간 ${minutes}분 남음`
+    return `${minutes}분 남음`
+  }
+
+  // ✅ 페이지네이션
+  const totalPages = Math.ceil(reports.length / itemsPerPage)
+  const currentReports = reports.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+
   return (
     <div className="container">
       <h1>🚨 신고 내역 및 사용자 정지 관리</h1>
@@ -92,56 +127,154 @@ const handleBanUser = (authorId?: string, author?: string) => {
       {reports.length === 0 ? (
         <p>신고 내역이 없습니다.</p>
       ) : (
-        <ul className="report-list">
-          {reports.map((r, i) => (
-            <li key={i} className="report-item">
-              {r.commentId ? (
-                <>
-                  <strong>💬 댓글 신고 (게시글 ID: {r.postId})</strong>
-                  <p><b>작성자:</b> {r.author || '익명'}</p>
-                  <p><b>내용:</b> {r.text?.slice(0, 100) || '(없음)'}</p>
-                </>
-              ) : (
-                <>
-                  <strong>📄 게시글 신고</strong>
-                  <p><b>제목:</b> {r.title || '(제목 없음)'}</p>
-                  {r.detail && <p><b>신고 설명:</b> {r.detail}</p>}
-                </>
-              )}
+        <>
+          <ul className="report-list">
+            {currentReports.map((r, i) => (
+              <li key={i} className="report-item">
+                {r.commentId ? (
+  <>
+    <strong>
+      💬 댓글 신고 (
+      <Link
+        to={`/post/${r.postId}`}
+        target="_blank"
+        style={{
+          color: 'var(--primary)',
+          textDecoration: 'underline',
+          cursor: 'pointer',
+        }}
+      >
+        게시글 #{r.postId}로 이동
+      </Link>
+      )
+    </strong>
 
-              <p><b>사유:</b> {r.reason}</p>
-              <p><b>신고일:</b> {new Date(r.createdAt).toLocaleString('ko-KR')}</p>
+    <p>
+      <b>작성자:</b>{' '}
+      {r.authorId ? (
+        r.isRegisteredUser ? (
+          <span className="report-author-login">
+            ✍️ {r.author}{' '}
+            <span className="author-id">({r.authorId})</span>
+          </span>
+        ) : (
+          <span className="report-author-anon">
+            👤 익명{' '}
+            <span className="author-id">({r.authorId})</span>
+          </span>
+        )
+      ) : (
+        <span style={{ color: '#c0392b' }}>❌ 알 수 없음</span>
+      )}
+    </p>
 
-              <div className="report-actions" style={{ marginTop: '8px' }}>
+    {/* ✅ 신고된 댓글 내용 표시 */}
+    <p>
+      <b>댓글 내용:</b>{' '}
+      <span
+        style={{
+          display: 'inline-block',
+          background: 'var(--card-bg)',
+          border: '1px solid var(--border)',
+          padding: '6px 8px',
+          borderRadius: '6px',
+          color: 'var(--text)',
+        }}
+      >
+        {r.text?.slice(0, 120) || '(내용 없음)'}
+      </span>
+    </p>
+  </>
+) : (
+  <>
+    <strong>
+      📄 게시글 신고 (
+      <Link
+        to={`/post/${r.postId}/${encodeURIComponent(
+          (r.title || '제목없음').toLowerCase().replace(/[^\w가-힣]+/g, '-')
+        )}`}
+        target="_blank"
+        style={{
+          color: 'var(--primary)',
+          textDecoration: 'underline',
+          cursor: 'pointer',
+        }}
+      >
+        ID: {r.postId}
+      </Link>
+      )
+    </strong>
+    <p>
+      <b>작성자:</b>{' '}
+      {r.authorId ? (
+        <span className="report-author-anon">
+          👤 {r.author || '익명'}{' '}
+          <span className="author-id">({r.authorId})</span>
+        </span>
+      ) : (
+        <span style={{ color: '#c0392b' }}>❌ 알 수 없음</span>
+      )}
+    </p>
+    <p>
+      <b>제목:</b>{' '}
+      {r.title ? (
+        <Link
+          to={`/post/${r.postId}/${encodeURIComponent(
+            (r.title || '제목없음').toLowerCase().replace(/[^\w가-힣]+/g, '-')
+          )}`}
+          target="_blank"
+          style={{
+            color: 'var(--primary)',
+            textDecoration: 'underline',
+            cursor: 'pointer',
+          }}
+        >
+          {r.title}
+        </Link>
+      ) : (
+        '(제목 없음)'
+      )}
+    </p>
+    {r.detail && <p><b>신고 설명:</b> {r.detail}</p>}
+  </>
+)}
+
+                <p><b>사유:</b> {r.reason}</p>
+                <p><b>신고일:</b> {new Date(r.createdAt).toLocaleString('ko-KR')}</p>
+
+                <div className="report-actions">
+                  <button
+                    onClick={() => handleDeleteReport(i)}
+                    className="report-btn report-delete"
+                  >
+                    🗑 삭제
+                  </button>
+                  <button
+                    onClick={() => handleBanUser(r.authorId, r.author, (page - 1) * itemsPerPage + i)}
+                    className="report-btn report-ban"
+                  >
+                    ⛔ 사용자 정지
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* 페이지네이션 */}
+          {totalPages > 1 && (
+            <div className="pagination">
+              {Array.from({ length: totalPages }).map((_, idx) => (
                 <button
-                  onClick={() => handleDeleteReport(i)}
-                  style={{
-                    background: '#eee',
-                    padding: '4px 10px',
-                    borderRadius: '6px',
-                  }}
+                  key={idx}
+                  className={page === idx + 1 ? 'active' : ''}
+                  onClick={() => setPage(idx + 1)}
                 >
-                  🗑 삭제
+                  {idx + 1}
                 </button>
-
-                {/* ✅ 정지 버튼 (익명도 가능) */}
-                <button
-                  onClick={() =>
-                    handleBanUser(r.authorId, r.author, r.commentId, r.postId)
-                  }
-                  style={{
-                    background: '#ffcccc',
-                    padding: '4px 10px',
-                    borderRadius: '6px',
-                    marginLeft: '8px',
-                  }}
-                >
-                  ⛔ 사용자 정지
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* 🚫 정지된 사용자 목록 */}
@@ -151,36 +284,33 @@ const handleBanUser = (authorId?: string, author?: string) => {
           <p>현재 정지된 사용자가 없습니다.</p>
         ) : (
           <ul>
-  {bannedUsers.map((u, i) => {
-    const diff = u.expiresAt - Date.now()
-    const days = Math.floor(diff / (24 * 60 * 60 * 1000))
-    const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
-    const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000))
+            {bannedUsers.map((u, i) => (
+              <li key={i}>
+                {u.isRegisteredUser ? (
+                  <span className="report-author-login">
+                    ✍️ {u.author} <span className="author-id">({u.authorId})</span>
+                  </span>
+                ) : (
+                  <span className="report-author-anon">
+                    👤 익명 <span className="author-id">({u.authorId})</span>
+                  </span>
+                )}{' '}
+                — {getRemaining(u.expiresAt)}
+                {u.reason && (
+  <p style={{ margin: '4px 0 0 0', color: 'var(--muted)', fontSize: '14px' }}>
+    📝 사유: {u.reason}
+  </p>
+)}
 
-    let remaining = ''
-    if (days > 0) remaining = `${days}일 ${hours}시간 남음`
-    else if (hours > 0) remaining = `${hours}시간 ${minutes}분 남음`
-    else remaining = `${minutes}분 남음`
-
-    return (
-      <li key={i}>
-        <b>{u.author || '익명 사용자'}</b> — {remaining}
-        <button
-          onClick={() => handleUnbanUser(u.authorId)}
-          style={{
-            marginLeft: '10px',
-            padding: '2px 8px',
-            borderRadius: '4px',
-            background: '#d0f0d0',
-          }}
-        >
-          🔓 해제
-        </button>
-      </li>
-    )
-  })}
-</ul>
-
+                <button
+                  onClick={() => handleUnbanUser(u.authorId)}
+                  className="report-btn report-unban"
+                >
+                  🔓 해제
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>

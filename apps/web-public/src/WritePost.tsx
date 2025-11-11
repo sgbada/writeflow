@@ -9,6 +9,7 @@ import 'katex/dist/katex.min.css'
 import katex from 'katex'
 import ImageResize from 'quill-image-resize-module-react'
 import BlotFormatter from 'quill-blot-formatter'
+import { canDo, record, formatRemain } from './lib/antispam';
 
 Quill.register('modules/imageResize', ImageResize)
 Quill.register('modules/blotFormatter', BlotFormatter)
@@ -37,6 +38,16 @@ function formatRemainingTime(expiresAt: number): string {
 
 
 export default function WritePost() {
+  // ✅ 항상 고정된 유저 ID 확보 (컴포넌트 안 최상단에서 실행)
+const [userId] = useState(() => {
+  let stored = localStorage.getItem('userId')
+  if (!stored) {
+    stored = crypto.randomUUID()
+    localStorage.setItem('userId', stored)
+  }
+  return stored
+})
+
   const navigate = useNavigate()
   const { id } = useParams<{ id?: string }>()
   const postId = id ? Number(id) : null
@@ -173,43 +184,49 @@ export default function WritePost() {
     alert('📝 임시 저장 완료! (새로고침해도 유지됩니다)')
   }
   const existingAuthorId = existing?.authorId || localStorage.getItem('userId')!
-  // ✅ 항상 userId를 먼저 확보
- // ✅ 항상 userId를 먼저 확보
-let userId = localStorage.getItem('userId')
-if (!userId) {
-  userId = crypto.randomUUID()
-  localStorage.setItem('userId', userId)
-}
+
 
 const COOLDOWN_MS = 30000
 
 // ✅ 최종 제출
 // ✅ 최종 제출
 const handleSubmit = (e: FormEvent) => {
-  e.preventDefault()
+  e.preventDefault();
 
-  // 🚫 정지된 사용자 체크 (게시글 작성 금지)
-  localStorage.setItem('userId', userId!)
-  const banned = JSON.parse(localStorage.getItem('bannedUsers') || '[]')
-  const currentUserId = localStorage.getItem('userId')
-  const banInfo = banned.find((b: any) => b.authorId === currentUserId && Date.now() < b.expiresAt)
-  
+  // 🚫 정지된 사용자 체크
+  localStorage.setItem('userId', userId!);
+  const banned = JSON.parse(localStorage.getItem('bannedUsers') || '[]');
+  const currentUserId = localStorage.getItem('userId');
+  const banInfo = banned.find(
+    (b: any) => b.authorId === currentUserId && Date.now() < b.expiresAt
+  );
+
   if (banInfo) {
-    const remainingMsg = formatRemainingTime(banInfo.expiresAt)
-    alert(`🚫 현재 정지된 상태입니다.\n(${remainingMsg})\n게시글을 작성할 수 없습니다.`)
-    return
+    const remainingMsg = formatRemainingTime(banInfo.expiresAt);
+    alert(`🚫 현재 정지된 상태입니다.
+사유: ${banInfo.reason || '사유 없음'}
+(${remainingMsg})
+게시글을 작성할 수 없습니다.`);
+    return;
   }
 
+  // 🕒 도배 방지 (1분에 한 번만)
+  const { allowed, remain } = canDo('post');
+  if (!allowed) {
+    alert(`⏳ 글은 ${formatRemain(remain)} 후에 다시 작성할 수 있습니다.`);
+    return;
+  }
+
+  // ✅ 정상 등록
   const uniqueTags = Array.from(
     new Set(
       (Array.isArray(tags) ? tags : tags.split(/[\s,]+/))
         .map((t) => t.trim().replace(/^#/, ''))
         .filter(Boolean)
     )
-  )
+  );
 
-  const currentUser = localStorage.getItem('username') || '익명'
-
+  const currentUser = localStorage.getItem('username') || '익명';
   const newPost: Post = {
     id: postId || Date.now(),
     title,
@@ -223,16 +240,20 @@ const handleSubmit = (e: FormEvent) => {
     comments: existing?.comments ?? [],
     images,
     author: author.trim() || currentUser,
-    authorId: existing?.authorId || userId!,
+    authorId: userId || `anon-${Date.now()}`,
     isRegisteredUser: !!localStorage.getItem('username'),
-  }
+  };
 
-  if (id) editPost(postId!, newPost)
-  else addPost(newPost)
+  if (id) editPost(postId!, newPost);
+  else addPost(newPost);
 
-  localStorage.removeItem('tempPost')
-  navigate('/')
-}
+  record('post'); // 도배 방지 기록
+  localStorage.removeItem('tempPost');
+  navigate('/');
+};
+
+
+
 // 🚫 정지 상태 계산 (렌더링용)
 const banned = JSON.parse(localStorage.getItem('bannedUsers') || '[]')
 const currentUserId = localStorage.getItem('userId')
@@ -244,6 +265,26 @@ const remainingMsg = banInfo ? formatRemainingTime(banInfo.expiresAt) : ''
   return (
     <div className="container write-page">
       <h1>{id ? '글 수정' : '새 글 작성'}</h1>
+{isBanned && (
+  <div
+    style={{
+      background: 'var(--accent-bg)',
+      border: '1px solid var(--border)',
+      padding: '14px 16px',
+      borderRadius: '10px',
+      marginBottom: '16px',
+      color: 'var(--text)',
+      lineHeight: 1.5,
+    }}
+  >
+    <b>🚫 현재 계정은 정지 상태입니다.</b>
+    <br />
+    🕒 남은 시간: {remainingMsg}
+    <br />
+    📝 정지 사유: {banInfo.reason || '사유 없음'}
+  </div>
+)}
+
 
       <form onSubmit={handleSubmit} className="form">
         <select value={board} onChange={(e) => setBoard(e.target.value)}>
@@ -327,24 +368,28 @@ const remainingMsg = banInfo ? formatRemainingTime(banInfo.expiresAt) : ''
               </span>
             )}
             <button
-              type="submit"
-              className="comment-submit-btn"
-              onClick={(e) => {
-                if (isBanned) {
-                  e.preventDefault()
-                  alert(`🚫 현재 정지된 상태입니다.\n(${remainingMsg})\n게시글을 작성할 수 없습니다.`)
-                  return
-                }
-                // 통과: 작성 가능
-              }}
-              style={{
-                opacity: isBanned ? 0.5 : 1,
-                cursor: isBanned ? 'not-allowed' : 'pointer',
-                pointerEvents: 'auto', // ✅ 클릭 막히지 않도록 활성화
-              }}
-            >
-              {id ? '수정 완료' : '등록'}
-            </button>
+  type="submit"
+  className="comment-submit-btn"
+  onClick={(e) => {
+    if (isBanned && banInfo) {
+      e.preventDefault()
+      alert(`🚫 현재 정지된 상태입니다.
+사유: ${banInfo.reason || '사유 없음'}
+(${remainingMsg})
+게시글을 작성할 수 없습니다.`)
+      return
+    }
+    // 통과: 작성 가능
+  }}
+  style={{
+    opacity: isBanned ? 0.5 : 1,
+    cursor: isBanned ? 'not-allowed' : 'pointer',
+    pointerEvents: 'auto', // ✅ 클릭 막히지 않도록 활성화
+  }}
+>
+  {id ? '수정 완료' : '등록'}
+</button>
+
 
 
           </div>

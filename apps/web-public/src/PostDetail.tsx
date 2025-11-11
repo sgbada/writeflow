@@ -2,6 +2,26 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, FormEvent, useEffect } from 'react'
 import { usePostsStore } from './store/posts'
 import type { Comment } from './lib/types'
+import { canDo, record, formatRemain } from './lib/antispam';
+let userId = localStorage.getItem('userId')
+if (!userId) {
+  userId = crypto.randomUUID()
+  localStorage.setItem('userId', userId)
+}
+// 🕒 정지 남은 시간 계산 함수
+function formatRemainingTime(expiresAt: number): string {
+  const diffMs = expiresAt - Date.now()
+  if (diffMs <= 0) return '만료됨'
+
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000))
+  const diffHours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
+  const diffMinutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000))
+
+  if (diffDays >= 1) return `${diffDays}일 ${diffHours}시간 남음`
+  if (diffHours >= 1) return `${diffHours}시간 ${diffMinutes}분 남음`
+  return `${diffMinutes}분 남음`
+}
+
 
 export default function PostDetail() {
   const { id, slug } = useParams<{ id: string; slug?: string }>()
@@ -140,70 +160,63 @@ const isAuthor =
     navigate('/')
   }
 const handleAddComment = (e: FormEvent, parentId?: number) => {
-  e.preventDefault()
+  e.preventDefault();
 
-  // ✅ 유저 식별자 (고유 userId)
-  let userId = localStorage.getItem('userId')
-  if (!userId) {
-    userId = crypto.randomUUID()
-    localStorage.setItem('userId', userId)
-  }
-
-  // ✅ 정지 리스트 불러오기
-  const banned: any[] = JSON.parse(localStorage.getItem('bannedUsers') || '[]')
-
-  // ✅ 현재 사용자가 정지된 상태인지 확인
-  const banInfo = banned.find((b) => b.authorId === userId)
-
+  // ✅ 정지 사용자 확인
+  const banned: any[] = JSON.parse(localStorage.getItem('bannedUsers') || '[]');
+  const banInfo = banned.find((b) => b.authorId === userId);
   if (banInfo && Date.now() < banInfo.expiresAt) {
-    const diffMs = banInfo.expiresAt - Date.now()
-    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000))
-    const diffHours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
-    const diffMinutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000))
-
-    let remainingMsg = ''
-    if (diffDays >= 1) {
-      remainingMsg = `${diffDays}일 ${diffHours}시간 남음`
-    } else if (diffHours >= 1) {
-      remainingMsg = `${diffHours}시간 ${diffMinutes}분 남음`
-    } else {
-      remainingMsg = `${diffMinutes}분 남음`
-    }
-
-    alert(`🚫 현재 정지된 상태입니다.\n(${remainingMsg})\n댓글을 작성할 수 없습니다.`)
-    return
+    const remainingMsg = formatRemainingTime(banInfo.expiresAt);
+    alert(`🚫 현재 정지된 상태입니다.
+사유: ${banInfo.reason || '사유 없음'}
+(${remainingMsg})
+댓글을 작성할 수 없습니다.`);
+    return;
   }
 
-  // ✅ 입력 확인
+  // ✅ 입력 내용 가져오기
   const input = parentId
     ? replyInputs[parentId]
-    : { nickname, password: commentPwd, text: comment }
+    : { nickname, password: commentPwd, text: comment };
 
-  if (!input.text.trim()) return
+  // ✅ 빈 입력 방지
+  if (!input.text || !input.text.trim()) {
+    alert('댓글 내용을 입력하세요.');
+    return;
+  }
 
-  // ✅ 댓글 저장
+  // ✅ 쿨다운 검사 (30초)
+  const { allowed, remain } = canDo('comment');
+  if (!allowed) {
+    alert(`⏳ 댓글은 ${formatRemain(remain)} 후에 다시 작성할 수 있습니다.`);
+    return;
+  }
+
+  // ✅ 댓글 등록
   addComment(postId, {
-    author: input.nickname || '익명',
-    authorId: userId, // ✅ 이제 postId 포함하지 않음
+    author: input.nickname?.trim() || '익명',
+    authorId: userId,
     text: input.text.trim(),
     password: input.password || undefined,
     parentId,
-  })
+  });
+
+  // ✅ 쿨다운 기록
+  record('comment');
 
   // ✅ 입력창 초기화
   if (parentId) {
     setReplyInputs((prev) => ({
       ...prev,
       [parentId]: { nickname: '', password: '', text: '' },
-    }))
-    setReplyToId(null)
+    }));
+    setReplyToId(null);
   } else {
-    setComment('')
-    setNickname('')
-    setCommentPwd('')
+    setNickname('');
+    setCommentPwd('');
+    setComment('');
   }
-}
-
+};
 
 
   const handleCommentDelete = (cid: number) => {
@@ -215,6 +228,7 @@ const handleAddComment = (e: FormEvent, parentId?: number) => {
       setCommentDeletePwd('')
     }
   }
+
   // ✅ 들여쓰기 기반의 간단한 재귀 함수 (최대 3단계)
 const renderReplies = (parentId: number, depth = 1): JSX.Element | null => {
   const childReplies = sortedComments.filter((r) => r.parentId === parentId)
@@ -246,30 +260,13 @@ const renderReplies = (parentId: number, depth = 1): JSX.Element | null => {
                 </button>
                 {/* 🚨 댓글 신고 버튼 */}
 
-              <button
-                className="c-report"
-                title="댓글 신고"
-                onClick={() => {
-                  const reason = prompt('댓글 신고 사유를 입력하세요 (예: 욕설, 스팸 등)')
-                  if (!reason) return
-                  const reports = JSON.parse(localStorage.getItem('reports') || '[]')
-                  reports.push({
-                    postId,
-                    commentId: c.id,
-                    author: c.author,
-                    authorId: c.authorId || localStorage.getItem('userId') || `anon-${c.id}`, // ✅ 익명도 고유 ID 생성
-                    reason,
-                    text: c.text,
-                    createdAt: new Date().toISOString(),
-                  })
-
-                  localStorage.setItem('reports', JSON.stringify(reports))
-                  alert('댓글이 신고되었습니다.')
-                }}
-              >
-                🚩
-              </button>
-
+     <button
+  className="c-report"
+  title="댓글 신고"
+  onClick={() => handleReportComment(r)} // ✅ 수정됨 (r로 넘김)
+>
+  🚩
+</button>
                 <button
                   className="c-delete"
                   onClick={() => setCommentDeleteId(r.id)}
@@ -351,6 +348,125 @@ const renderReplies = (parentId: number, depth = 1): JSX.Element | null => {
     </ul>
   )
 }
+// PostDetail.tsx — 댓글 신고 핸들러 (중복/쿨다운 포함)
+const handleReportComment = (comment: Comment) => {
+  try {
+    // 고유 사용자 ID
+    let uid = localStorage.getItem('userId');
+    if (!uid) {
+      uid = crypto.randomUUID();
+      localStorage.setItem('userId', uid);
+    }
+
+    const reportKey = `comment-${postId}-${comment.id}-${uid}`;
+
+    // 중복 체크
+    const reported: string[] = JSON.parse(localStorage.getItem('reportedItems') || '[]');
+    if (reported.includes(reportKey)) {
+      alert('🚫 이미 이 댓글을 신고하셨습니다.');
+      return;
+    }
+
+    // 쿨다운 체크
+    const { allowed, remain } = canDo('report', reportKey);
+    if (!allowed) {
+      alert(`⏳ 동일 댓글은 ${formatRemain(remain)} 후에 다시 신고할 수 있습니다.`);
+      return;
+    }
+
+    const reason = prompt('댓글 신고 사유를 입력하세요 (예: 욕설, 스팸 등)');
+    if (!reason) return;
+
+    // ✅ authorId/author/isRegisteredUser 함께 저장!
+    const reports = JSON.parse(localStorage.getItem('reports') || '[]');
+    reports.push({
+      postId,
+      commentId: comment.id,
+      author: comment.author || '익명',
+      authorId: comment.authorId,                // ← 핵심!
+      isRegisteredUser: !!localStorage.getItem('username'),
+      text: comment.text,
+      reason,
+      createdAt: new Date().toISOString(),
+    });
+    localStorage.setItem('reports', JSON.stringify(reports));
+
+    // 중복 방지 & 쿨다운 기록
+    reported.push(reportKey);
+    localStorage.setItem('reportedItems', JSON.stringify(reported));
+    record('report', reportKey);
+
+    alert('🚩 댓글이 신고되었습니다.');
+  } catch (err) {
+    console.error('🚨 댓글 신고 중 오류:', err);
+    alert('댓글 신고 처리 중 오류가 발생했습니다.');
+  }
+};
+
+
+
+// ✅ 게시글 신고 핸들러 (완전 수정본)
+const handleReportPost = () => {
+  try {
+    let uid = localStorage.getItem('userId')
+    if (!uid) {
+      uid = crypto.randomUUID()
+      localStorage.setItem('userId', uid)
+    }
+
+    const targetKey = `post-${postId}-${uid}`
+
+    // ✅ 중복 체크
+    const reported: string[] = JSON.parse(localStorage.getItem('reportedItems') || '[]')
+    if (reported.includes(targetKey)) {
+      alert('🚫 이미 이 게시글을 신고하셨습니다.')
+      return
+    }
+
+    // ✅ 쿨다운 체크
+    const { allowed, remain } = canDo('report', targetKey)
+    if (!allowed) {
+      alert(`⏳ 동일 게시글은 ${formatRemain(remain)} 후에 다시 신고할 수 있습니다.`)
+      return
+    }
+
+    // ✅ 신고 사유 필수 확인
+    if (!reportReason) {
+      alert('신고 사유를 선택해주세요.')
+      return
+    }
+
+    // ✅ 세부 내용
+    const detail = (document.getElementById('reportDetail') as HTMLTextAreaElement)?.value || ''
+
+    // ✅ 신고 내역 저장
+    const reports = JSON.parse(localStorage.getItem('reports') || '[]')
+    reports.push({
+      type: 'post',
+      postId,
+      title: post.title,
+      author: post.author || '익명',
+      authorId: post.authorId,
+      isRegisteredUser: !!localStorage.getItem('username'),
+      reason: reportReason,
+      detail,
+      createdAt: new Date().toISOString(),
+    })
+    localStorage.setItem('reports', JSON.stringify(reports))
+
+    // ✅ 중복 방지 및 쿨다운 기록
+    reported.push(targetKey)
+    localStorage.setItem('reportedItems', JSON.stringify(reported))
+    record('report', targetKey)
+
+    alert('🚩 게시글이 신고되었습니다.')
+    setShowReport(false)
+  } catch (err) {
+    console.error('🚨 게시글 신고 중 오류:', err)
+    alert('게시글 신고 처리 중 오류가 발생했습니다.')
+  }
+}
+
 
   // ✅ 익명 넘버링 함수
 const getDisplayName = (c: Comment): string => {
@@ -570,27 +686,15 @@ const getDisplayName = (c: Comment): string => {
                 </button>
                  {/* 🚨 댓글 신고 버튼 */}
                 <button
-                  className="c-report"
-                  title="댓글 신고"
-                  onClick={() => {
-                    const reason = prompt('댓글 신고 사유를 입력하세요 (예: 욕설, 스팸 등)')
-                    if (!reason) return
-                    const reports = JSON.parse(localStorage.getItem('reports') || '[]')
-                    reports.push({
-                      postId,
-                      commentId: c.id,
-                      author: c.author|| `anon-${postId}`,
-                      authorId: c.authorId || localStorage.getItem('userId') || `anon-${c.id}`,
-                      reason,
-                      text: c.text,
-                      createdAt: new Date().toISOString(),
-                    })
-                    localStorage.setItem('reports', JSON.stringify(reports))
-                    alert('🚨 댓글이 신고되었습니다.')
-                  }}
-                >
-                  🚩
-                </button>
+  className="c-report"
+  title="댓글 신고"
+  onClick={() => handleReportComment(c)}
+>
+  🚩
+</button>
+
+
+
 
                 <button
                   className="c-delete"
@@ -677,6 +781,34 @@ const getDisplayName = (c: Comment): string => {
         )
       })}
   </ul>
+{/* 🚫 정지 상태 안내 */}
+{(() => {
+  const bannedUsers = JSON.parse(localStorage.getItem('bannedUsers') || '[]')
+  const uid = localStorage.getItem('userId')
+  const info = bannedUsers.find((b: any) => b.authorId === uid && Date.now() < b.expiresAt)
+  if (!info) return null
+
+  const remaining = formatRemainingTime(info.expiresAt)
+  return (
+    <div
+      style={{
+        background: 'var(--accent-bg)',
+        border: '1px solid var(--border)',
+        padding: '14px 16px',
+        borderRadius: '10px',
+        marginBottom: '14px',
+        color: 'var(--text)',
+        lineHeight: 1.5,
+      }}
+    >
+      <b>🚫 현재 계정은 정지 상태입니다.</b>
+      <br />
+      🕒 남은 시간: {remaining}
+      <br />
+      📝 정지 사유: {info.reason || '사유 없음'}
+    </div>
+  )
+})()}
 
   {/* ✅ 일반 댓글 입력창 */}
   <form onSubmit={(e) => handleAddComment(e)} className="comment-form">
@@ -750,29 +882,12 @@ const getDisplayName = (c: Comment): string => {
       <div className="report-actions">
         <button onClick={() => setShowReport(false)}>취소</button>
         <button
-          onClick={() => {
-            if (!reportReason) {
-              alert('신고 사유를 선택해주세요.')
-              return
-            }
+    onClick={handleReportPost}
+  style={{ background: 'var(--primary)', color: '#fff' }}
+>
+  제출
+</button>
 
-            const reports = JSON.parse(localStorage.getItem('reports') || '[]')
-            reports.push({
-              postId,
-              title: post.title,
-              reason: reportReason,
-              detail: (document.getElementById('reportDetail') as HTMLTextAreaElement)?.value || '',
-              createdAt: new Date().toISOString(),
-            })
-            localStorage.setItem('reports', JSON.stringify(reports))
-
-            alert('신고가 접수되었습니다.')
-            setShowReport(false)
-          }}
-          style={{ background: 'var(--primary)', color: '#fff' }}
-        >
-          제출
-        </button>
       </div>
     </div>
   </div>
