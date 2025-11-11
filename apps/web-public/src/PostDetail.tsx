@@ -53,7 +53,40 @@ export default function PostDetail() {
     (commentPage - 1) * commentsPerPage,
     commentPage * commentsPerPage
   )
+  const [showReport, setShowReport] = useState(false)
+const [reportReason, setReportReason] = useState('')
   const [replyToId, setReplyToId] = useState<number | null>(null)
+  const locationHook = useLocation()
+const absoluteUrl =
+  typeof window !== 'undefined'
+    ? `${window.location.origin}${locationHook.pathname}${locationHook.search}`
+    : ''
+
+const handleShare = async () => {
+  const title = post?.title || '게시글'
+  const text = '이 글을 공유합니다'
+
+  try {
+    if (navigator.share) {
+      await navigator.share({ title, text, url: absoluteUrl })
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(absoluteUrl)
+      alert('📋 링크가 복사되었습니다!')
+    } else {
+      const temp = document.createElement('input')
+      temp.value = absoluteUrl
+      document.body.appendChild(temp)
+      temp.select()
+      document.execCommand('copy')
+      document.body.removeChild(temp)
+      alert('📋 링크가 복사되었습니다!')
+    }
+  } catch (err) {
+    console.error(err)
+    alert('공유에 실패했습니다. 다시 시도해주세요.')
+  }
+}
+
 
   // ✅ 슬러그 정규화
   useEffect(() => {
@@ -162,6 +195,7 @@ const renderReplies = (parentId: number, depth = 1): JSX.Element | null => {
   if (depth > 3) return null // ✅ 3단계 제한
 
   return (
+    
     <ul className="reply-list" style={{ marginLeft: `${depth * 20}px` }}>
       {childReplies.map((r) => {
         const isReplyWriter = r.authorId && post.authorId && r.authorId === post.authorId
@@ -336,21 +370,76 @@ const getDisplayName = (c: Comment): string => {
         </div>
       )}
 
-      {/* ✏️ 수정 / 삭제 */}
-      <div className="post-actions">
-        <button
-          onClick={() => setShowEditPrompt(!showEditPrompt)}
-          className={showEditPrompt ? 'btn-toggle active' : 'btn-toggle'}
-        >
-          ✏️ 수정
-        </button>
-        <button
-          onClick={() => setShowDeletePrompt(!showDeletePrompt)}
-          className={showDeletePrompt ? 'btn-toggle active' : 'btn-toggle'}
-        >
-          🗑 삭제
-        </button>
-      </div>
+ {/* ✏️ 수정 / 삭제 + 공유 + 신고 */}
+<div className="post-actions">
+  <div className="action-left">
+    <button
+      onClick={() => setShowEditPrompt(!showEditPrompt)}
+      className={showEditPrompt ? 'btn-toggle active' : 'btn-toggle'}
+    >
+      ✏️ 수정
+    </button>
+    <button
+      onClick={() => setShowDeletePrompt(!showDeletePrompt)}
+      className={showDeletePrompt ? 'btn-toggle active' : 'btn-toggle'}
+    >
+      🗑 삭제
+    </button>
+  </div>
+
+  <div className="action-right">
+    {/* 🔗 공유 아이콘 */}
+    <button
+      className="btn-share-icon"
+      title="공유하기"
+      onClick={async () => {
+        const url = `${window.location.origin}${location.pathname}${location.search}`
+        const title = post.title || '게시글'
+        try {
+          if (navigator.share) {
+            await navigator.share({ title, url })
+          } else {
+            await navigator.clipboard.writeText(url)
+            alert('📋 링크가 복사되었습니다!')
+          }
+        } catch (err) {
+          console.error(err)
+        }
+      }}
+    >
+      🔗
+    </button>
+
+    {/* 📋 URL 복사 버튼 */}
+    <button
+      className="btn-copy-url"
+      onClick={async () => {
+        const url = `${window.location.origin}${location.pathname}${location.search}`
+        try {
+          await navigator.clipboard.writeText(url)
+          alert('URL이 복사되었습니다!')
+        } catch (err) {
+          console.error(err)
+          alert('복사에 실패했습니다.')
+        }
+      }}
+    >
+      URL
+    </button>
+
+    {/* 🚩 신고 버튼 (👉 여기에 옮김) */}
+    <button
+      className="btn-report"
+      onClick={() => setShowReport(true)}
+      title="신고하기"
+    >
+      🚩 신고
+    </button>
+  </div>
+</div>
+
+
+            
 
       {showEditPrompt && (
         <div className="inline-password-box">
@@ -363,6 +452,7 @@ const getDisplayName = (c: Comment): string => {
           <button onClick={handleEditConfirm}>수정 확인</button>
           {editError && <p className="error">{editError}</p>}
         </div>
+
       )}
 
       {showDeletePrompt && (
@@ -555,6 +645,62 @@ const getDisplayName = (c: Comment): string => {
       >
         ← 목록으로
       </button>
+      {showReport && (
+  <div className="report-modal-backdrop" onClick={() => setShowReport(false)}>
+    <div className="report-modal" onClick={(e) => e.stopPropagation()}>
+      <h3>게시글 신고</h3>
+      <p>신고 사유를 선택해주세요.</p>
+
+      <select
+        value={reportReason}
+        onChange={(e) => setReportReason(e.target.value)}
+      >
+        <option value="">-- 선택 --</option>
+        <option value="스팸/광고">스팸/광고</option>
+        <option value="욕설/비방">욕설/비방</option>
+        <option value="음란물/부적절한 내용">음란물/부적절한 내용</option>
+        <option value="개인정보 노출">개인정보 노출</option>
+        <option value="기타">기타</option>
+      </select>
+
+      <textarea
+        placeholder="추가 설명 (선택)"
+        rows={3}
+        style={{ width: '100%', marginTop: '8px' }}
+        id="reportDetail"
+      />
+
+      <div className="report-actions">
+        <button onClick={() => setShowReport(false)}>취소</button>
+        <button
+          onClick={() => {
+            if (!reportReason) {
+              alert('신고 사유를 선택해주세요.')
+              return
+            }
+
+            const reports = JSON.parse(localStorage.getItem('reports') || '[]')
+            reports.push({
+              postId,
+              title: post.title,
+              reason: reportReason,
+              detail: (document.getElementById('reportDetail') as HTMLTextAreaElement)?.value || '',
+              createdAt: new Date().toISOString(),
+            })
+            localStorage.setItem('reports', JSON.stringify(reports))
+
+            alert('신고가 접수되었습니다.')
+            setShowReport(false)
+          }}
+          style={{ background: 'var(--primary)', color: '#fff' }}
+        >
+          제출
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   )
 }

@@ -277,11 +277,16 @@ export default function PostsList() {
           <button
             className="arrow"
             onClick={() => {
-              const prevGroup = Math.floor((page - 1) / 10) * 10
-              setPage(prevGroup)
-              setSearchParams({ page: String(prevGroup) })
-              window.scrollTo({ top: 0 })
-            }}
+                const prevGroup = Math.floor((page - 1) / 10) * 10
+                setPage(prevGroup)
+                setSearchParams(prev => {
+                  const sp = new URLSearchParams(prev)
+                  sp.set('page', String(prevGroup))
+                  return sp
+                })
+                window.scrollTo({ top: 0 })
+              }}
+
           >
             ◀
           </button>
@@ -297,9 +302,14 @@ export default function PostsList() {
               className={page === num ? 'active' : ''}
               onClick={() => {
                 setPage(num)
-                setSearchParams({ page: String(num) })
+                setSearchParams(prev => {
+                  const sp = new URLSearchParams(prev)
+                  sp.set('page', String(num))
+                  return sp
+                })
                 window.scrollTo({ top: 0 })
               }}
+
             >
               {num}
             </button>
@@ -313,9 +323,14 @@ export default function PostsList() {
             onClick={() => {
               const nextGroup = Math.floor((page - 1) / 10) * 10 + 11
               setPage(nextGroup)
-              setSearchParams({ page: String(nextGroup) })
+              setSearchParams(prev => {
+                const sp = new URLSearchParams(prev)
+                sp.set('page', String(nextGroup))
+                return sp
+              })
               window.scrollTo({ top: 0 })
             }}
+
           >
             ▶
           </button>

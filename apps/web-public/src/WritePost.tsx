@@ -168,7 +168,7 @@ if (!userId) {
   userId = crypto.randomUUID()
   localStorage.setItem('userId', userId)
 }
-
+  const COOLDOWN_MS = 30000
   // ✅ 최종 제출
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()

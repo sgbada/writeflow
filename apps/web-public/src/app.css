@@ -1961,3 +1961,207 @@ select:hover,
 .writer-link:hover {
   text-decoration: underline;
 }
+
+.share-section {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+.btn-share {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-share:hover {
+  background: var(--accent-bg);
+}
+
+.post-actions {
+  display: flex;
+  justify-content: space-between; /* 왼쪽: 수정/삭제, 오른쪽: 공유 */
+  align-items: center;
+  margin-top: 10px;
+}
+
+.action-left {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-share-icon {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+
+.btn-share-icon:hover {
+  color: var(--primary);
+}
+
+.post-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.action-left {
+  display: flex;
+  gap: 8px;
+}
+
+/* 🔧 공유/복사 버튼을 수정/삭제 버튼 크기와 통일 */
+.action-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 공유 아이콘 버튼 */
+.btn-share-icon {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;     /* 👈 수정/삭제 버튼과 동일 */
+  font-size: 14px;        /* 👈 글자 크기 통일 */
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-share-icon:hover {
+  background: #f0f0f0;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* URL 복사 버튼 */
+.btn-copy-url {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;      /* 👈 동일 높이/폭 */
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-copy-url:hover {
+  background: var(--accent-bg);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* 다크모드 호환 */
+[data-theme="dark"] .btn-share-icon,
+[data-theme="dark"] .btn-copy-url {
+  background: #2a2a2a;
+  border-color: #555;
+  color: #ddd;
+}
+
+[data-theme="dark"] .btn-share-icon:hover,
+[data-theme="dark"] .btn-copy-url:hover {
+  background: #333;
+  color: #4ea0ff;
+  border-color: #4ea0ff;
+}
+
+.btn-report {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  color: #d63031; /* 빨간색 강조 */
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-report:hover {
+  background: #ffecec;
+  border-color: #ff7675;
+  color: #c0392b;
+}
+
+/* === 🚨 신고 모달 === */
+.report-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4); /* 어두운 반투명 배경 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.report-modal {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  width: 360px;
+  max-width: 90vw;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: popup-fade 0.25s ease;
+}
+
+@keyframes popup-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.report-modal h3 {
+  margin-top: 0;
+  color: var(--text);
+}
+
+.report-modal select,
+.report-modal textarea {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+  background: var(--card-bg);
+  color: var(--text);
+}
+
+.report-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.report-actions button {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  background: var(--card-bg);
+  transition: background 0.2s ease;
+}
+
+.report-actions button:hover {
+  background: var(--accent-bg);
+}

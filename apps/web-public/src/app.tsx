@@ -8,6 +8,9 @@ import NotFound from "./NotFound"
 import ThemeToggle from "./ThemeToggle"
 import ScrollToTop from './ScrollToTop'
 import 'react-quill/dist/quill.snow.css'
+import ReportsList from './ReportsList'
+
+
 
 function Layout() {
   const navigate = useNavigate()
@@ -115,6 +118,7 @@ function AppRoutes() {
 
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
+      <Route path="/reports" element={<ReportsList />} />
     </Routes>
   )
 }
