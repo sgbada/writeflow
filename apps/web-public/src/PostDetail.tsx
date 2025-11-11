@@ -139,32 +139,58 @@ const isAuthor =
     deletePost(postId, deletePwd)
     navigate('/')
   }
-
 const handleAddComment = (e: FormEvent, parentId?: number) => {
   e.preventDefault()
+
+  // ✅ 유저 식별자 (고유 userId)
+  let userId = localStorage.getItem('userId')
+  if (!userId) {
+    userId = crypto.randomUUID()
+    localStorage.setItem('userId', userId)
+  }
+
+  // ✅ 정지 리스트 불러오기
+  const banned: any[] = JSON.parse(localStorage.getItem('bannedUsers') || '[]')
+
+  // ✅ 현재 사용자가 정지된 상태인지 확인
+  const banInfo = banned.find((b) => b.authorId === userId)
+
+  if (banInfo && Date.now() < banInfo.expiresAt) {
+    const diffMs = banInfo.expiresAt - Date.now()
+    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000))
+    const diffHours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
+    const diffMinutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000))
+
+    let remainingMsg = ''
+    if (diffDays >= 1) {
+      remainingMsg = `${diffDays}일 ${diffHours}시간 남음`
+    } else if (diffHours >= 1) {
+      remainingMsg = `${diffHours}시간 ${diffMinutes}분 남음`
+    } else {
+      remainingMsg = `${diffMinutes}분 남음`
+    }
+
+    alert(`🚫 현재 정지된 상태입니다.\n(${remainingMsg})\n댓글을 작성할 수 없습니다.`)
+    return
+  }
+
+  // ✅ 입력 확인
   const input = parentId
     ? replyInputs[parentId]
     : { nickname, password: commentPwd, text: comment }
+
   if (!input.text.trim()) return
 
-  const userId = localStorage.getItem('userId') || crypto.randomUUID()
-  localStorage.setItem('userId', userId)
-  const currentUserId = localStorage.getItem('userId')
-  const isAuthor =
-  (post.authorId && post.authorId === currentUserId) ||
-  (!post.authorId && post.author === currentUser)
+  // ✅ 댓글 저장
+  addComment(postId, {
+    author: input.nickname || '익명',
+    authorId: userId, // ✅ 이제 postId 포함하지 않음
+    text: input.text.trim(),
+    password: input.password || undefined,
+    parentId,
+  })
 
-  // ✅ 실제 저장 (언급 제거 버전)
-addComment(postId, {
-  author: input.nickname || '익명',
-  authorId: userId,
-  text: input.text.trim(), // ✅ @닉네임 제거
-  password: input.password || undefined,
-  parentId,
-})
-
-
-  // ✅ 입력 초기화
+  // ✅ 입력창 초기화
   if (parentId) {
     setReplyInputs((prev) => ({
       ...prev,
@@ -177,6 +203,7 @@ addComment(postId, {
     setCommentPwd('')
   }
 }
+
 
 
   const handleCommentDelete = (cid: number) => {
@@ -217,6 +244,32 @@ const renderReplies = (parentId: number, depth = 1): JSX.Element | null => {
                 >
                   ⤷
                 </button>
+                {/* 🚨 댓글 신고 버튼 */}
+
+              <button
+                className="c-report"
+                title="댓글 신고"
+                onClick={() => {
+                  const reason = prompt('댓글 신고 사유를 입력하세요 (예: 욕설, 스팸 등)')
+                  if (!reason) return
+                  const reports = JSON.parse(localStorage.getItem('reports') || '[]')
+                  reports.push({
+                    postId,
+                    commentId: c.id,
+                    author: c.author,
+                    authorId: c.authorId || localStorage.getItem('userId') || `anon-${c.id}`, // ✅ 익명도 고유 ID 생성
+                    reason,
+                    text: c.text,
+                    createdAt: new Date().toISOString(),
+                  })
+
+                  localStorage.setItem('reports', JSON.stringify(reports))
+                  alert('댓글이 신고되었습니다.')
+                }}
+              >
+                🚩
+              </button>
+
                 <button
                   className="c-delete"
                   onClick={() => setCommentDeleteId(r.id)}
@@ -427,7 +480,7 @@ const getDisplayName = (c: Comment): string => {
       URL
     </button>
 
-    {/* 🚩 신고 버튼 (👉 여기에 옮김) */}
+    {/* 🚩 신고 버튼 */}
     <button
       className="btn-report"
       onClick={() => setShowReport(true)}
@@ -515,6 +568,30 @@ const getDisplayName = (c: Comment): string => {
                 >
                   ⤷
                 </button>
+                 {/* 🚨 댓글 신고 버튼 */}
+                <button
+                  className="c-report"
+                  title="댓글 신고"
+                  onClick={() => {
+                    const reason = prompt('댓글 신고 사유를 입력하세요 (예: 욕설, 스팸 등)')
+                    if (!reason) return
+                    const reports = JSON.parse(localStorage.getItem('reports') || '[]')
+                    reports.push({
+                      postId,
+                      commentId: c.id,
+                      author: c.author|| `anon-${postId}`,
+                      authorId: c.authorId || localStorage.getItem('userId') || `anon-${c.id}`,
+                      reason,
+                      text: c.text,
+                      createdAt: new Date().toISOString(),
+                    })
+                    localStorage.setItem('reports', JSON.stringify(reports))
+                    alert('🚨 댓글이 신고되었습니다.')
+                  }}
+                >
+                  🚩
+                </button>
+
                 <button
                   className="c-delete"
                   onClick={() => setCommentDeleteId(c.id)}

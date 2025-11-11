@@ -2165,3 +2165,110 @@ select:hover,
 .report-actions button:hover {
   background: var(--accent-bg);
 }
+
+/* 댓글 액션 버튼 그룹 정리 */
+.c-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* ✅ 버튼 간격 줄이기 */
+}
+
+/* 모든 댓글 버튼 (답글, 신고, 삭제) 공통 스타일 */
+.c-actions button {
+  background: none;
+  border: none;
+  padding: 0 3px; /* ✅ 좌우 여백 최소화 */
+  cursor: pointer;
+  font-size: 13px; /* ✅ 통일된 크기 */
+  line-height: 1;
+  color: #888;
+  transition: color 0.15s ease, transform 0.1s ease;
+}
+
+/* 버튼 hover 시 약간의 강조 */
+.c-actions button:hover {
+  color: var(--primary);
+  transform: scale(1.15);
+}
+
+/* 🚨 신고 버튼 (회색 버전) */
+.c-report {
+  color: #888;            /* 기본 회색 */
+  font-size: 13px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0 3px;
+  line-height: 1;
+  transition: color 0.15s ease, transform 0.1s ease;
+}
+
+/* hover 시 살짝 어두운 회색 + 미묘한 확대 */
+.c-report:hover {
+  color: #555;            /* hover 시 진회색 */
+  transform: scale(1.1);
+}
+
+
+/* ✕ 삭제 버튼 조금만 회색으로 */
+.c-delete {
+  color: #aaa;
+}
+
+.c-delete:hover {
+  color: #ff4d4d;
+}
+
+/* 답글 버튼 약간 어둡게 */
+.reply-btn {
+  color: #666;
+}
+
+.reply-btn:hover {
+  color: var(--primary);
+}
+
+/* 🚨 댓글 신고 버튼 (회색 고정, 게시글 신고와 구분) */
+.c-actions .c-report {
+  color: #999 !important;         /* ✅ 진한 회색 */
+  font-size: 13px;
+  background: none;
+  border: none;
+  padding: 0 3px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s ease, transform 0.1s ease;
+}
+
+.c-actions .c-report:hover {
+  color: #555 !important;         /* hover 시 약간 진해짐 */
+  transform: scale(1.1);
+}
+
+.report-list {
+  list-style: none;
+  padding: 0;
+}
+
+.report-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.report-item strong {
+  color: var(--primary);
+}
+
+.report-item p {
+  margin: 4px 0;
+  color: var(--text);
+}
+
+.report-item hr {
+  margin-top: 8px;
+  border: none;
+  border-top: 1px solid var(--border);
+}

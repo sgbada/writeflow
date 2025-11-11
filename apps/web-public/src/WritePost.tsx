@@ -23,6 +23,17 @@ if (!localStorage.getItem('userId')) {
   localStorage.setItem('userId', crypto.randomUUID())
 }
 
+// ✅ 남은 정지 시간 계산 (댓글/게시글 공통)
+function formatRemainingTime(expiresAt: number): string {
+  const diffMs = expiresAt - Date.now()
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000))
+  const diffHours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
+  const diffMinutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000))
+
+  if (diffDays >= 1) return `${diffDays}일 ${diffHours}시간 남음`
+  if (diffHours >= 1) return `${diffHours}시간 ${diffMinutes}분 남음`
+  return `${diffMinutes}분 남음`
+}
 
 
 export default function WritePost() {
@@ -163,54 +174,71 @@ export default function WritePost() {
   }
   const existingAuthorId = existing?.authorId || localStorage.getItem('userId')!
   // ✅ 항상 userId를 먼저 확보
+ // ✅ 항상 userId를 먼저 확보
 let userId = localStorage.getItem('userId')
 if (!userId) {
   userId = crypto.randomUUID()
   localStorage.setItem('userId', userId)
 }
-  const COOLDOWN_MS = 30000
-  // ✅ 최종 제출
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    const uniqueTags = Array.from(
-      new Set(
-        (Array.isArray(tags) ? tags : tags.split(/[\s,]+/))
-          .map((t) => t.trim().replace(/^#/, ''))
-          .filter(Boolean)
-      )
-    )
 
-    // ✅ 작성자 설정: 로그인 유저명 or 익명
-    const currentUser = localStorage.getItem('username') || '익명'
-    const isLoggedIn = !!localStorage.getItem('username')
+const COOLDOWN_MS = 30000
 
-    const userId = localStorage.getItem('userId')!
+// ✅ 최종 제출
+// ✅ 최종 제출
+const handleSubmit = (e: FormEvent) => {
+  e.preventDefault()
 
-    const newPost: Post = {
-      id: postId || Date.now(),
-      title,
-      content,
-      board,
-      tags: uniqueTags,
-      slug: title.trim().toLowerCase().replace(/[^\w가-힣]+/g, '-'),
-      createdAt: existing?.createdAt || new Date().toISOString(),
-      password,
-      likes: existing?.likes ?? 0,
-      comments: existing?.comments ?? [],
-      images,
-      author: author.trim() || currentUser,
-      authorId: existing?.authorId || userId, // ✅ 항상 포함됨
-      isRegisteredUser: !!localStorage.getItem('username'),
-    }
-
-
-
-    if (id) editPost(postId!, newPost)
-    else addPost(newPost)
-
-    localStorage.removeItem('tempPost')
-    navigate('/')
+  // 🚫 정지된 사용자 체크 (게시글 작성 금지)
+  localStorage.setItem('userId', userId!)
+  const banned = JSON.parse(localStorage.getItem('bannedUsers') || '[]')
+  const currentUserId = localStorage.getItem('userId')
+  const banInfo = banned.find((b: any) => b.authorId === currentUserId && Date.now() < b.expiresAt)
+  
+  if (banInfo) {
+    const remainingMsg = formatRemainingTime(banInfo.expiresAt)
+    alert(`🚫 현재 정지된 상태입니다.\n(${remainingMsg})\n게시글을 작성할 수 없습니다.`)
+    return
   }
+
+  const uniqueTags = Array.from(
+    new Set(
+      (Array.isArray(tags) ? tags : tags.split(/[\s,]+/))
+        .map((t) => t.trim().replace(/^#/, ''))
+        .filter(Boolean)
+    )
+  )
+
+  const currentUser = localStorage.getItem('username') || '익명'
+
+  const newPost: Post = {
+    id: postId || Date.now(),
+    title,
+    content,
+    board,
+    tags: uniqueTags,
+    slug: title.trim().toLowerCase().replace(/[^\w가-힣]+/g, '-'),
+    createdAt: existing?.createdAt || new Date().toISOString(),
+    password,
+    likes: existing?.likes ?? 0,
+    comments: existing?.comments ?? [],
+    images,
+    author: author.trim() || currentUser,
+    authorId: existing?.authorId || userId!,
+    isRegisteredUser: !!localStorage.getItem('username'),
+  }
+
+  if (id) editPost(postId!, newPost)
+  else addPost(newPost)
+
+  localStorage.removeItem('tempPost')
+  navigate('/')
+}
+// 🚫 정지 상태 계산 (렌더링용)
+const banned = JSON.parse(localStorage.getItem('bannedUsers') || '[]')
+const currentUserId = localStorage.getItem('userId')
+const banInfo = banned.find((b: any) => b.authorId === currentUserId && Date.now() < b.expiresAt)
+const isBanned = !!banInfo
+const remainingMsg = banInfo ? formatRemainingTime(banInfo.expiresAt) : ''
 
 
   return (
@@ -298,9 +326,27 @@ if (!userId) {
                 {isSaved ? `${lastSaved} 자동 저장됨` : '⚠️ 저장 안 됨'}
               </span>
             )}
-            <button type="submit" className="comment-submit-btn">
+            <button
+              type="submit"
+              className="comment-submit-btn"
+              onClick={(e) => {
+                if (isBanned) {
+                  e.preventDefault()
+                  alert(`🚫 현재 정지된 상태입니다.\n(${remainingMsg})\n게시글을 작성할 수 없습니다.`)
+                  return
+                }
+                // 통과: 작성 가능
+              }}
+              style={{
+                opacity: isBanned ? 0.5 : 1,
+                cursor: isBanned ? 'not-allowed' : 'pointer',
+                pointerEvents: 'auto', // ✅ 클릭 막히지 않도록 활성화
+              }}
+            >
               {id ? '수정 완료' : '등록'}
             </button>
+
+
           </div>
         </div>
       </form>
