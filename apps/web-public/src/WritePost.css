@@ -1,0 +1,688 @@
+/* --------------------------------------- */
+/* 전체 WRAPPER (중복 제거 + 통합) */
+/* --------------------------------------- */
+
+.write-wrapper {
+  width: 100%;
+  max-width: 480px;
+  margin: 0px auto;
+  padding: 32px 18px 100px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(8px);
+  border-radius: 22px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  box-sizing: border-box;
+}
+
+/* dark */
+[data-theme="dark"] .write-wrapper {
+  background: rgba(20,20,20,0.6);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+
+
+/* --------------------------------------- */
+/* 감정별 배경 테마 */
+/* --------------------------------------- */
+
+.write-wrapper.theme-joy    { background: linear-gradient(135deg, #fff6b2, #ffd76a); }
+.write-wrapper.theme-sad    { background: linear-gradient(135deg, #dfe9f5, #b8c6db); }
+.write-wrapper.theme-anger  { background: linear-gradient(135deg, #ffbaba, #ff7b7b); }
+.write-wrapper.theme-fear   { background: linear-gradient(135deg, #e4e4fa, #b4b8ff); }
+.write-wrapper.theme-love   { background: linear-gradient(135deg, #ffdce7, #ff9bb5); }
+
+/* dark 감정별 */
+[data-theme="dark"] .write-wrapper.theme-joy   { --neon-r:255; --neon-g:226; --neon-b:138; }
+[data-theme="dark"] .write-wrapper.theme-sad   { --neon-r:136; --neon-g:199; --neon-b:255; }
+[data-theme="dark"] .write-wrapper.theme-anger { --neon-r:255; --neon-g:107; --neon-b:107; }
+[data-theme="dark"] .write-wrapper.theme-fear  { --neon-r:157; --neon-g:141; --neon-b:247; }
+[data-theme="dark"] .write-wrapper.theme-love  { --neon-r:255; --neon-g:128; --neon-b:181; }
+
+
+
+/* --------------------------------------- */
+/* NIGHT SKY - 별 효과 */
+/* --------------------------------------- */
+
+[data-theme="dark"] .writepage-bg {
+  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.09), rgba(0,0,0,0.95));
+  position: relative;
+  overflow: hidden;
+}
+
+/* ⭐ 별 PNG (CORS-free) */
+[data-theme="dark"] .writepage-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+
+
+/* --------------------------------------- */
+/* 다크모드 네온 카드 */
+/* --------------------------------------- */
+
+[data-theme="dark"] .write-wrapper {
+  border: 1px solid rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.25);
+  box-shadow:
+    0 0 22px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.25),
+    0 0 8px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.10);
+  animation: neonpulse 3s infinite ease-in-out;
+}
+
+/* 네온 애니메이션 */
+@keyframes neonpulse {
+  0%,100% {
+    box-shadow: 0 0 12px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.15);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.35);
+  }
+}
+
+
+
+/* --------------------------------------- */
+/* STEP 전환 */
+/* --------------------------------------- */
+
+.step {
+  transition: opacity .3s, transform .3s;
+}
+
+.step.hidden {
+  opacity: 0;
+  transform: translateX(40px);
+  height: 0;
+  overflow: hidden;
+}
+
+.step.active {
+  opacity: 1;
+  transform: translateX(0);
+  height: auto;
+}
+
+
+
+/* --------------------------------------- */
+/* TEXTAREA */
+/* --------------------------------------- */
+
+
+.write-form textarea {
+  width: 100%;
+  display: block;
+  height: 150px;              /* ⭐ 튀어나오는 원인 제거 */
+  padding: 16px;
+  border-radius: 14px;
+  border: none;
+  resize: none;
+  font-size: 15px;
+  line-height: 1.5;
+
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  box-sizing: border-box;
+}
+[data-theme="dark"] .write-form textarea {
+  background: rgba(255,255,255,0.05);
+  color: #eee;
+}
+
+/* textarea 컨테이너가 밀리지 않도록 */
+.write-form {
+  overflow: visible; /* ⭐ 반드시 필요 */
+}
+
+
+/* --------------------------------------- */
+/* 스탬프, 입력, 버튼 등 기존 스타일 유지 */
+/* --------------------------------------- */
+
+.stamp-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.stamp-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* 공통 */
+.submit-btn,
+.stamp-add {
+  padding: 12px 0;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+
+/* 기쁨 */
+.theme-joy .submit-btn,
+.theme-joy .stamp-add {
+  background: #ffd76a;
+  color: #5a4200;
+}
+
+/* 슬픔 */
+.theme-sad .submit-btn,
+.theme-sad .stamp-add {
+  background: #b8c6db;
+  color: #0f2a4d;
+}
+
+/* 분노 */
+.theme-anger .submit-btn,
+.theme-anger .stamp-add {
+  background: #ff7b7b;
+  color: #4d0000;
+}
+
+/* 두려움 */
+.theme-fear .submit-btn,
+.theme-fear .stamp-add {
+  background: #b4b8ff;
+  color: #181a45;
+}
+
+/* 사랑 */
+.theme-love .submit-btn,
+.theme-love .stamp-add {
+  background: #ff9bb5;
+  color: #4a1123;
+}
+
+
+.writepage-bg {
+  min-height: calc(100vh - 100px);     /* ⭐ 반드시 화면을 꽉 채움 */
+  padding: 32px 0;   /* 아래 띠 제거 */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background-size: cover;
+}
+
+/* 카드 상단 컨트롤 바 */
+.card-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.ctrl-btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+}
+
+
+.theme-joy .ctrl-btn { background: #ffe8a8; color: #5a4200; }
+.theme-sad .ctrl-btn { background: #d9e7ff; color: #0a2649; }
+.theme-anger .ctrl-btn { background: #ffc8c8; color: #5a0000; }
+.theme-fear .ctrl-btn { background: #dcd9ff; color: #1c1d52; }
+.theme-love .ctrl-btn { background: #ffd1e2; color: #52152b; }
+
+
+
+
+/* 다크 모드 */
+[data-theme="dark"] .ctrl-back {
+  color: #f5f5f5;
+  text-shadow: 0 2px 6px rgba(255,255,255,0.25);
+}
+
+[data-theme="dark"] .ctrl-back:hover {
+  text-shadow: 0 3px 12px rgba(255,255,255,0.35);
+}
+
+
+
+.ctrl-back:hover {
+  transform: translateX(-3px) scale(1.05);
+  text-shadow: 0 3px 10px rgba(0,0,0,0.25);
+}
+
+.ctrl-back:active {
+  transform: scale(0.92);
+  opacity: 0.75;
+}
+
+
+.textarea-wrapper {
+  position: relative;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 150px;
+  resize: none;
+  line-height: 1.6;
+  font-size: 15px;
+  padding: 20px 20px;
+  border-radius: 14px;
+  border: none;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.95);
+  overflow: hidden; /* ⭐ 깜빡임 방지 */
+}
+
+/* 숨겨진 미러 div */
+.textarea-mirror {
+  visibility: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.6;
+  font-size: 15px;
+  padding: 20px 20px;
+  width: 100%;
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+
+.stamp-row button {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+/* 감정 테마별 버튼 색 */
+.theme-joy .stamp-row button { background: #ffe38a; color: #5a4200; }
+.theme-sad .stamp-row button { background: #bcd8ff; color: #0f2a4d; }
+.theme-anger .stamp-row button { background: #ffb1b1; color: #4d0000; }
+.theme-fear .stamp-row button  { background: #c7c4ff; color: #181a45; }
+.theme-love .stamp-row button  { background: #ffc1d6; color: #4a1123; }
+
+/* hover */
+.stamp-row button:hover { opacity: 0.9; }
+
+/* -------------------------- */
+/* 하단 고정 바 */
+/* -------------------------- */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 12px 24px;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  z-index: 999;
+}
+
+[data-theme="dark"] .bottom-bar {
+  background: rgba(30,30,30,0.6);
+  border-color: rgba(255,255,255,0.1);
+}
+
+.bottom-back,
+.bottom-save {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #f5f5f5;
+}
+
+.bottom-save {
+  background: #ffeec7;
+}
+
+[data-theme="dark"] .bottom-back,
+[data-theme="dark"] .bottom-save {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+.submit-btn {
+  margin-top: 16px;
+  margin-bottom: 10px; /* 기존 80~120px 같은 과한 여백 제거 */
+  position: relative;
+  overflow: hidden;
+}
+
+/* ================================
+   📌 WRITE PAGE — 고정 하단 바
+================================ */
+
+
+.back-btn {
+  font-size: 20px;
+  border: none;
+  background: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.save-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  cursor: pointer;
+  color: var(--text);
+}
+
+.save-btn:hover {
+  background: var(--accent-bg);
+}
+
+/* 📌 다크모드 */
+[data-theme="dark"] .write-bottom-bar {
+  background: #1e1e1e;
+  border-color: #444;
+}
+
+[data-theme="dark"] .save-btn {
+  background: #2a2a2a;
+  border-color: #555;
+  color: #ddd;
+}
+
+[data-theme="dark"] .save-btn:hover {
+  background: #333;
+}
+
+.write-bottom-inside {
+  display: flex;
+  justify-content: space-between; /* ← 좌/우 끝으로 붙게 함 */
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+/* STEP1: 감정 선택 카드 (다크 모드에서 밝게 보이게) */
+[data-theme="dark"] .write-wrapper {
+  background: rgba(255,255,255,0.08) !important;
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow:
+    0 4px 20px rgba(0,0,0,0.6),
+    0 0 40px rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] .write-wrapper,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] .subtitle {
+  color: #f2f2f2 !important;
+}
+
+[data-theme="dark"] .emotion-buttons button {
+  background: rgba(255,255,255,0.15);
+  color: #f1f1f1;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+[data-theme="dark"] .emotion-buttons button:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+[data-theme="dark"] .writepage-bg {
+  background: radial-gradient(circle at 50% 20%, #222, #0d0d0d);
+}
+[data-theme="dark"] .writepage-bg::after {
+  opacity: 0.08;
+}
+
+/* ============================================
+   ⭐ 모든 버튼 공통 애니메이션 복구
+   ============================================ */
+button {
+  transition: background 0.25s ease, 
+              transform 0.15s ease,
+              opacity 0.25s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  opacity: 0.93;
+}
+
+button:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+/* 감정 테마 별로 hover glow */
+.theme-joy button:hover {
+  box-shadow: 0 0 10px rgba(255, 215, 106, 0.6);
+}
+
+.theme-sad button:hover {
+  box-shadow: 0 0 10px rgba(184, 198, 219, 0.6);
+}
+
+.theme-anger button:hover {
+  box-shadow: 0 0 10px rgba(255, 123, 123, 0.6);
+}
+
+.theme-fear button:hover {
+  box-shadow: 0 0 10px rgba(180, 184, 255, 0.6);
+}
+
+.theme-love button:hover {
+  box-shadow: 0 0 10px rgba(255, 155, 181, 0.6);
+}
+
+/* ============================================
+   ⭐ 라이트 모드 — 감정 선택 버튼 hover 색상
+   ============================================ */
+
+/* 공통 transition */
+.emotion-buttons button {
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+/* 라이트 모드에서만 적용 */
+[data-theme="light"] .emotion-buttons button:hover {
+  transform: translateY(-2px);
+  color: #000;
+}
+
+/* ⭐ 감정별 hover 색상 */
+[data-theme="light"] .emotion-buttons button:nth-child(1):hover {
+  background: #ffe48a; /* joy */
+}
+[data-theme="light"] .emotion-buttons button:nth-child(2):hover {
+  background: #c6d6f1; /* sad */
+}
+[data-theme="light"] .emotion-buttons button:nth-child(3):hover {
+  background: #ffb2b2; /* anger */
+}
+[data-theme="light"] .emotion-buttons button:nth-child(4):hover {
+  background: #cfcffd; /* fear */
+}
+[data-theme="light"] .emotion-buttons button:nth-child(5):hover {
+  background: #ffc6d9; /* love */
+}
+
+/* =======================================  
+   ⭐ 라이트 모드 감정 버튼 Hover 효과  
+   ======================================= */
+[data-theme="light"] .emotion-buttons button {
+  transition: all 0.25s ease;
+  background: #fff;
+  border: 1px solid #eee;
+}
+
+/* hover 시 기본 효과 */
+[data-theme="light"] .emotion-buttons button:hover {
+  transform: translateY(-3px) scale(1.03);
+  border-color: transparent;
+}
+
+/* 감정별 그라데이션 + glow */
+[data-theme="light"] .emotion-buttons button[data-emotion="joy"]:hover {
+  background: linear-gradient(135deg, #fff3a3, #ffd76a);
+  box-shadow: 0 6px 16px rgba(255, 195, 55, 0.35);
+}
+
+[data-theme="light"] .emotion-buttons button[data-emotion="sad"]:hover {
+  background: linear-gradient(135deg, #dbe8ff, #b9cdf0);
+  box-shadow: 0 6px 16px rgba(120, 160, 255, 0.35);
+}
+
+[data-theme="light"] .emotion-buttons button[data-emotion="anger"]:hover {
+  background: linear-gradient(135deg, #ffb5b5, #ff7b7b);
+  box-shadow: 0 6px 16px rgba(255, 80, 80, 0.38);
+}
+
+[data-theme="light"] .emotion-buttons button[data-emotion="fear"]:hover {
+  background: linear-gradient(135deg, #d3d1ff, #b7b9ff);
+  box-shadow: 0 6px 16px rgba(140, 130, 255, 0.35);
+}
+
+[data-theme="light"] .emotion-buttons button[data-emotion="love"]:hover {
+  background: linear-gradient(135deg, #ffd4e5, #ff9abb);
+  box-shadow: 0 6px 16px rgba(255, 120, 160, 0.35);
+}
+
+/* 기쁨 */
+.theme-joy .submit-btn:hover {
+  background: linear-gradient(135deg, #ffe58f, #ffcd4f);
+  box-shadow: 0 6px 16px rgba(255, 209, 79, 0.45);
+}
+
+/* 슬픔 */
+.theme-sad .submit-btn:hover {
+  background: linear-gradient(135deg, #c9d7ea, #a8b8d4);
+  box-shadow: 0 6px 16px rgba(120, 150, 200, 0.35);
+}
+
+/* 분노 */
+.theme-anger .submit-btn:hover {
+  background: linear-gradient(135deg, #ff9d9d, #ff6767);
+  box-shadow: 0 6px 16px rgba(255, 90, 90, 0.45);
+}
+
+/* 두려움 */
+.theme-fear .submit-btn:hover {
+  background: linear-gradient(135deg, #d4d3ff, #b3b2ff);
+  box-shadow: 0 6px 16px rgba(160, 150, 255, 0.35);
+}
+
+/* 사랑 */
+.theme-love .submit-btn:hover {
+  background: linear-gradient(135deg, #ffbfd3, #ff8eb0);
+  box-shadow: 0 6px 16px rgba(255, 120, 160, 0.45);
+}
+
+.submit-btn::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255,255,255,0.4); /* 파동 색 (감정별로 바꿔줄 수도 있음) */
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* hover 시 원이 퍼져나감 */
+.submit-btn:hover::after {
+  animation: wavepulse 0.6s ease-out;
+}
+
+@keyframes wavepulse {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.45;
+  }
+  100% {
+    width: 280px;
+    height: 280px;
+    opacity: 0;
+  }
+}
+
+.theme-joy .submit-btn::after { background: rgba(255,215,106,0.45); }
+.theme-sad .submit-btn::after { background: rgba(184,198,219,0.45); }
+.theme-anger .submit-btn::after { background: rgba(255,123,123,0.45); }
+.theme-fear .submit-btn::after { background: rgba(180,184,255,0.45); }
+.theme-love .submit-btn::after { background: rgba(255,155,181,0.45); }
+.step-back {
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  font-size: 22px;
+  opacity: 0.8;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.step2-header h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 auto 10px;
+  text-align: center;
+}
+
+.emotion-buttons button {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.55);
+}
+
+.step3 {
+  animation: fadein 0.4s ease-out;
+}
+
+.step.hidden {
+  opacity: 0;
+  transform: translateX(40px);
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+}
+
+.submit-btn.outline {
+  background: transparent;
+  border: 2px solid rgba(0,0,0,0.15);
+  color: var(--text);
+}
+[data-theme="dark"] .submit-btn.outline {
+  border-color: rgba(255,255,255,0.2);
+}
+
+.step.step3.hidden {
+  display: none !important;
+}

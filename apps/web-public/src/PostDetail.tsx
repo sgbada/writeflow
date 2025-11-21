@@ -1,898 +1,163 @@
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
-import { useState, FormEvent, useEffect } from 'react'
-import { usePostsStore } from './store/posts'
-import type { Comment } from './lib/types'
-import { canDo, record, formatRemain } from './lib/antispam';
-let userId = localStorage.getItem('userId')
-if (!userId) {
-  userId = crypto.randomUUID()
-  localStorage.setItem('userId', userId)
-}
-// 🕒 정지 남은 시간 계산 함수
-function formatRemainingTime(expiresAt: number): string {
-  const diffMs = expiresAt - Date.now()
-  if (diffMs <= 0) return '만료됨'
+import { useParams, useNavigate } from "react-router-dom";
+import { usePostsStore } from "./store/posts";
+import "./WritePost.css";
+import "./PostList.css";
 
-  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000))
-  const diffHours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
-  const diffMinutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000))
-
-  if (diffDays >= 1) return `${diffDays}일 ${diffHours}시간 남음`
-  if (diffHours >= 1) return `${diffHours}시간 ${diffMinutes}분 남음`
-  return `${diffMinutes}분 남음`
-}
-
+const EMOTION_LABELS: Record<string, string> = {
+  joy: "😊 기쁨",
+  sad: "😢 슬픔",
+  anger: "😠 분노",
+  fear: "😨 두려움",
+  love: "💕 사랑",
+};
 
 export default function PostDetail() {
-  const { id, slug } = useParams<{ id: string; slug?: string }>()
-  const postId = Number(id)
-  const navigate = useNavigate()
-  const { posts, deletePost, likePost, addComment, deleteComment, incrementViews } = usePostsStore()
-  const post = posts.find((p) => p.id === postId)
-  const location = useLocation()
-  const fromPage = location.state?.fromPage || 1
+  const { id } = useParams<{ id: string }>();
+  const postId = Number(id);
 
-  // ✅ 현재 로그인한 사용자명 (없으면 익명)
-  const currentUser = localStorage.getItem('username') || '익명'
+  const navigate = useNavigate();
+  const { posts, addStamp, deletePost } = usePostsStore();
 
-  // ✅ 상태들
-  const [liked, setLiked] = useState<boolean>(() => {
-    const likedPosts: number[] = JSON.parse(localStorage.getItem('likedPosts') || '[]')
-    return likedPosts.includes(postId)
-  })
-  const [nickname, setNickname] = useState('')
-  const [comment, setComment] = useState('')
-  const [commentPwd, setCommentPwd] = useState('')
-  const [commentDeletePwd, setCommentDeletePwd] = useState('')
-  const [commentDeleteId, setCommentDeleteId] = useState<number | null>(null)
-  const [anonymousMap, setAnonymousMap] = useState<Record<string, number>>({})
-  const [replyInputs, setReplyInputs] = useState<Record<number, { nickname: string; password: string; text: string }>>({})
-  const [commentDeleteError, setCommentDeleteError] = useState('')
-  const [editPwd, setEditPwd] = useState('')
-  const [editError, setEditError] = useState('')
-  const [deletePwd, setDeletePwd] = useState('')
-  const [showEditPrompt, setShowEditPrompt] = useState(false)
-  const [showDeletePrompt, setShowDeletePrompt] = useState(false)
-  const [showAllTags, setShowAllTags] = useState(false)
+  const post = posts.find((p) => p.id === postId);
 
-  // ✅ 댓글 정렬 및 페이지네이션
-  const [sortOrder, setSortOrder] = useState<'oldest' | 'newest'>('oldest')
-  const sortedComments = [...(post?.comments || [])].sort((a, b) => {
-    if (sortOrder === 'newest')
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  })
+  if (!post) return <p style={{ textAlign: "center" }}>글을 찾을 수 없습니다.</p>;
 
-  const commentsPerPage = 15
-  const [commentPage, setCommentPage] = useState(1)
-  const totalComments = sortedComments.length
-  const totalCommentPages = Math.ceil(totalComments / commentsPerPage)
-  const groupStart = Math.floor((commentPage - 1) / 10) * 10 + 1
-  const groupEnd = Math.min(groupStart + 9, totalCommentPages)
-  const currentComments = sortedComments.slice(
-    (commentPage - 1) * commentsPerPage,
-    commentPage * commentsPerPage
-  )
-  const [showReport, setShowReport] = useState(false)
-const [reportReason, setReportReason] = useState('')
-  const [replyToId, setReplyToId] = useState<number | null>(null)
-  const locationHook = useLocation()
-const absoluteUrl =
-  typeof window !== 'undefined'
-    ? `${window.location.origin}${locationHook.pathname}${locationHook.search}`
-    : ''
-
-const handleShare = async () => {
-  const title = post?.title || '게시글'
-  const text = '이 글을 공유합니다'
-
-  try {
-    if (navigator.share) {
-      await navigator.share({ title, text, url: absoluteUrl })
-    } else if (navigator.clipboard) {
-      await navigator.clipboard.writeText(absoluteUrl)
-      alert('📋 링크가 복사되었습니다!')
-    } else {
-      const temp = document.createElement('input')
-      temp.value = absoluteUrl
-      document.body.appendChild(temp)
-      temp.select()
-      document.execCommand('copy')
-      document.body.removeChild(temp)
-      alert('📋 링크가 복사되었습니다!')
-    }
-  } catch (err) {
-    console.error(err)
-    alert('공유에 실패했습니다. 다시 시도해주세요.')
-  }
-}
-
-
-  // ✅ 슬러그 정규화
-  useEffect(() => {
-    if (post && slug !== post.slug) navigate(`/post/${post.id}/${post.slug}`, { replace: true })
-  }, [post, slug, navigate])
-
-  // ✅ 조회수 증가 (1시간 중복 방지)
-  useEffect(() => {
-    if (!post) return
-    const viewedPosts = JSON.parse(localStorage.getItem('viewedPosts') || '{}') as Record<
-      number,
-      number
-    >
-    const now = Date.now()
-    const HOUR_MS = 60 * 60 * 1000
-    if (viewedPosts[postId] && now - viewedPosts[postId] < HOUR_MS) return
-    incrementViews(postId)
-    viewedPosts[postId] = now
-    localStorage.setItem('viewedPosts', JSON.stringify(viewedPosts))
-  }, [postId, post, incrementViews])
-
-  if (!post) return <p>존재하지 않는 글입니다.</p>
-
-  const currentUserId = localStorage.getItem('userId')
-const isAuthor =
-  (post.authorId && post.authorId === currentUserId) ||
-  (!post.authorId && post.author === currentUser) // old post fallback
-
-  // ✅ 좋아요
-  const handleLike = () => {
-    if (isAuthor) {
-      alert('자신의 글은 추천할 수 없습니다!')
-      return
-    }
-    if (liked) return
-    likePost(postId)
-    setLiked(true)
-    const likedPosts: number[] = JSON.parse(localStorage.getItem('likedPosts') || '[]')
-    likedPosts.push(postId)
-    localStorage.setItem('likedPosts', JSON.stringify(likedPosts))
-  }
-
-
-  // ✅ 수정 / 삭제
-  const handleEditConfirm = () => {
-    if (editPwd === post.password) navigate(`/edit/${postId}`)
-    else setEditError('비밀번호가 올바르지 않습니다.')
-  }
-  const handleDeleteConfirm = () => {
-    deletePost(postId, deletePwd)
-    navigate('/')
-  }
-const handleAddComment = (e: FormEvent, parentId?: number) => {
-  e.preventDefault();
-
-  // ✅ 정지 사용자 확인
-  const banned: any[] = JSON.parse(localStorage.getItem('bannedUsers') || '[]');
-  const banInfo = banned.find((b) => b.authorId === userId);
-  if (banInfo && Date.now() < banInfo.expiresAt) {
-    const remainingMsg = formatRemainingTime(banInfo.expiresAt);
-    alert(`🚫 현재 정지된 상태입니다.
-사유: ${banInfo.reason || '사유 없음'}
-(${remainingMsg})
-댓글을 작성할 수 없습니다.`);
-    return;
-  }
-
-  // ✅ 입력 내용 가져오기
-  const input = parentId
-    ? replyInputs[parentId]
-    : { nickname, password: commentPwd, text: comment };
-
-  // ✅ 빈 입력 방지
-  if (!input.text || !input.text.trim()) {
-    alert('댓글 내용을 입력하세요.');
-    return;
-  }
-
-  // ✅ 쿨다운 검사 (30초)
-  const { allowed, remain } = canDo('comment');
-  if (!allowed) {
-    alert(`⏳ 댓글은 ${formatRemain(remain)} 후에 다시 작성할 수 있습니다.`);
-    return;
-  }
-
-  // ✅ 댓글 등록
-  addComment(postId, {
-    author: input.nickname?.trim() || '익명',
-    authorId: userId,
-    text: input.text.trim(),
-    password: input.password || undefined,
-    parentId,
-  });
-
-  // ✅ 쿨다운 기록
-  record('comment');
-
-  // ✅ 입력창 초기화
-  if (parentId) {
-    setReplyInputs((prev) => ({
-      ...prev,
-      [parentId]: { nickname: '', password: '', text: '' },
-    }));
-    setReplyToId(null);
-  } else {
-    setNickname('');
-    setCommentPwd('');
-    setComment('');
-  }
-};
-
-
-  const handleCommentDelete = (cid: number) => {
-    const success = deleteComment(postId, cid, commentDeletePwd)
-    if (!success) setCommentDeleteError('비밀번호가 올바르지 않습니다.')
-    else {
-      setCommentDeleteError('')
-      setCommentDeleteId(null)
-      setCommentDeletePwd('')
-    }
-  }
-
-  // ✅ 들여쓰기 기반의 간단한 재귀 함수 (최대 3단계)
-const renderReplies = (parentId: number, depth = 1): JSX.Element | null => {
-  const childReplies = sortedComments.filter((r) => r.parentId === parentId)
-  if (childReplies.length === 0) return null
-  if (depth > 3) return null // ✅ 3단계 제한
-
-  return (
-    
-    <ul className="reply-list" style={{ marginLeft: `${depth * 20}px` }}>
-      {childReplies.map((r) => {
-        const isReplyWriter = r.authorId && post.authorId && r.authorId === post.authorId
-        return (
-          <li key={r.id} className="reply-item">
-            <div className="c-head">
-              <div className="c-info">
-                <strong className="c-author">
-                  {getDisplayName(r)}
-                  {isReplyWriter && <span className="badge-writer">작성자</span>}
-                </strong>
-                <span className="c-time">{new Date(r.createdAt).toLocaleString()}</span>
-              </div>
-              <div className="c-actions">
-                <button
-                  className="reply-btn"
-                  onClick={() => setReplyToId(r.id)}
-                  title="답글 달기"
-                >
-                  ⤷
-                </button>
-                {/* 🚨 댓글 신고 버튼 */}
-
-     <button
-  className="c-report"
-  title="댓글 신고"
-  onClick={() => handleReportComment(r)} // ✅ 수정됨 (r로 넘김)
->
-  🚩
-</button>
-                <button
-                  className="c-delete"
-                  onClick={() => setCommentDeleteId(r.id)}
-                  title="댓글 삭제"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            <div
-              className="c-body"
-              dangerouslySetInnerHTML={{
-                __html: r.text,
-              }}
-            />
-
-            {/* ✅ 답글 입력창 */}
-            {replyToId === r.id && (
-              <form onSubmit={(e) => handleAddComment(e, r.id)} className="reply-form">
-                <div className="replying-info">
-                  💬 {getDisplayName(r)}님에게 답글 작성 중...
-                  <button
-                    type="button"
-                    onClick={() => setReplyToId(null)}
-                    className="cancel-reply"
-                  >
-                    취소
-                  </button>
-                </div>
-                <div className="reply-fields">
-                  <div className="reply-left">
-                    <input
-                      type="text"
-                      placeholder="닉네임"
-                      value={replyInputs[r.id]?.nickname || ''}
-                      onChange={(e) =>
-                        setReplyInputs((prev) => ({
-                          ...prev,
-                          [r.id]: { ...(prev[r.id] || {}), nickname: e.target.value },
-                        }))
-                      }
-                    />
-                    <input
-                      type="password"
-                      placeholder="비밀번호"
-                      value={replyInputs[r.id]?.password || ''}
-                      onChange={(e) =>
-                        setReplyInputs((prev) => ({
-                          ...prev,
-                          [r.id]: { ...(prev[r.id] || {}), password: e.target.value },
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="reply-right">
-                    <textarea
-                      placeholder="답글을 입력하세요."
-                      value={replyInputs[r.id]?.text || ''}
-                      onChange={(e) =>
-                        setReplyInputs((prev) => ({
-                          ...prev,
-                          [r.id]: { ...(prev[r.id] || {}), text: e.target.value },
-                        }))
-                      }
-                      required
-                    />
-                    <button type="submit">등록</button>
-                  </div>
-                </div>
-              </form>
-            )}
-
-            {/* ✅ 하위 답글 렌더링 (깊이 제한 포함) */}
-            {renderReplies(r.id, depth + 1)}
-          </li>
-        )
-      })}
-    </ul>
-  )
-}
-// PostDetail.tsx — 댓글 신고 핸들러 (중복/쿨다운 포함)
-const handleReportComment = (comment: Comment) => {
-  try {
-    // 고유 사용자 ID
-    let uid = localStorage.getItem('userId');
-    if (!uid) {
-      uid = crypto.randomUUID();
-      localStorage.setItem('userId', uid);
-    }
-
-    const reportKey = `comment-${postId}-${comment.id}-${uid}`;
-
-    // 중복 체크
-    const reported: string[] = JSON.parse(localStorage.getItem('reportedItems') || '[]');
-    if (reported.includes(reportKey)) {
-      alert('🚫 이미 이 댓글을 신고하셨습니다.');
-      return;
-    }
-
-    // 쿨다운 체크
-    const { allowed, remain } = canDo('report', reportKey);
-    if (!allowed) {
-      alert(`⏳ 동일 댓글은 ${formatRemain(remain)} 후에 다시 신고할 수 있습니다.`);
-      return;
-    }
-
-    const reason = prompt('댓글 신고 사유를 입력하세요 (예: 욕설, 스팸 등)');
-    if (!reason) return;
-
-    // ✅ authorId/author/isRegisteredUser 함께 저장!
-    const reports = JSON.parse(localStorage.getItem('reports') || '[]');
-    reports.push({
-      postId,
-      commentId: comment.id,
-      author: comment.author || '익명',
-      authorId: comment.authorId,                // ← 핵심!
-      isRegisteredUser: !!localStorage.getItem('username'),
-      text: comment.text,
-      reason,
-      createdAt: new Date().toISOString(),
+  const formatDate = (d: string) => {
+    const date = new Date(d);
+    return date.toLocaleString("ko-KR", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
     });
-    localStorage.setItem('reports', JSON.stringify(reports));
+  };
 
-    // 중복 방지 & 쿨다운 기록
-    reported.push(reportKey);
-    localStorage.setItem('reportedItems', JSON.stringify(reported));
-    record('report', reportKey);
-
-    alert('🚩 댓글이 신고되었습니다.');
-  } catch (err) {
-    console.error('🚨 댓글 신고 중 오류:', err);
-    alert('댓글 신고 처리 중 오류가 발생했습니다.');
-  }
-};
-
-
-
-// ✅ 게시글 신고 핸들러 (완전 수정본)
-const handleReportPost = () => {
-  try {
-    let uid = localStorage.getItem('userId')
-    if (!uid) {
-      uid = crypto.randomUUID()
-      localStorage.setItem('userId', uid)
-    }
-
-    const targetKey = `post-${postId}-${uid}`
-
-    // ✅ 중복 체크
-    const reported: string[] = JSON.parse(localStorage.getItem('reportedItems') || '[]')
-    if (reported.includes(targetKey)) {
-      alert('🚫 이미 이 게시글을 신고하셨습니다.')
-      return
-    }
-
-    // ✅ 쿨다운 체크
-    const { allowed, remain } = canDo('report', targetKey)
-    if (!allowed) {
-      alert(`⏳ 동일 게시글은 ${formatRemain(remain)} 후에 다시 신고할 수 있습니다.`)
-      return
-    }
-
-    // ✅ 신고 사유 필수 확인
-    if (!reportReason) {
-      alert('신고 사유를 선택해주세요.')
-      return
-    }
-
-    // ✅ 세부 내용
-    const detail = (document.getElementById('reportDetail') as HTMLTextAreaElement)?.value || ''
-
-    // ✅ 신고 내역 저장
-    const reports = JSON.parse(localStorage.getItem('reports') || '[]')
-    reports.push({
-      type: 'post',
-      postId,
-      title: post.title,
-      author: post.author || '익명',
-      authorId: post.authorId,
-      isRegisteredUser: !!localStorage.getItem('username'),
-      reason: reportReason,
-      detail,
-      createdAt: new Date().toISOString(),
-    })
-    localStorage.setItem('reports', JSON.stringify(reports))
-
-    // ✅ 중복 방지 및 쿨다운 기록
-    reported.push(targetKey)
-    localStorage.setItem('reportedItems', JSON.stringify(reported))
-    record('report', targetKey)
-
-    alert('🚩 게시글이 신고되었습니다.')
-    setShowReport(false)
-  } catch (err) {
-    console.error('🚨 게시글 신고 중 오류:', err)
-    alert('게시글 신고 처리 중 오류가 발생했습니다.')
-  }
-}
-
-
-  // ✅ 익명 넘버링 함수
-const getDisplayName = (c: Comment): string => {
-  if (c.author !== '익명') return c.author
-  if (!c.authorId) return '익명'
-  if (!anonymousMap[c.authorId]) {
-    const next = Object.keys(anonymousMap).length + 1
-    setAnonymousMap((prev) => ({ ...prev, [c.authorId]: next }))
-    return `익명${next}`
-  }
-  return `익명${anonymousMap[c.authorId]}`
-}
-
+  const userId = localStorage.getItem("userId");
 
   return (
-    <div className="container post-detail">
-      <h1>{post.title}</h1>
+<div className={`writepage-bg theme-${post.emotionCategory}`}>
 
-      <div className="meta">
-        {post.author || '익명'} | {new Date(post.createdAt).toLocaleString()} | 조회 {post.views ?? 0} | 추천{' '}
-        {post.likes ?? 0}
-      </div>
+      <div className="feed-wrapper">
 
-      <hr className="post-divider" />
-
-      {/* ✅ 이미지 */}
-      {post.coverImageUrl && (
-        <img
-          src={post.coverImageUrl}
-          alt={post.title}
-          loading="lazy"
-          width="600"
-          height="400"
-          style={{
-            objectFit: 'cover',
-            aspectRatio: '3/2',
-            display: 'block',
-            margin: '1rem auto',
-            borderRadius: '8px',
-          }}
-        />
-      )}
-
-      <div className="post-content" dangerouslySetInnerHTML={{ __html: post.content }} />
-
-      {/* 👍 추천 */}
-      <div className="like-section">
-        <button
-          className={`like-btn ${liked ? 'liked' : ''}`}
-          onClick={handleLike}
-        >
-          {liked ? '👍 추천됨' : '👍 추천하기'}{' '}
-          <span className="like-count">{post.likes || 0}</span>
-        </button>
-      </div>
-
-      {/* 🔖 태그 */}
-      {post.tags && post.tags.length > 0 && (
-        <div className="post-tags">
-          {(showAllTags ? post.tags : post.tags.slice(0, 10)).map((tag, i) => (
-            <Link key={i} to={`/search?q=%23${encodeURIComponent(tag)}`} className="tag-link small">
-              #{tag}
-            </Link>
-          ))}
-          {post.tags.length > 10 && (
-            <button className="tag-more" onClick={() => setShowAllTags((p) => !p)}>
-              {showAllTags ? '접기 ▲' : `+${post.tags.length - 10}개 더보기 ▼`}
-            </button>
-          )}
+        {/* 🔙 뒤로가기 (글자 없음, PostList와 동일 스타일) */}
+        <div className="step2-header">
+          <div className="step1-back-wrapper">
+            <button className="step-back" onClick={() => navigate(-1)}>←</button>
+          </div>
+          <h3 className="step2-title">{EMOTION_LABELS[post.emotionCategory]}</h3>
         </div>
-      )}
 
- {/* ✏️ 수정 / 삭제 + 공유 + 신고 */}
-<div className="post-actions">
-  <div className="action-left">
-    <button
-      onClick={() => setShowEditPrompt(!showEditPrompt)}
-      className={showEditPrompt ? 'btn-toggle active' : 'btn-toggle'}
-    >
-      ✏️ 수정
-    </button>
-    <button
-      onClick={() => setShowDeletePrompt(!showDeletePrompt)}
-      className={showDeletePrompt ? 'btn-toggle active' : 'btn-toggle'}
-    >
-      🗑 삭제
-    </button>
-  </div>
+        {/* ----------------------------- */}
+        {/* 카드 전체 (PostList 스타일) */}
+        {/* ----------------------------- */}
+        <div className="write-wrapper detail-appear">
 
-  <div className="action-right">
-    {/* 🔗 공유 아이콘 */}
-    <button
-      className="btn-share-icon"
-      title="공유하기"
-      onClick={async () => {
-        const url = `${window.location.origin}${location.pathname}${location.search}`
-        const title = post.title || '게시글'
-        try {
-          if (navigator.share) {
-            await navigator.share({ title, url })
-          } else {
-            await navigator.clipboard.writeText(url)
-            alert('📋 링크가 복사되었습니다!')
-          }
-        } catch (err) {
-          console.error(err)
-        }
-      }}
-    >
-      🔗
-    </button>
 
-    {/* 📋 URL 복사 버튼 */}
-    <button
-      className="btn-copy-url"
-      onClick={async () => {
-        const url = `${window.location.origin}${location.pathname}${location.search}`
-        try {
-          await navigator.clipboard.writeText(url)
-          alert('URL이 복사되었습니다!')
-        } catch (err) {
-          console.error(err)
-          alert('복사에 실패했습니다.')
-        }
-      }}
-    >
-      URL
-    </button>
+          {/* 상단: 날짜 & 작성자 */}
+          <div className="card-top" style={{ marginBottom: "14px" }}>
 
-    {/* 🚩 신고 버튼 */}
-    <button
-      className="btn-report"
-      onClick={() => setShowReport(true)}
-      title="신고하기"
-    >
-      🚩 신고
-    </button>
-  </div>
+{/*
+            <span className="emotion-pill">{EMOTION_LABELS[post.emotionCategory]}</span>
+            */}
+            <span className="card-date">{formatDate(post.createdAt)}</span>
+          </div>
+
+          {/* 작성자 */}
+          {/*
+          <div className="detail-author" style={{ fontSize: "13px", opacity: 0.75, marginBottom: "10px" }}>
+            작성자: {post.author || "익명"}
 </div>
-
-
-            
-
-      {showEditPrompt && (
-        <div className="inline-password-box">
-          <input
-            type="password"
-            placeholder="비밀번호 입력"
-            value={editPwd}
-            onChange={(e) => setEditPwd(e.target.value)}
-          />
-          <button onClick={handleEditConfirm}>수정 확인</button>
-          {editError && <p className="error">{editError}</p>}
-        </div>
-
-      )}
-
-      {showDeletePrompt && (
-        <div className="inline-password-box">
-          <input
-            type="password"
-            placeholder="비밀번호 입력"
-            value={deletePwd}
-            onChange={(e) => setDeletePwd(e.target.value)}
-          />
-          <button onClick={handleDeleteConfirm}>삭제 확인</button>
-        </div>
-      )}
-
-{/* 💬 댓글 영역 */}
-<div className="comment-area">
-  <h2>댓글</h2>
-
-  {/* 정렬 버튼 */}
-  <div className="comment-sort">
-    <button
-      className={sortOrder === 'oldest' ? 'active' : ''}
-      onClick={() => setSortOrder('oldest')}
-    >
-      등록순
-    </button>
-    <button
-      className={sortOrder === 'newest' ? 'active' : ''}
-      onClick={() => setSortOrder('newest')}
-    >
-      최신순
-    </button>
-  </div>
-
-  <ul className="comment-list">
-    {sortedComments
-      .filter((c) => !c.parentId) // 부모 댓글만
-      .map((c) => {
-        const isWriter = c.authorId && post.authorId && c.authorId === post.authorId
-        const replies = sortedComments.filter((r) => r.parentId === c.id)
-
-        return (
-          <li key={c.id} className="comment-item">
-            <div className="c-head">
-              <div className="c-info">
-                <strong className="c-author">
-                  {getDisplayName(c)}
-                  {isWriter && <span className="badge-writer">작성자</span>}
-                </strong>
-
-                <span className="c-time">
-                  {new Date(c.createdAt).toLocaleString()}
-                </span>
-              </div>
-              <div className="c-actions">
+*/}
+          {/* 본문 */}
+          <div className="card-content">
+            <p className="post-content">{post.content}</p>
+          </div>
+            <div className="stamp-divider"></div>
+          {/* 스탬프 */}
+          {post.emotionStamps?.length > 0 && (
+            <div className="stamp-list" style={{ marginTop: "16px" }}>
+              {post.emotionStamps.map((s) => (
                 <button
-                  className="reply-btn"
-                  onClick={() => setReplyToId(c.id)}
-                  title="답글 달기"
+                  key={s.id}
+                  className="stamp-item"
+                  onClick={() => addStamp(post.id, s.id)}
                 >
-                  ⤷
+                  {s.label} &nbsp;
+                  {(post.emotionStampCounts?.[s.id] ?? 0).toString()}
                 </button>
-                 {/* 🚨 댓글 신고 버튼 */}
-                <button
-  className="c-report"
-  title="댓글 신고"
-  onClick={() => handleReportComment(c)}
->
-  🚩
-</button>
-
-
-
-
-                <button
-                  className="c-delete"
-                  onClick={() => setCommentDeleteId(c.id)}
-                  title="댓글 삭제"
-                >
-                  ✕
-                </button>
-              </div>
+              ))}
             </div>
+          )}
+
+          {/* LLM 요약 */}
+          {post.summaryByLLM && (
             <div
-              className="c-body"
-              dangerouslySetInnerHTML={{
-                __html: c.text.replace(
-                  /@([^\s]+)/g,
-                  '<span class="mention">@$1</span>'
-                ),
+              style={{
+                marginTop: "20px",
+                padding: "14px 16px",
+                borderRadius: "16px",
+                background: "rgba(255,255,255,0.55)",
+                backdropFilter: "blur(8px)",
+                fontSize: "14px",
+                lineHeight: "1.45",
               }}
-            />
+            >
+              <strong>🧠 AI 해석</strong>
+              <p style={{ marginTop: "6px" }}>{post.summaryByLLM}</p>
+            </div>
+          )}
 
+          {/* -------------------------------------- */}
+          {/* 하단 신고/삭제 — 카드 아래 작게 */}
+          {/* -------------------------------------- */}
+          <div
+            style={{
+              marginTop: "22px",
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "14px",
+              fontSize: "13px",
+              opacity: 0.75,
+            }}
+          >
+            <button
+              style={{
+                border: "none",
+                background: "none",
+                cursor: "pointer",
+                padding: "4px 6px",
+              }}
+              onClick={() => alert("🚨 신고 기능 준비 중입니다.")}
+            >
+              🚨
+            </button>
 
-            {/* ✅ 답글 입력창 */}
-            {replyToId === c.id && (
-                <form onSubmit={(e) => handleAddComment(e, c.id)} className="reply-form">
-                  <div className="replying-info">
-                    💬 {getDisplayName(c)}님에게 답글 작성 중...
-                    <button
-                      type="button"
-                      onClick={() => setReplyToId(null)}
-                      className="cancel-reply"
-                    >
-                      취소
-                    </button>
-                  </div>
-                  <div className="reply-fields">
-                    <div className="reply-left">
-                      <input
-                        type="text"
-                        placeholder="닉네임"
-                        value={replyInputs[c.id]?.nickname || ''}
-                        onChange={(e) =>
-                          setReplyInputs((prev) => ({
-                            ...prev,
-                            [c.id]: { ...(prev[c.id] || {}), nickname: e.target.value },
-                          }))
-                        }
-                      />
-
-                      <input
-                        type="password"
-                        placeholder="비밀번호"
-                        value={replyInputs[c.id]?.password || ''}
-                        onChange={(e) =>
-                          setReplyInputs((prev) => ({
-                            ...prev,
-                            [c.id]: { ...(prev[c.id] || {}), password: e.target.value },
-                          }))
-                        }
-                      />
-                    </div>
-
-                    <div className="reply-right">
-                      <textarea
-                        placeholder="답글을 입력하세요."
-                        value={replyInputs[c.id]?.text || ''}
-                        onChange={(e) =>
-                          setReplyInputs((prev) => ({
-                            ...prev,
-                            [c.id]: { ...(prev[c.id] || {}), text: e.target.value },
-                          }))
-                        }
-                        required
-                      />
-                      <button type="submit">등록</button>
-                    </div>
-                  </div>
-                </form>
-              )}
-             
-            {/* ✅ 답글 목록 (무한 계층) */}
-{renderReplies(c.id)}
-
-          </li>
-        )
-      })}
-  </ul>
-{/* 🚫 정지 상태 안내 */}
-{(() => {
-  const bannedUsers = JSON.parse(localStorage.getItem('bannedUsers') || '[]')
-  const uid = localStorage.getItem('userId')
-  const info = bannedUsers.find((b: any) => b.authorId === uid && Date.now() < b.expiresAt)
-  if (!info) return null
-
-  const remaining = formatRemainingTime(info.expiresAt)
-  return (
-    <div
-      style={{
-        background: 'var(--accent-bg)',
-        border: '1px solid var(--border)',
-        padding: '14px 16px',
-        borderRadius: '10px',
-        marginBottom: '14px',
-        color: 'var(--text)',
-        lineHeight: 1.5,
-      }}
-    >
-      <b>🚫 현재 계정은 정지 상태입니다.</b>
-      <br />
-      🕒 남은 시간: {remaining}
-      <br />
-      📝 정지 사유: {info.reason || '사유 없음'}
-    </div>
-  )
-})()}
-
-  {/* ✅ 일반 댓글 입력창 */}
-  <form onSubmit={(e) => handleAddComment(e)} className="comment-form">
-
-
-    <div className="comment-side">
-      <input
-        type="text"
-        placeholder="닉네임 (최대 10자)"
-        value={nickname}
-        onChange={(e) => {
-          if (e.target.value.length <= 10) setNickname(e.target.value)
-        }}
-        maxLength={10}
-      />
-      <input
-        type="password"
-        placeholder="비밀번호"
-        value={commentPwd}
-        onChange={(e) => setCommentPwd(e.target.value)}
-      />
-    </div>
-    <div className="comment-main">
-      <textarea
-        placeholder="댓글을 입력하세요."
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        required
-      ></textarea>
-      <button type="submit">등록</button>
-    </div>
-  </form>
-</div>
-
-
-
-      <hr className="post-divider" />
-      <button
-        onClick={() => {
-          if (window.history.state && window.history.state.idx > 0) navigate(-1)
-          else navigate(`/?page=${fromPage}`)
-        }}
-      >
-        ← 목록으로
-      </button>
-      {showReport && (
-  <div className="report-modal-backdrop" onClick={() => setShowReport(false)}>
-    <div className="report-modal" onClick={(e) => e.stopPropagation()}>
-      <h3>게시글 신고</h3>
-      <p>신고 사유를 선택해주세요.</p>
-
-      <select
-        value={reportReason}
-        onChange={(e) => setReportReason(e.target.value)}
-      >
-        <option value="">-- 선택 --</option>
-        <option value="스팸/광고">스팸/광고</option>
-        <option value="욕설/비방">욕설/비방</option>
-        <option value="음란물/부적절한 내용">음란물/부적절한 내용</option>
-        <option value="개인정보 노출">개인정보 노출</option>
-        <option value="기타">기타</option>
-      </select>
-
-      <textarea
-        placeholder="추가 설명 (선택)"
-        rows={3}
-        style={{ width: '100%', marginTop: '8px' }}
-        id="reportDetail"
-      />
-
-      <div className="report-actions">
-        <button onClick={() => setShowReport(false)}>취소</button>
-        <button
-    onClick={handleReportPost}
-  style={{ background: 'var(--primary)', color: '#fff' }}
->
-  제출
-</button>
-
-      </div>
-    </div>
-  </div>
+            {/* 작성자에게만 삭제 버튼 표시 */}
+            {post.authorId === userId && (
+  <button
+    style={{
+      border: "none",
+      background: "none",
+      cursor: "pointer",
+      padding: "4px 6px",
+    }}
+    onClick={() => {
+      if (window.confirm("정말 삭제하시겠습니까?")) {
+        const userId = localStorage.getItem("userId");
+        deletePost(post.id, userId!);
+        navigate("/read");
+      }
+    }}
+  >
+    🗑️
+  </button>
 )}
 
+          </div>
+        </div>
+      </div>
     </div>
-  )
+    
+  );
 }

@@ -1,26 +1,30 @@
-export interface Comment {
-  id: number
-  author: string
-  authorId: string // ✅ 추가
-  text: string
-  password?: string
-  createdAt: string
-  parentId?: number
+export interface EmotionStamp {
+  id: string
+  label: string
 }
 
 export interface Post {
   id: number
-  title: string
-  slug?: string
   content: string
-  password: string
-  board: string
-  tags: string[]
-  likes: number
-  comments: Comment[]
   createdAt: string
-  images?: string[]
+
+  emotionCategory: string
+  emotionStamps: EmotionStamp[]
+  emotionStampCounts: Record<string, number>  // key는 stamp.id
+
+  summaryByLLM?: string
+
   author: string
   authorId: string
-  isRegisteredUser?: boolean
+
+  images?: string[]
+}
+
+
+export interface Report {
+  id: number
+  postId: number
+  reporterId: string
+  reason: string
+  createdAt: string
 }

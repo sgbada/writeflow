@@ -55,36 +55,48 @@ function Layout() {
   return (
     <>
       <header className="app-header">
-        <h1 className="site-title">
-          <Link to="/">WriteFlow</Link>
-        </h1>
+  <h1 className="site-title">
+    <Link to="/">WriteFlow</Link>
+  </h1>
 
-        {/* 🔹 오른쪽 영역 */}
-        <div className="header-right" ref={menuRef}>
-          {!user ? (
-            <div className="auth-buttons">
-              <Link to="/login" className="login-btn">로그인</Link>
-              <Link to="/signup" className="signup-btn">회원가입</Link>
-            </div>
-          ) : (
-            <div className="user-menu">
-              <button onClick={() => setMenuOpen(!menuOpen)} className="mypage-btn">
-                마이페이지 ▼
-              </button>
-              {menuOpen && (
-                <div className="dropdown-menu">
-                  <Link to="/my-posts" onClick={() => setMenuOpen(false)}>내 글 보기</Link>
-                  <Link to="/settings" onClick={() => setMenuOpen(false)}>설정</Link>
-                  <button onClick={handleLogout}>로그아웃</button>
-                </div>
-              )}
-            </div>
-          )}
+  {/* 🔹 오른쪽 구역 전체 */}
+  <div className="header-right" ref={menuRef}>
 
-          {/* ✅ 다크모드 토글 */}
-          <ThemeToggle />
-        </div>
-      </header>
+    {/* 로그인한 경우 탭을 오른쪽 정렬로 표시 */}
+    {user && (
+      <nav className="main-nav user-nav">
+        <Link to="/read" className="nav-link">글 읽기</Link>
+        <Link to="/write" className="nav-link">글 쓰기</Link>
+        <Link to="/my-posts" className="nav-link">내 글</Link>
+      </nav>
+    )}
+
+    {/* 로그인 / 회원가입 또는 마이페이지 */}
+    {!user ? (
+      <div className="auth-buttons">
+        <Link to="/login" className="login-btn">로그인</Link>
+        <Link to="/signup" className="signup-btn">회원가입</Link>
+      </div>
+    ) : (
+      <div className="user-menu">
+        <button onClick={() => setMenuOpen(!menuOpen)} className="mypage-btn">
+          마이페이지 ▼
+        </button>
+        {menuOpen && (
+          <div className="dropdown-menu">
+            <Link to="/settings" onClick={() => setMenuOpen(false)}>설정</Link>
+            <button onClick={handleLogout}>로그아웃</button>
+          </div>
+        )}
+      </div>
+    )}
+
+    {/* 테마 토글 */}
+    <ThemeToggle />
+  </div>
+</header>
+
+
 
       <main>
         <AppRoutes />
@@ -104,6 +116,8 @@ function AppRoutes() {
       <Route path="/tag/:slug" element={<PostsList key={location.pathname} />} />
       <Route path="/author/:id" element={<PostsList key={location.pathname} />} />
       <Route path="/popular" element={<PostsList key="popular" />} />
+      <Route path="/read" element={<PostsList key="read" />} />
+
 
       {/* 검색 */}
       <Route path="/search" element={<PostsList key={`search-${location.search}`} />} />

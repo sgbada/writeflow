@@ -1,400 +1,330 @@
-import { useState, useRef, FormEvent, useEffect } from 'react'
-import type { Post } from './lib/types'
-import { useNavigate, useParams } from 'react-router-dom'
-import { usePostsStore } from './store/posts'
+import "./WritePost.css";
 
-import ReactQuill, { Quill } from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
-import 'katex/dist/katex.min.css'
-import katex from 'katex'
-import ImageResize from 'quill-image-resize-module-react'
-import BlotFormatter from 'quill-blot-formatter'
-import { canDo, record, formatRemain } from './lib/antispam';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { usePostsStore } from "./store/posts";
 
-Quill.register('modules/imageResize', ImageResize)
-Quill.register('modules/blotFormatter', BlotFormatter)
-
-// ✅ 수식 렌더링용
-if (typeof window !== 'undefined') {
-  // @ts-ignore
-  window.katex = katex
-}
-// ✅ 유저 고유 ID를 localStorage에 한 번만 생성
-if (!localStorage.getItem('userId')) {
-  localStorage.setItem('userId', crypto.randomUUID())
-}
-
-// ✅ 남은 정지 시간 계산 (댓글/게시글 공통)
-function formatRemainingTime(expiresAt: number): string {
-  const diffMs = expiresAt - Date.now()
-  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000))
-  const diffHours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
-  const diffMinutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000))
-
-  if (diffDays >= 1) return `${diffDays}일 ${diffHours}시간 남음`
-  if (diffHours >= 1) return `${diffHours}시간 ${diffMinutes}분 남음`
-  return `${diffMinutes}분 남음`
-}
-
+// 🔹 임시 저장 키
+const TEMP_KEY = "writeflow_temp_post";
 
 export default function WritePost() {
-  // ✅ 항상 고정된 유저 ID 확보 (컴포넌트 안 최상단에서 실행)
-const [userId] = useState(() => {
-  let stored = localStorage.getItem('userId')
-  if (!stored) {
-    stored = crypto.randomUUID()
-    localStorage.setItem('userId', stored)
-  }
-  return stored
-})
+  const navigate = useNavigate();
+  const { addPost } = usePostsStore();
 
-  const navigate = useNavigate()
-  const { id } = useParams<{ id?: string }>()
-  const postId = id ? Number(id) : null
-  const { posts, addPost, editPost } = usePostsStore()
-  const existing = posts.find((p) => p.id === postId)
-  const [author, setAuthor] = useState(existing?.author || '')
-  const [title, setTitle] = useState(existing?.title || '')
-  const [content, setContent] = useState(existing?.content || '')
-  const [password, setPassword] = useState(existing?.password || '')
-  const [board, setBoard] = useState(existing?.board || '자유')
-  const [tags, setTags] = useState(existing?.tags?.join(', ') || '')
-  const [images, setImages] = useState<string[]>(existing?.images || [])
-  const [tagInput, setTagInput] = useState(existing?.tags?.join(', ') || '')
+  // 두 단계 UI
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  // 🕒 최근 자동 저장 시각 표시용
-  const [lastSaved, setLastSaved] = useState<string | null>(null)
-  const [isSaved, setIsSaved] = useState(true) // ✅ 저장 여부 추적
-  const quillRef = useRef<any>(null)
 
-  // ✅ Quill 모듈 설정
-  const modules = {
-    toolbar: {
-      container: [
-        [{ header: [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-        [{ color: [] }, { background: [] }],
-        [{ align: [] }],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['link', 'image', 'video', 'formula', 'code-block', 'clean'],
-      ],
-    },
-    blotFormatter: {},
-    imageResize: {
-      parchment: Quill.import('parchment'),
-      modules: ['Resize', 'DisplaySize', 'Toolbar'],
-    },
-  }
+  // 글 정보
+  const [emotionCategory, setEmotionCategory] = useState("");
+  const [content, setContent] = useState("");
+  const [stampInput, setStampInput] = useState("");
+  const [emotionStamps, setEmotionStamps] = useState<EmotionStamp[]>([]);
 
-  // ✅ 태그 입력 핸들러
-  const handleTagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value
-    setTagInput(input)
-    setIsSaved(false)
 
-    const tagList = input
-      .split(/[\s,]+/)
-      .map((t) => t.trim().replace(/^#/, ''))
-      .filter(Boolean)
+  // 임시 저장 여부
+  const [isSaved, setIsSaved] = useState(true);
 
-    const uniqueTags = Array.from(new Set(tagList)).slice(0, 30)
-    setTags(uniqueTags)
-  }
+  const MAX_CHAR = 220;
+  const countGraphemes = (text: string) => {
+  return [...text].length;
+};
+// textarea와 동일한 스타일을 가진 숨겨진 div로 높이 계산
+const updateHeight = (value: string) => {
+  const mirror = document.getElementById("textarea-mirror");
+  if (!mirror) return;
 
-  // ✅ 수식 색상 보정
+  mirror.textContent = value + "\u200b";
+
+  const newHeight = mirror.scrollHeight;
+  const textarea = document.getElementById("textarea") as HTMLTextAreaElement;
+  if (textarea) textarea.style.height = newHeight + "px";
+};
   useEffect(() => {
-    const fixKatex = () => {
-      const isDark = document.documentElement.dataset.theme === 'dark'
-      const color = isDark ? '#f5f5f5' : '#222'
-      document.querySelectorAll('.katex, .katex *').forEach((el) => {
-        const e = el as HTMLElement
-        e.style.background = 'transparent'
-        e.style.color = color
-        e.style.fill = color
-      })
-    }
-    fixKatex()
-    const observer = new MutationObserver(fixKatex)
-    observer.observe(document.body, { childList: true, subtree: true })
-    return () => observer.disconnect()
-  }, [])
+  // 페이지 진입 시 emotionCategory 초기화
+  setEmotionCategory("");
+  setStep(1);
+}, []);
 
-  // ✅ [1] 새 글일 때 localStorage에서 임시 저장 복원
+  // ---------------------------------------------------
+  // 🔥 1) 임시 저장된 내용 불러오기
+  // ---------------------------------------------------
   useEffect(() => {
-    if (!id) {
-      const saved = localStorage.getItem('tempPost')
-      if (saved) {
-        const draft = JSON.parse(saved)
-        setTitle(draft.title || '')
-        setContent(draft.content || '')
-        setTagInput(draft.tagInput || '')
-        setTags(draft.tags || [])
-        setBoard(draft.board || '자유')
-        setLastSaved(draft.lastSaved || null)
+    const saved = localStorage.getItem(TEMP_KEY);
+    if (!saved) return;
+
+    try {
+      const temp = JSON.parse(saved);
+      if (temp.content || temp.emotionCategory || temp.emotionStamps?.length) {
+        setEmotionCategory(temp.emotionCategory || "");
+        setContent(temp.content || "");
+        setEmotionStamps(temp.emotionStamps || []);
+        setStep(1);
       }
-    }
-  }, [id])
+    } catch {}
+  }, []);
 
-  // ✅ [2] 자동 저장 (3분마다)
+  // ---------------------------------------------------
+  // 🔥 2) 자동 임시 저장 (10초마다)
+  // ---------------------------------------------------
   useEffect(() => {
     const interval = setInterval(() => {
-      if (title || content || tagInput) {
-        const now = new Date()
-        const formatted = now.toLocaleTimeString('ko-KR', {
-          hour: '2-digit',
-          minute: '2-digit',
+      if (!content && !emotionCategory && emotionStamps.length === 0) return;
+
+      localStorage.setItem(
+        TEMP_KEY,
+        JSON.stringify({
+          step,
+          emotionCategory,
+          content,
+          emotionStamps,
         })
-        const draft = { title, content, tagInput, tags, board, lastSaved: formatted }
-        localStorage.setItem('tempPost', JSON.stringify(draft))
-        setLastSaved(formatted)
-        setIsSaved(true)
-      }
-    }, 180000)
-    return () => clearInterval(interval)
-  }, [title, content, tagInput, tags, board])
+      );
+      setIsSaved(true);
+    }, 10000);
 
-  // ✅ [3] 내용 수정 시 저장 상태 해제
-  useEffect(() => {
-    if (title || content || tagInput) setIsSaved(false)
-  }, [title, content, tagInput, tags, board])
+    return () => clearInterval(interval);
+  }, [step, emotionCategory, content, emotionStamps]);
 
-  // ✅ [4] 브라우저 새로고침/닫기 감지 (임시 저장 안 된 경우 경고)
+  // ---------------------------------------------------
+  // 🔥 3) beforeunload 경고
+  // ---------------------------------------------------
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!isSaved && (title || content || tagInput)) {
-        e.preventDefault()
-        e.returnValue = ''
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!isSaved && (content || emotionStamps.length > 0)) {
+        e.preventDefault();
+        e.returnValue = "";
       }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isSaved, content, emotionStamps]);
+
+  // ---------------------------------------------------
+  // 🔥 스탬프 추가
+  // ---------------------------------------------------
+  const addStamp = () => {
+    const clean = stampInput.trim();
+    if (!clean) return;
+    if ([...clean].length > 10) {
+    alert("스탬프는 최대 10자까지 입력할 수 있습니다.");
+    return;
+  }
+    if (emotionStamps.length >= 5) {
+      alert("스탬프는 최대 5개까지 가능합니다.");
+      return;
     }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [isSaved, title, content, tagInput])
-
-  // ✅ 임시 저장 버튼 (수동)
-  const handleTempSave = () => {
-    const now = new Date()
-    const formatted = now.toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-    const draft = { title, content, tagInput, tags, board, lastSaved: formatted }
-    localStorage.setItem('tempPost', JSON.stringify(draft))
-    setLastSaved(formatted)
-    setIsSaved(true)
-    alert('📝 임시 저장 완료! (새로고침해도 유지됩니다)')
-  }
-  const existingAuthorId = existing?.authorId || localStorage.getItem('userId')!
+    setEmotionStamps([
+  ...emotionStamps,
+  { id: crypto.randomUUID(), label: clean }
+]);
 
 
-const COOLDOWN_MS = 30000
-
-// ✅ 최종 제출
-// ✅ 최종 제출
-const handleSubmit = (e: FormEvent) => {
-  e.preventDefault();
-
-  // 🚫 정지된 사용자 체크
-  localStorage.setItem('userId', userId!);
-  const banned = JSON.parse(localStorage.getItem('bannedUsers') || '[]');
-  const currentUserId = localStorage.getItem('userId');
-  const banInfo = banned.find(
-    (b: any) => b.authorId === currentUserId && Date.now() < b.expiresAt
-  );
-
-  if (banInfo) {
-    const remainingMsg = formatRemainingTime(banInfo.expiresAt);
-    alert(`🚫 현재 정지된 상태입니다.
-사유: ${banInfo.reason || '사유 없음'}
-(${remainingMsg})
-게시글을 작성할 수 없습니다.`);
-    return;
-  }
-
-  // 🕒 도배 방지 (1분에 한 번만)
-  const { allowed, remain } = canDo('post');
-  if (!allowed) {
-    alert(`⏳ 글은 ${formatRemain(remain)} 후에 다시 작성할 수 있습니다.`);
-    return;
-  }
-
-  // ✅ 정상 등록
-  const uniqueTags = Array.from(
-    new Set(
-      (Array.isArray(tags) ? tags : tags.split(/[\s,]+/))
-        .map((t) => t.trim().replace(/^#/, ''))
-        .filter(Boolean)
-    )
-  );
-
-  const currentUser = localStorage.getItem('username') || '익명';
-  const newPost: Post = {
-    id: postId || Date.now(),
-    title,
-    content,
-    board,
-    tags: uniqueTags,
-    slug: title.trim().toLowerCase().replace(/[^\w가-힣]+/g, '-'),
-    createdAt: existing?.createdAt || new Date().toISOString(),
-    password,
-    likes: existing?.likes ?? 0,
-    comments: existing?.comments ?? [],
-    images,
-    author: author.trim() || currentUser,
-    authorId: userId || `anon-${Date.now()}`,
-    isRegisteredUser: !!localStorage.getItem('username'),
+    setStampInput("");
+    setIsSaved(false);
   };
 
-  if (id) editPost(postId!, newPost);
-  else addPost(newPost);
+  // ---------------------------------------------------
+  // 🔥 더미 LLM 요약
+  // ---------------------------------------------------
+  const fakeLLMSummary = (text: string) => {
+    if (text.includes("슬프") || text.includes("힘들"))
+      return "마음이 무거운 하루였네요.";
+    if (text.includes("기쁨") || text.includes("좋아"))
+      return "행복한 감정이 느껴져요.";
+    return "당신의 감정이 잘 기록되었어요.";
+  };
 
-  record('post'); // 도배 방지 기록
-  localStorage.removeItem('tempPost');
-  navigate('/');
-};
+  // ---------------------------------------------------
+  // 🔥 뒤로가기 버튼 (Step2 → Step1)
+  // ---------------------------------------------------
+  const goBackStep = () => {
+    if (!isSaved && (content || emotionStamps.length > 0)) {
+      const ok = window.confirm("임시 저장되지 않은 내용이 있습니다. 돌아갈까요?");
+      if (!ok) return;
+    }
+    setStep(1);
+  };
 
+  // ---------------------------------------------------
+  // 🔥 임시 저장 버튼
+  // ---------------------------------------------------
+  const saveTemp = () => {
+    localStorage.setItem(
+      TEMP_KEY,
+      JSON.stringify({
+        step,
+        emotionCategory,
+        content,
+        emotionStamps,
+      })
+    );
+    setIsSaved(true);
+    alert("임시 저장되었습니다!");
+  };
 
+  // ---------------------------------------------------
+  // 🔥 최종 제출
+  // ---------------------------------------------------
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
 
-// 🚫 정지 상태 계산 (렌더링용)
-const banned = JSON.parse(localStorage.getItem('bannedUsers') || '[]')
-const currentUserId = localStorage.getItem('userId')
-const banInfo = banned.find((b: any) => b.authorId === currentUserId && Date.now() < b.expiresAt)
-const isBanned = !!banInfo
-const remainingMsg = banInfo ? formatRemainingTime(banInfo.expiresAt) : ''
+    if (!content.trim()) {
+      alert("내용을 입력해주세요.");
+      return;
+    }
 
+    addPost({
+      content,
+      emotionCategory,
+      emotionStamps,
+      summaryByLLM: fakeLLMSummary(content),
+    });
+
+    // 제출 후 임시 저장 삭제
+    localStorage.removeItem(TEMP_KEY);
+setContent("");
+  setEmotionStamps([]);
+  setStampInput("");
+
+  setIsSaved(true);
+
+  setStep(3);
+  localStorage.setItem("last_post_id", newPostId);
+
+  };
+
+  const chooseEmotion = (emotion: string) => {
+    setEmotionCategory(emotion);
+    setTimeout(() => setStep(2), 200);
+  };
 
   return (
-    <div className="container write-page">
-      <h1>{id ? '글 수정' : '새 글 작성'}</h1>
-{isBanned && (
-  <div
-    style={{
-      background: 'var(--accent-bg)',
-      border: '1px solid var(--border)',
-      padding: '14px 16px',
-      borderRadius: '10px',
-      marginBottom: '16px',
-      color: 'var(--text)',
-      lineHeight: 1.5,
-    }}
-  >
-    <b>🚫 현재 계정은 정지 상태입니다.</b>
-    <br />
-    🕒 남은 시간: {remainingMsg}
-    <br />
-    📝 정지 사유: {banInfo.reason || '사유 없음'}
-  </div>
-)}
+    <div className={`writepage-bg ${step === 1 ? "theme-default" : `theme-${emotionCategory}`}`}>
+      <div className="write-wrapper">
+      
 
+        {/* STEP 1 - 감정 선택 */}
+        <div className={`step step1 ${step === 1 ? "active" : "hidden"}`}>
+          <button className="step-back" onClick={() => navigate(-1)}>←</button>
+          <h2>오늘 당신의 감정은?</h2>
+          <p className="subtitle">하루의 분위기를 가장 잘 표현하는 감정을 선택해 주세요.</p>
 
-      <form onSubmit={handleSubmit} className="form">
-        <select value={board} onChange={(e) => setBoard(e.target.value)}>
-          <option value="자유">자유게시판</option>
-          <option value="유머">유머게시판</option>
-          <option value="질문">질문게시판</option>
-        </select>
-        {/* 🔹 닉네임 + 비밀번호 한 줄 입력 */}
-<div className="nickname-password-row">
-  <input
-    type="text"
-    placeholder="닉네임 (최대 10자)"
-    value={author}
-    onChange={(e) => setAuthor(e.target.value.slice(0, 10))}
-    maxLength={10}
-  />
-  <input
-    type="password"
-    placeholder="비밀번호 (최대 20자)"
-    value={password}
-    onChange={(e) => setPassword(e.target.value.slice(0, 20))}
-    maxLength={20}
-    required={!id}
-  />
+          <div className="emotion-buttons">
+  <button data-emotion="joy" onClick={() => chooseEmotion("joy")}>😊 기쁨</button>
+  <button data-emotion="sad" onClick={() => chooseEmotion("sad")}>😢 슬픔</button>
+  <button data-emotion="anger" onClick={() => chooseEmotion("anger")}>😠 분노</button>
+  <button data-emotion="fear" onClick={() => chooseEmotion("fear")}>😨 두려움</button>
+  <button data-emotion="love" onClick={() => chooseEmotion("love")}>💕 사랑</button>
 </div>
 
-        <input
-          type="text"
-          placeholder="제목 (최대 50자)"
-          value={title}
-          onChange={(e) => e.target.value.length <= 50 && setTitle(e.target.value)}
-          maxLength={50}
-          required
-        />
-
-        <div className="editor-wrapper">
-          <ReactQuill
-            ref={quillRef}
-            theme="snow"
-            value={content}
-            onChange={setContent}
-            modules={modules}
-            placeholder="내용을 입력하세요."
-          />
         </div>
+        
 
-        <input
-          type="text"
-          placeholder="태그 (쉼표나 띄어쓰기로 구분, 최대 30개)"
-          value={tagInput}
-          onChange={handleTagChange}
-        />
+        {/* STEP 2 - 글 작성 */}
+        <div className={`step step2 ${step === 2 ? "active" : "hidden"}`}>
+          <h3>당신의 감정을 기록해보세요</h3>
 
-        {/* 📝 하단 버튼 영역 */}
-        <div className="write-btn-row">
-          <div className="write-btn-left">
-            <button
-              type="button"
-              onClick={() => {
-                if (!isSaved && (title || content || tagInput)) {
-                  const ok = window.confirm('⚠️ 임시 저장되지 않은 내용이 있습니다. 나가시겠습니까?')
-                  if (!ok) return
-                }
-                navigate('/')
-              }}
-            >
-              취소
-            </button>
-            <button type="button" onClick={handleTempSave}>
-              임시 저장
-            </button>
+          {/* 뒤로가기 + 임시저장 */}
+          <div className="write-controls">
+
+           
           </div>
 
-          <div className="write-btn-right">
-            {lastSaved && (
-              <span
-                className="auto-save-time"
-                style={{ color: isSaved ? '#666' : '#c0392b' }}
-              >
-                {isSaved ? `${lastSaved} 자동 저장됨` : '⚠️ 저장 안 됨'}
-              </span>
-            )}
-            <button
-  type="submit"
-  className="comment-submit-btn"
-  onClick={(e) => {
-    if (isBanned && banInfo) {
-      e.preventDefault()
-      alert(`🚫 현재 정지된 상태입니다.
-사유: ${banInfo.reason || '사유 없음'}
-(${remainingMsg})
-게시글을 작성할 수 없습니다.`)
-      return
-    }
-    // 통과: 작성 가능
-  }}
-  style={{
-    opacity: isBanned ? 0.5 : 1,
-    cursor: isBanned ? 'not-allowed' : 'pointer',
-    pointerEvents: 'auto', // ✅ 클릭 막히지 않도록 활성화
-  }}
->
-  {id ? '수정 완료' : '등록'}
-</button>
+         <form onSubmit={handleSubmit} className="write-form">
+  <div className="textarea-wrapper">
+    <div id="textarea-mirror" className="textarea-mirror"></div>
+
+    <textarea
+      id="textarea"
+      className="textarea"
+      value={content}
+      onInput={(e) => {
+        const value = (e.target as HTMLTextAreaElement).value;
+
+        if (countGraphemes(value) <= MAX_CHAR) {
+          setContent(value);
+          setIsSaved(false);
+        }
+        updateHeight(value);
+      }}
+      placeholder="지금 느끼는 감정을 자유롭게 남겨보세요… (최대 220자)"
+    />
+  </div>
+
+  <div className="char-counter">
+    {countGraphemes(content)}/{MAX_CHAR}
+  </div>
+
+  <label>감정 스탬프 (최대 5개)</label>
+
+  <div className="stamp-row">
+    <input
+      value={stampInput}
+      onChange={(e) => {
+        const v = e.target.value;
+        if ([...v].length <= 10) {
+          setStampInput(v);
+        }
+      }}
+      placeholder="예: 😢 위로받고 싶어 (최대 10자)"
+    />
+    <button type="button" onClick={addStamp}>추가</button>
+  </div>
+
+  <div className="stamp-list">
+    {emotionStamps.map((stamp) => (
+      <span key={stamp.id} className="stamp-item">
+        {stamp.label}
+      </span>
+    ))}
+  </div>
+
+  <button type="submit" className="submit-btn">등록하기</button>
+</form>
 
 
-
-          </div>
         </div>
-      </form>
+        {step === 2 && (
+  <div className="write-bottom-inside">
+    <button className="back-btn" onClick={goBackStep}>←</button>
+
+    <button className="save-btn" onClick={saveTemp}>💾 임시저장</button>
+  </div>
+)}
+{/* STEP 3 - 등록 완료 화면 */}
+<div className={`step step3 ${step === 3 ? "active" : "hidden"}`} style={{ textAlign: "center", paddingTop: "40px", paddingBottom: "60px" }}>
+  
+  <h2 style={{ marginBottom: "20px" }}>✓ 등록이 완료되었습니다.</h2>
+
+  <p style={{ opacity: 0.8, marginBottom: "32px" }}>
+    소중한 감정을 기록해주셔서 감사합니다.
+  </p>
+
+  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+    <button
+      className="submit-btn"
+      onClick={() => {
+  const id = localStorage.getItem("last_post_id");
+  if (id) navigate(`/post/${id}`);
+}}
+
+    >
+      내 글 읽기
+    </button>
+
+    <button
+      className="submit-btn"
+      onClick={() => navigate("/read")}
+      style={{ background: "var(--accent-bg)", color: "var(--primary)" }}
+    >
+      다른 사람 글 읽기
+    </button>
+  </div>
+</div>
+
+      </div>
+      
     </div>
-  )
+  );
 }

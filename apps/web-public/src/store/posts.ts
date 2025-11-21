@@ -1,26 +1,7 @@
 import { create } from 'zustand'
-import type { Post, Comment } from '../lib/types'
+import type { Post, Report } from '../lib/types'
 
-// 🔹 LocalStorage 도우미
-const persist = (posts: Post[]) => localStorage.setItem('posts', JSON.stringify(posts))
-const getInitial = (): Post[] => {
-  const posts = JSON.parse(localStorage.getItem('posts') || '[]')
-  const userId = ensureUserId()
-  return posts.map((p: any) => ({
-    ...p,
-    authorId: p.authorId || userId, // ✅ 없으면 내 userId로 채움
-  }))
-}
-
-
-// 🔹 편집 토큰
-const EDIT_TOKENS_KEY = 'editTokens'
-const getTokens = (): Record<number, boolean> =>
-  JSON.parse(localStorage.getItem(EDIT_TOKENS_KEY) || '{}')
-const setTokens = (t: Record<number, boolean>) =>
-  localStorage.setItem(EDIT_TOKENS_KEY, JSON.stringify(t))
-
-// 🔹 유저 고유 ID (닉네임 바뀌어도 동일인 식별용)
+// 🔹 유저 고유 ID (로그인 기반)
 const ensureUserId = (): string => {
   let id = localStorage.getItem('userId')
   if (!id) {
@@ -30,150 +11,154 @@ const ensureUserId = (): string => {
   return id
 }
 
-// ✅ Zustand store 타입 정의
+// 🔹 LocalStorage helpers
+const persistPosts = (posts: Post[]) =>
+  localStorage.setItem('posts', JSON.stringify(posts))
+
+const getInitialPosts = (): Post[] =>
+  JSON.parse(localStorage.getItem('posts') || '[]')
+
+const persistReports = (r: Report[]) =>
+  localStorage.setItem('reports', JSON.stringify(r))
+
+const getInitialReports = (): Report[] =>
+  JSON.parse(localStorage.getItem('reports') || '[]')
+
+// Reaction 중복 방지
+// reactions[postId][stamp][userId] = true
+const REACTION_KEY = 'userReactions'
+const getReactions = () =>
+  JSON.parse(localStorage.getItem(REACTION_KEY) || '{}')
+const saveReactions = (r: any) =>
+  localStorage.setItem(REACTION_KEY, JSON.stringify(r))
+
+// -------------------------------
+// 🔥 Store 타입
+// -------------------------------
 interface PostsStore {
   posts: Post[]
-  addPost: (post: Post) => void
-  editPost: (id: number, newData: Partial<Post>) => void
-  deletePost: (id: number, password: string) => void
-  likePost: (postId: number) => void
-  incrementViews: (postId: number, viewerId?: string) => void
-  addComment: (postId: number, comment: Partial<Comment> & { parentId?: number }) => void
-  deleteComment: (postId: number, commentId: number, password?: string) => boolean
-  canEdit: (postId: number) => boolean
-  verifyPasswordAndGrantEdit: (postId: number, password: string) => boolean
-  revokeEdit: (postId: number) => void
+  reports: Report[]
+
+  addPost: (data: {
+    content: string
+    emotionCategory: string
+    emotionStamps: string[]
+    summaryByLLM?: string
+  }) => void
+
+  deletePost: (postId: number, userId: string) => void
+
+  addStamp: (postId: number, stamp: string) => void
+
+  addReport: (postId: number, reason: string) => void
 }
 
-// ✅ 실제 Store 구현
+// -------------------------------
+// 🔥 실제 Store
+// -------------------------------
 export const usePostsStore = create<PostsStore>((set, get) => ({
-  posts: getInitial(),
+  posts: getInitialPosts(),
+  reports: getInitialReports(),
 
-  addPost: (post) =>
-    set((state) => {
-      const userId = ensureUserId() // ← 고유 ID 확보
-      const updated = [
-        ...state.posts,
-        {
-          ...post,
-          authorId: userId, // ✅ 작성자 ID 강제 추가
-          comments: post.comments ?? [],
-          likes: post.likes ?? 0,
-        },
-      ]
-      persist(updated)
-      const myPosts = JSON.parse(localStorage.getItem('myPosts') || '[]') as number[]
-      if (!myPosts.includes(post.id)) {
-        myPosts.push(post.id)
-        localStorage.setItem('myPosts', JSON.stringify(myPosts))
-      }
-      return { posts: updated }
-    }),
+  // -----------------------------------
+  // ✨ 글 생성
+  // -----------------------------------
+addPost: ({ content, emotionCategory, emotionStamps, summaryByLLM }) =>
+  set((state) => {
+    const userId = ensureUserId()
 
+    const initialStampCounts = Object.fromEntries(
+      emotionStamps.map((stamp) => [stamp.id, 0])
+    )
 
-  editPost: (id, newData) =>
-    set((state) => {
-      const updated = state.posts.map((p) => (p.id === id ? { ...p, ...newData } : p))
-      persist(updated)
-      return { posts: updated }
-    }),
-
-  deletePost: (id, password) =>
-    set((state) => {
-      const target = state.posts.find((p) => p.id === id)
-      if (!target || target.password !== password) return state
-      const updated = state.posts.filter((p) => p.id !== id)
-      persist(updated)
-      const tokens = getTokens()
-      delete tokens[id]
-      setTokens(tokens)
-      return { posts: updated }
-    }),
-
-  likePost: (postId) =>
-    set((state) => {
-      const updated = state.posts.map((p) =>
-        p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p
-      )
-      persist(updated)
-      return { posts: updated }
-    }),
-
-  incrementViews: (postId: number) =>
-    set((state) => {
-      const updated = state.posts.map((p) =>
-        p.id === postId ? { ...p, views: (p.views ?? 0) + 1 } : p
-      )
-      persist(updated)
-      return { posts: updated }
-    }),
-
-  // ✅ 답글 parentId 및 authorId 완벽 반영
-  addComment: (postId, comment) =>
-    set((state) => {
-      const posts = [...state.posts]
-      const post = posts.find((p) => p.id === postId)
-      if (!post) return state
-
-      const userId = ensureUserId()
-
-      const newComment: Comment = {
-        id: Date.now(),
-        author: comment.author || '익명',
-        authorId: userId, // ✅ 익명이라도 고유 ID 부여
-        text: comment.text || '',
-        password: comment.password,
-        createdAt: new Date().toISOString(),
-        parentId: comment.parentId, // ✅ 답글용
-      }
-
-      post.comments = [...(post.comments || []), newComment]
-      persist(posts)
-      return { posts }
-    }),
-
-  // ✅ 삭제 (비밀번호 확인)
-  deleteComment: (postId, commentId, password) => {
-    let success = false
-    set((state) => {
-      const updated = state.posts.map((p) => {
-        if (p.id !== postId) return p
-        const comments = (p.comments || []).filter((c) => {
-          if (c.id === commentId) {
-            if (!password || c.password !== password) {
-              success = false
-              return true
-            }
-            success = true
-            return false
-          }
-          return true
-        })
-        return { ...p, comments }
-      })
-      persist(updated)
-      return { posts: updated }
-    })
-    return success
-  },
-
-  canEdit: (postId) => !!getTokens()[postId],
-
-  verifyPasswordAndGrantEdit: (postId, password) => {
-    const post = get().posts.find((p) => p.id === postId)
-    if (!post) return false
-    const ok = post.password === password
-    if (ok) {
-      const tokens = getTokens()
-      tokens[postId] = true
-      setTokens(tokens)
+    const newPost: Post = {
+      id: Date.now(),
+      content,
+      emotionCategory,
+      emotionStamps,
+      emotionStampCounts: initialStampCounts,
+      summaryByLLM: summaryByLLM ?? '',
+      createdAt: new Date().toISOString(),
+      author: localStorage.getItem('username') || '사용자',
+      authorId: userId,
     }
-    return ok
-  },
 
-  revokeEdit: (postId) => {
-    const tokens = getTokens()
-    delete tokens[postId]
-    setTokens(tokens)
-  },
+    const updated = [...state.posts, newPost]
+    persistPosts(updated)
+
+    return { posts: updated }   // ← ✔ 상태 업데이트!
+  }),
+
+  // -----------------------------------
+  // ✨ 글 삭제 (작성자만)
+  // -----------------------------------
+  deletePost: (postId, userId) =>
+    set((state) => {
+      const target = state.posts.find((p) => p.id === postId)
+      if (!target) return state
+      if (target.authorId !== userId) return state // 작성자만 삭제 가능
+
+      const updated = state.posts.filter((p) => p.id !== postId)
+      persistPosts(updated)
+      return { posts: updated }
+    }),
+
+  // -----------------------------------
+  // ✨ 감정 스탬프 Reaction
+  // -----------------------------------
+  addStamp: (postId, stampId) =>
+  set((state) => {
+    const userId = ensureUserId();
+    const reactions = getReactions();
+
+    reactions[postId] ??= {};
+    reactions[postId][stampId] ??= {};
+
+    if (reactions[postId][stampId][userId]) return state;
+
+    reactions[postId][stampId][userId] = true;
+    saveReactions(reactions);
+
+    const updated = state.posts.map((p) => {
+      if (p.id !== postId) return p;
+      return {
+        ...p,
+        emotionStampCounts: {
+          ...p.emotionStampCounts,
+          [stampId]: (p.emotionStampCounts[stampId] ?? 0) + 1,
+        },
+      };
+    });
+
+    persistPosts(updated);
+    return { posts: updated };
+  })
+,
+
+  // -----------------------------------
+  // ✨ 신고 기능 (중복 방지)
+  // -----------------------------------
+addReport: (postId, reason) =>
+  set((state) => {
+    const userId = ensureUserId()
+
+    const already = state.reports.some(
+      (r) => r.postId === postId && r.reporterId === userId
+    )
+    if (already) return {}   // 아무 것도 업데이트 안 함
+
+    const newReport: Report = {
+      id: Date.now(),
+      postId,
+      reporterId: userId,
+      reason,
+      createdAt: new Date().toISOString(),
+    }
+
+    const updated = [...state.reports, newReport]
+    persistReports(updated)
+
+    return { reports: updated }
+  }),
+
 }))
