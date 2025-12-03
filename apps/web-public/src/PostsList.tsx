@@ -6,16 +6,7 @@ import type { PostResponse } from "./lib/types";
 import "./WritePost.css";
 import "./PostList.css";
 
-// ⭐ FE emotion → BE emotion 이름 연결
-const FE_TO_BE: Record<string, string> = {
-  joy: "JOY",          // 기쁨
-  anger: "ANGER",      // 분노
-  sadness: "SADNESS",  // 슬픔
-  pleasure: "PLEASURE",// 즐거움
-  love: "LOVE",        // 사랑
-  hate: "HATE",        // 미움
-  ambition: "AMBITION" // 야망
-};
+
 
 const EMOTION_LABELS: Record<string, string> = {
   joy: "😊 기쁨",
@@ -26,22 +17,35 @@ const EMOTION_LABELS: Record<string, string> = {
   hate: "💔 미움",
   ambition: "🔥 야망",
 };
+export const FE_TO_BE: Record<string, string> = {
+  joy: "JOY",
+  anger: "ANGER",
+  sadness: "SADNESS",
+  pleasure: "PLEASURE",
+  love: "LOVE",
+  hate: "HATE",
+  ambition: "AMBITION",
+};
 
 
 export default function PostsList() {
   /* ------------- 스크롤 복원 ------------- */
   useEffect(() => {
+  try {
     const saved = sessionStorage.getItem("scroll-pos");
-    if (saved) {
-      window.scrollTo(0, parseInt(saved, 10));
-    }
-  }, []);
+    if (saved) window.scrollTo(0, parseInt(saved, 10));
+  } catch (e) {
+    console.warn("⚠ sessionStorage 접근 불가:", e);
+  }
+}, []);
+
 
   const navigate = useNavigate();
   const { loadPosts } = usePostsStore();
 
   const [step, setStep] = useState<1 | 2>(1);
-  const [emotion, setEmotion] = useState<string>("joy");
+  const [emotion, setEmotion] = useState<string>("JOY");
+
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   // 서버 기반 데이터
@@ -55,6 +59,7 @@ export default function PostsList() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const emotionFromUrl = params.get("emotion"); // "joy" 등
+
 
   // URL 감정 → step 전환 + 서버에서 불러오기
   useEffect(() => {
@@ -77,6 +82,25 @@ export default function PostsList() {
  /* -------------------- 서버 페이지 로드 -------------------- */
   async function loadPage(loadPageNum: number, emo: string) {
     if (isLoading.current || !hasMore) return;
+    // ⭐ MOCK 모드: 백엔드 없어도 UI 완성 가능
+  const USE_MOCK = true;
+if (USE_MOCK) {
+  const mock = await import("./mocks/postsList.json");
+
+  // FE emotion → BE 변환
+  const fe = emotionFromUrl ?? emotion;
+  const beEmotion = FE_TO_BE[fe.toLowerCase()];
+
+  // emotion 필터링 추가
+  const filtered = mock.items.filter(p =>
+    !p.hidden && p.emotion === beEmotion
+  );
+
+  setItems(filtered);
+  setHasMore(false);
+  return;
+}
+
 
     isLoading.current = true;
 
@@ -110,11 +134,13 @@ export default function PostsList() {
     if (!loaderRef.current) return;
 
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasMore && !isLoading.current) {
-        const emo = FE_TO_BE[emotion];
-        loadPage(page + 1, emo);
-      }
-    });
+  if (entries[0].isIntersecting && hasMore && !isLoading.current) {
+    const fe = emotionFromUrl ?? emotion;    // 두 값 중 확실한 emotion
+    const emo = FE_TO_BE[fe];                // BE 변환
+    loadPage(page + 1, emo);
+  }
+});
+
 
     observer.observe(loaderRef.current);
     return () => observer.disconnect();
@@ -122,6 +148,7 @@ export default function PostsList() {
 
   // STEP1 → STEP2 이동
   const chooseEmotion = (emo: string) => {
+    setEmotion(FE_TO_BE[emo]); // "JOY"
     navigate(`/read?emotion=${emo}`);
   };
 
@@ -182,73 +209,79 @@ export default function PostsList() {
           </div>
 
           {items.length === 0 ? (
-            <p style={{ textAlign: "center", opacity: 0.7 }}>아직 글이 없어요.</p>
-          ) : (
-            items.map((post) => (
-              <div
-                key={post.id}
-                className="write-wrapper card-appear"
-                style={{ marginBottom: "32px" }}
-              >
+  <p style={{ textAlign: "center", opacity: 0.7 }}>아직 글이 없어요.</p>
+) : (
+  items
+    .filter((post) => !post.hidden)
+    .map((post) => {
+      const listEmotion = post.emotion
+        ? post.emotion.toLowerCase()
+        : (emotionFromUrl ?? "joy");
 
-                {/* 카드 상단 메뉴 */}
-                <div className="card-controls">
-                  <button
-                    className="menu-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenMenuId(openMenuId === post.id ? null : post.id);
-                    }}
-                  >
-                    ⋮
-                  </button>
+      return (
+        <div
+          key={post.id}
+          className="write-wrapper card-appear"
+          style={{ marginBottom: "32px" }}
+        >
+          <div className="card-controls">
+            <button
+              className="menu-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenMenuId(openMenuId === post.id ? null : post.id);
+              }}
+            >
+              ⋮
+            </button>
 
-                  {openMenuId === post.id && (
-                    <div className="menu-popup">
-                      <button onClick={() => alert("신고 기능 준비 중입니다.")}>
-                        🚨 신고하기
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(
-                            `${window.location.origin}/post/${post.id}`
-                          );
-                          alert("URL이 복사되었습니다.");
-                        }}
-                      >
-                        🔗 URL 복사
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* 본문 */}
-                <Link
-                  to={`/post/${post.id}`}
-                  className="card-link"
-                  onClick={() =>
-                    sessionStorage.setItem("scroll-pos", String(window.scrollY))
-                  }
+            {openMenuId === post.id && (
+              <div className="menu-popup">
+                <button onClick={() => alert("신고 기능 준비 중입니다.")}>
+                  🚨 신고하기
+                </button>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      `${window.location.origin}/post/${listEmotion}/${post.id}`
+                    );
+                    alert("URL이 복사되었습니다.");
+                  }}
                 >
-                  <div className="card-content">
-                    <p style={{ whiteSpace: "pre-wrap" }}>{post.content}</p>
-                  </div>
-                </Link>
-
-                {/* 구분선 */}
-                <div className="stamp-divider"></div>
-
-                {/* 버튼 목록 */}
-                <div className="stamp-list">
-                  {post.buttons.map((btn) => (
-                    <button key={btn.buttonType} className="stamp-item">
-                      {btn.label} {btn.clickCount}
-                    </button>
-                  ))}
-                </div>
+                  🔗 URL 복사
+                </button>
               </div>
-            ))
-          )}
+            )}
+          </div>
+
+          <Link
+            to={`/post/${listEmotion}/${post.id}`}
+            className="card-link"
+            onClick={() => {
+              try {
+                sessionStorage.setItem("scroll-pos", String(window.scrollY));
+              } catch {}
+            }}
+          >
+            <div className="card-content">
+              <p style={{ whiteSpace: "pre-wrap" }}>{post.content}</p>
+            </div>
+          </Link>
+
+          <div className="stamp-divider"></div>
+
+          <div className="stamp-list">
+            {post.buttons.map((btn) => (
+              <button key={btn.buttonType} className="stamp-item">
+                {btn.label} {btn.clickCount}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    })
+)}
+
 
           {/* 플로팅 버튼 */}
           <div className="floating-buttons">

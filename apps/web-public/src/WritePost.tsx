@@ -4,9 +4,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePostsStore } from "./store/posts";
 
-// 🔹 임시 저장 키
-const TEMP_KEY = "writeflow_temp_post";
-
 export default function WritePost() {
   const navigate = useNavigate();
   const { createPost } = usePostsStore(); 
@@ -28,17 +25,13 @@ interface EmotionStamp {
   // 두 단계 UI
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
-
+  const [lastPostId, setLastPostId] = useState<number | null>(null);
   // 글 정보
   const [emotionCategory, setEmotionCategory] = useState("");
   const [content, setContent] = useState("");
   const [stampInput, setStampInput] = useState("");
   const [selectedButtons, setSelectedButtons] = useState<EmotionStamp[]>([]);
 
-
-
-  // 임시 저장 여부
-  const [isSaved, setIsSaved] = useState(true);
 
   const MAX_CHAR = 220;
   const countGraphemes = (text: string) => {
@@ -61,83 +54,7 @@ const updateHeight = (value: string) => {
   setStep(1);
 }, []);
 
-  // ---------------------------------------------------
-  // 🔥 1) 임시 저장된 내용 불러오기
-  // ---------------------------------------------------
-  useEffect(() => {
-    const saved = localStorage.getItem(TEMP_KEY);
-    if (!saved) return;
 
-    try {
-      const temp = JSON.parse(saved);
-      if (temp.content || temp.emotionCategory || temp.selectedButtons?.length) {
-        setEmotionCategory(temp.emotionCategory || "");
-        setContent(temp.content || "");
-        setSelectedButtons(temp.selectedButtons || []);
-        setStep(1);
-      }
-    } catch {}
-  }, []);
-
-  // ---------------------------------------------------
-  // 🔥 2) 자동 임시 저장 (10초마다)
-  // ---------------------------------------------------
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!content && !emotionCategory && selectedButtons.length === 0) return;
-
-      localStorage.setItem(
-        TEMP_KEY,
-        JSON.stringify({
-          step,
-          emotionCategory,
-          content,
-          selectedButtons,
-        })
-      );
-      setIsSaved(true);
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [step, emotionCategory, content, selectedButtons]);
-
-  // ---------------------------------------------------
-  // 🔥 3) beforeunload 경고
-  // ---------------------------------------------------
-  useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (!isSaved && (content || selectedButtons.length > 0)) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [isSaved, content, selectedButtons]);
-
-  // ---------------------------------------------------
-  // 🔥 스탬프 추가
-  // ---------------------------------------------------
-  const addStamp = () => {
-    const clean = stampInput.trim();
-    if (!clean) return;
-    if ([...clean].length > 10) {
-    alert("스탬프는 최대 10자까지 입력할 수 있습니다.");
-    return;
-  }
-    if (selectedButtons.length >= 5) {
-      alert("스탬프는 최대 5개까지 가능합니다.");
-      return;
-    }
-    setselectedButtons([
-  ...selectedButtons,
-  { id: crypto.randomUUID(), label: clean }
-]);
-
-
-    setStampInput("");
-    setIsSaved(false);
-  };
 
   // ---------------------------------------------------
   // 🔥 더미 LLM 요약
@@ -154,35 +71,20 @@ const updateHeight = (value: string) => {
   // 🔥 뒤로가기 버튼 (Step2 → Step1)
   // ---------------------------------------------------
   const goBackStep = () => {
-    if (!isSaved && (content || selectedButtons.length > 0)) {
-      const ok = window.confirm("임시 저장되지 않은 내용이 있습니다. 돌아갈까요?");
-      if (!ok) return;
-    }
+    setSelectedButtons([]);
     setStep(1);
   };
-
-  // ---------------------------------------------------
-  // 🔥 임시 저장 버튼
-  // ---------------------------------------------------
-  const saveTemp = () => {
-    localStorage.setItem(
-      TEMP_KEY,
-      JSON.stringify({
-        step,
-        emotionCategory,
-        content,
-        selectedButtons,
-      })
-    );
-    setIsSaved(true);
-    alert("임시 저장되었습니다!");
-  };
-
   // ---------------------------------------------------
   // 🔥 최종 제출
   // ---------------------------------------------------
 const handleSubmit = async (e: any) => {
   e.preventDefault();
+
+  if (!emotionCategory) {
+    alert("감정을 먼저 선택해 주세요.");
+    setStep(1);
+    return;
+  }
 
   if (!content.trim()) {
     alert("내용을 입력해주세요.");
@@ -205,19 +107,14 @@ const handleSubmit = async (e: any) => {
   try {
     const newPost = await createPost(payload);
     const newPostId = newPost.id;
+    setLastPostId(newPost.id);
 
-    // 임시 저장 삭제
-    localStorage.removeItem(TEMP_KEY);
-
-    // 다음 화면 이동
-    localStorage.setItem("last_post_id", String(newPostId));
     setStep(3);
 
     // 초기화
     setContent("");
     setSelectedButtons([]);
     setStampInput("");
-    setIsSaved(true);
 
   } catch (err: any) {
     alert("오류가 발생했습니다: " + err.message);
@@ -227,6 +124,8 @@ const handleSubmit = async (e: any) => {
 
   const chooseEmotion = (emotion: string) => {
     setEmotionCategory(emotion);
+    setSelectedButtons([]);        // 감정 바뀌면 버튼 초기화
+  setStampInput("");
     setTimeout(() => setStep(2), 200);
   };
 
@@ -280,7 +179,6 @@ const handleSubmit = async (e: any) => {
 
         if (countGraphemes(value) <= MAX_CHAR) {
           setContent(value);
-          setIsSaved(false);
         }
         updateHeight(value);
       }}
@@ -333,7 +231,6 @@ const handleSubmit = async (e: any) => {
   <div className="write-bottom-inside">
     <button className="back-btn" onClick={goBackStep}>←</button>
 
-    <button className="save-btn" onClick={saveTemp}>💾 임시저장</button>
   </div>
 )}
 {/* STEP 3 - 등록 완료 화면 */}
@@ -349,8 +246,7 @@ const handleSubmit = async (e: any) => {
     <button
       className="submit-btn"
       onClick={() => {
-  const id = localStorage.getItem("last_post_id");
-  if (id) navigate(`/post/${id}`);
+  if (lastPostId) navigate(`/post/${lastPostId}`);
 }}
 
     >

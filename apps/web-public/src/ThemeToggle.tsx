@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Moon, Sun } from "lucide-react" // 💡 lucide-react 아이콘 사용 (Vite 기본 지원)
+import "./ThemeToggle.css"
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState(() => {

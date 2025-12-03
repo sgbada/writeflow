@@ -126,7 +126,7 @@ function AppRoutes() {
       <Route path="/my-posts" element={<PostsList key="my-posts" />} />
 
       {/* 상세 / 작성 / 수정 */}
-      <Route path="/post/:id/:slug?" element={<PostDetail />} />
+      <Route path="/post/:emotion/:id" element={<PostDetail />} />s
       <Route path="/write" element={<WritePost />} />
       <Route path="/edit/:id" element={<WritePost />} />
 

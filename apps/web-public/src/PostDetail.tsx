@@ -5,15 +5,39 @@ import "./WritePost.css";
 import "./PostList.css";
 
 export default function PostDetail() {
-  const { id } = useParams<{ id: string }>();
-  const postId = Number(id);
+  const { emotion, id } = useParams<{ emotion: string; id: string }>();
+const postId = Number(id);
+
 
   const navigate = useNavigate();
-
-  const { getPost, clickButton, deletePost } = usePostsStore();
+const { getPost, clickButton, deletePost, reportPost } = usePostsStore();
 
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  // 🔥 MOCK 모드
+const USE_MOCK = true;
+// 🔥 서버에서 글 단건 조회
+useEffect(() => {
+  async function load() {
+    try {
+      if (USE_MOCK) {
+        const mock = await import(`./mocks/postDetail_${postId}.json`);
+        setPost(mock.default ?? mock);
+        setLoading(false);
+        return;
+      }
+
+      const data = await getPost(postId);
+      setPost(data);
+
+    } catch (e) {
+      alert("글을 불러오는 데 실패했습니다.");
+    }
+    setLoading(false);
+  }
+  load();
+}, [postId]);
+
 
   // 🔥 서버에서 글 단건 조회
   useEffect(() => {
@@ -62,6 +86,22 @@ export default function PostDetail() {
       alert("삭제 실패: " + e.message);
     }
   };
+  
+  const onReport = async () => {
+  if (!window.confirm("정말 신고하시겠습니까?")) return;
+
+  try {
+    await reportPost(post.id);
+    alert("신고 완료되었습니다.");
+
+    // 신고 횟수 증가 반영을 위해 다시 조회(optional)
+    const updated = await getPost(post.id);
+    setPost(updated);
+
+  } catch (e: any) {
+    alert("신고 실패: " + e.message);
+  }
+};
 
   const userName = localStorage.getItem("username");
 
@@ -134,16 +174,17 @@ export default function PostDetail() {
             }}
           >
             <button
-              style={{
-                border: "none",
-                background: "none",
-                cursor: "pointer",
-                padding: "4px 6px",
-              }}
-              onClick={() => alert("🚨 신고 기능 준비 중입니다.")}
-            >
-              🚨
-            </button>
+            style={{
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              padding: "4px 6px",
+            }}
+            onClick={onReport}
+          >
+            🚨
+          </button>
+
 
             {/* 작성자만 삭제 가능 */}
             {post.authorName === userName && (

@@ -21,6 +21,9 @@ interface PostsStore {
 
   deletePost: (id: number) => Promise<void>;
 
+  reportPost: (postId: number) => Promise<void>; 
+  
+
   clickButton: (
     postId: number,
     buttonType: string
@@ -36,6 +39,9 @@ export const usePostsStore = create<PostsStore>(() => ({
   createPost: async (req) => await PostsApi.createPost(req),
 
   deletePost: async (id) => await PostsApi.deletePost(id),
+  
+  reportPost: async (postId) => await PostsApi.reportPost(postId),
+
 
   clickButton: async (postId, buttonType) =>
     await PostsApi.clickButton(postId, buttonType),

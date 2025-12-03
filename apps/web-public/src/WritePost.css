@@ -741,6 +741,9 @@ button:active {
   background: radial-gradient(circle at 50% 20%, #222, #0d0d0d) !important;
 }
 
+/* -------------------------------- */
+/*  기본(라이트 모드) 버튼 스타일   */
+/* -------------------------------- */
 .button-select-grid {
   display: flex;
   flex-wrap: wrap;
@@ -751,7 +754,7 @@ button:active {
 
 .stamp-select-btn {
   padding: 6px 12px;
-  border-radius: 999px; /* 둥글게 */
+  border-radius: 999px;
   border: 1px solid #ddd;
   background: #fafafa;
   font-size: 14px;
@@ -769,4 +772,24 @@ button:active {
   border-color: #ffb73a;
   color: #8a4b00;
   font-weight: 600;
+}
+
+
+/* -------------------------------- */
+/*        🌙 다크모드 전용 스타일     */
+/* -------------------------------- */
+[data-theme="dark"] .stamp-select-btn {
+  background: #2b2b2b;
+  border-color: #444;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .stamp-select-btn:hover {
+  background: #3a3a3a;
+}
+
+[data-theme="dark"] .stamp-select-btn.selected {
+  background: #aa7c2f;     /* 골드 느낌 어둡게 */
+  border-color: #d9a441;
+  color: #fff2d0;
 }

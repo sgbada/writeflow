@@ -5,7 +5,7 @@ import {
   PostCreateRequest,
   ButtonClickResponse,
 } from "./types";
-
+import { FE_TO_BE } from "../PostsList"; 
 export const PostsApi = {
   // 📌 글 목록 조회
   getPosts: async (params: {
@@ -16,7 +16,12 @@ export const PostsApi = {
     const { emotion, page = 0, size = 20 } = params;
 
     const query = new URLSearchParams();
-    if (emotion) query.append("emotion", emotion);
+
+if (emotion) {
+  const beEmotion = FE_TO_BE[emotion.toLowerCase()] || emotion;
+  query.append("emotion", beEmotion);
+}
+
     query.append("page", page.toString());
     query.append("size", size.toString());
 
@@ -37,6 +42,11 @@ export const PostsApi = {
   deletePost: async (id: number): Promise<void> => {
     await apiDelete(`/posts/${id}`);
   },
+  // 📌 신고하기
+reportPost: async (postId: number): Promise<void> => {
+  await apiPost(`/posts/${postId}/report`);
+},
+
 
   // 📌 버튼 클릭
   clickButton: async (
@@ -46,3 +56,4 @@ export const PostsApi = {
     return apiPost(`/posts/${postId}/buttons/${buttonType}`);
   },
 };
+
