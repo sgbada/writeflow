@@ -9,7 +9,21 @@ const TEMP_KEY = "writeflow_temp_post";
 
 export default function WritePost() {
   const navigate = useNavigate();
-  const { addPost } = usePostsStore();
+  const { createPost } = usePostsStore(); 
+  const BUTTON_OPTIONS = [
+  { code: "EMPATHY", label: "공감" },
+  { code: "COMFORT", label: "위로" },
+  { code: "SAD", label: "슬픔" },
+  { code: "HAPPY", label: "행복" },
+  { code: "GOOD", label: "좋음" },
+  { code: "ANGRY", label: "분노" },
+  { code: "DISLIKE", label: "싫음" },
+];
+
+interface EmotionStamp {
+  code: string;
+  label: string;
+}
 
   // 두 단계 UI
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -19,7 +33,8 @@ export default function WritePost() {
   const [emotionCategory, setEmotionCategory] = useState("");
   const [content, setContent] = useState("");
   const [stampInput, setStampInput] = useState("");
-  const [emotionStamps, setEmotionStamps] = useState<EmotionStamp[]>([]);
+  const [selectedButtons, setSelectedButtons] = useState<EmotionStamp[]>([]);
+
 
 
   // 임시 저장 여부
@@ -55,10 +70,10 @@ const updateHeight = (value: string) => {
 
     try {
       const temp = JSON.parse(saved);
-      if (temp.content || temp.emotionCategory || temp.emotionStamps?.length) {
+      if (temp.content || temp.emotionCategory || temp.selectedButtons?.length) {
         setEmotionCategory(temp.emotionCategory || "");
         setContent(temp.content || "");
-        setEmotionStamps(temp.emotionStamps || []);
+        setSelectedButtons(temp.selectedButtons || []);
         setStep(1);
       }
     } catch {}
@@ -69,7 +84,7 @@ const updateHeight = (value: string) => {
   // ---------------------------------------------------
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!content && !emotionCategory && emotionStamps.length === 0) return;
+      if (!content && !emotionCategory && selectedButtons.length === 0) return;
 
       localStorage.setItem(
         TEMP_KEY,
@@ -77,28 +92,28 @@ const updateHeight = (value: string) => {
           step,
           emotionCategory,
           content,
-          emotionStamps,
+          selectedButtons,
         })
       );
       setIsSaved(true);
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [step, emotionCategory, content, emotionStamps]);
+  }, [step, emotionCategory, content, selectedButtons]);
 
   // ---------------------------------------------------
   // 🔥 3) beforeunload 경고
   // ---------------------------------------------------
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
-      if (!isSaved && (content || emotionStamps.length > 0)) {
+      if (!isSaved && (content || selectedButtons.length > 0)) {
         e.preventDefault();
         e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [isSaved, content, emotionStamps]);
+  }, [isSaved, content, selectedButtons]);
 
   // ---------------------------------------------------
   // 🔥 스탬프 추가
@@ -110,12 +125,12 @@ const updateHeight = (value: string) => {
     alert("스탬프는 최대 10자까지 입력할 수 있습니다.");
     return;
   }
-    if (emotionStamps.length >= 5) {
+    if (selectedButtons.length >= 5) {
       alert("스탬프는 최대 5개까지 가능합니다.");
       return;
     }
-    setEmotionStamps([
-  ...emotionStamps,
+    setselectedButtons([
+  ...selectedButtons,
   { id: crypto.randomUUID(), label: clean }
 ]);
 
@@ -139,7 +154,7 @@ const updateHeight = (value: string) => {
   // 🔥 뒤로가기 버튼 (Step2 → Step1)
   // ---------------------------------------------------
   const goBackStep = () => {
-    if (!isSaved && (content || emotionStamps.length > 0)) {
+    if (!isSaved && (content || selectedButtons.length > 0)) {
       const ok = window.confirm("임시 저장되지 않은 내용이 있습니다. 돌아갈까요?");
       if (!ok) return;
     }
@@ -156,7 +171,7 @@ const updateHeight = (value: string) => {
         step,
         emotionCategory,
         content,
-        emotionStamps,
+        selectedButtons,
       })
     );
     setIsSaved(true);
@@ -166,33 +181,49 @@ const updateHeight = (value: string) => {
   // ---------------------------------------------------
   // 🔥 최종 제출
   // ---------------------------------------------------
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
+const handleSubmit = async (e: any) => {
+  e.preventDefault();
 
-    if (!content.trim()) {
-      alert("내용을 입력해주세요.");
-      return;
-    }
+  if (!content.trim()) {
+    alert("내용을 입력해주세요.");
+    return;
+  }
 
-    addPost({
-      content,
-      emotionCategory,
-      emotionStamps,
-      summaryByLLM: fakeLLMSummary(content),
-    });
+  if (selectedButtons.length === 0) {
+    alert("최소 1개 이상의 버튼을 선택해주세요.");
+    return;
+  }
 
-    // 제출 후 임시 저장 삭제
-    localStorage.removeItem(TEMP_KEY);
-setContent("");
-  setEmotionStamps([]);
-  setStampInput("");
-
-  setIsSaved(true);
-
-  setStep(3);
-  localStorage.setItem("last_post_id", newPostId);
+  // 🔥 백엔드 규격 맞추기
+  const payload = {
+    content: content,
+    emotion: emotionCategory.toUpperCase(),   // "JOY"
+    buttons: selectedButtons.map(b => b.code)
 
   };
+
+  try {
+    const newPost = await createPost(payload);
+    const newPostId = newPost.id;
+
+    // 임시 저장 삭제
+    localStorage.removeItem(TEMP_KEY);
+
+    // 다음 화면 이동
+    localStorage.setItem("last_post_id", String(newPostId));
+    setStep(3);
+
+    // 초기화
+    setContent("");
+    setSelectedButtons([]);
+    setStampInput("");
+    setIsSaved(true);
+
+  } catch (err: any) {
+    alert("오류가 발생했습니다: " + err.message);
+  }
+};
+
 
   const chooseEmotion = (emotion: string) => {
     setEmotionCategory(emotion);
@@ -212,11 +243,14 @@ setContent("");
 
           <div className="emotion-buttons">
   <button data-emotion="joy" onClick={() => chooseEmotion("joy")}>😊 기쁨</button>
-  <button data-emotion="sad" onClick={() => chooseEmotion("sad")}>😢 슬픔</button>
   <button data-emotion="anger" onClick={() => chooseEmotion("anger")}>😠 분노</button>
-  <button data-emotion="fear" onClick={() => chooseEmotion("fear")}>😨 두려움</button>
+  <button data-emotion="sadness" onClick={() => chooseEmotion("sadness")}>😢 슬픔</button>
+  <button data-emotion="pleasure" onClick={() => chooseEmotion("pleasure")}>😄 즐거움</button>
   <button data-emotion="love" onClick={() => chooseEmotion("love")}>💕 사랑</button>
+  <button data-emotion="hate" onClick={() => chooseEmotion("hate")}>💔 미움</button>
+  <button data-emotion="ambition" onClick={() => chooseEmotion("ambition")}>🔥 야망</button>
 </div>
+
 
         </div>
         
@@ -227,6 +261,8 @@ setContent("");
 
           {/* 뒤로가기 + 임시저장 */}
           <div className="write-controls">
+          <h4>감정 버튼 선택 (최소 1개 ~ 최대 5개)</h4>
+
 
            
           </div>
@@ -256,29 +292,37 @@ setContent("");
     {countGraphemes(content)}/{MAX_CHAR}
   </div>
 
-  <label>감정 스탬프 (최대 5개)</label>
+ <div className="button-select-grid">
+  {BUTTON_OPTIONS.map((opt) => {
+    const isSelected = selectedButtons.some((s) => s.code === opt.code);
+    return (
+      <button
+        key={opt.code}
+        type="button"
+        className={`stamp-select-btn ${isSelected ? "selected" : ""}`}
+        onClick={() => {
+          if (isSelected) {
+            // 이미 선택 → 제거
+            setSelectedButtons((list) => list.filter((s) => s.code !== opt.code));
+          } else {
+            // 선택 추가
+            if (selectedButtons.length >= 5) {
+              alert("버튼은 최대 5개까지 선택할 수 있습니다.");
+              return;
+            }
+            setSelectedButtons([
+              ...selectedButtons,
+              { code: opt.code, label: opt.label }
+            ]);
+          }
+        }}
+      >
+        {opt.label}
+      </button>
+    );
+  })}
+</div>
 
-  <div className="stamp-row">
-    <input
-      value={stampInput}
-      onChange={(e) => {
-        const v = e.target.value;
-        if ([...v].length <= 10) {
-          setStampInput(v);
-        }
-      }}
-      placeholder="예: 😢 위로받고 싶어 (최대 10자)"
-    />
-    <button type="button" onClick={addStamp}>추가</button>
-  </div>
-
-  <div className="stamp-list">
-    {emotionStamps.map((stamp) => (
-      <span key={stamp.id} className="stamp-item">
-        {stamp.label}
-      </span>
-    ))}
-  </div>
 
   <button type="submit" className="submit-btn">등록하기</button>
 </form>

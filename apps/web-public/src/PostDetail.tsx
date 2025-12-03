@@ -1,25 +1,35 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { usePostsStore } from "./store/posts";
+import { useEffect, useState } from "react";
 import "./WritePost.css";
 import "./PostList.css";
-
-const EMOTION_LABELS: Record<string, string> = {
-  joy: "😊 기쁨",
-  sad: "😢 슬픔",
-  anger: "😠 분노",
-  fear: "😨 두려움",
-  love: "💕 사랑",
-};
 
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
   const postId = Number(id);
 
   const navigate = useNavigate();
-  const { posts, addStamp, deletePost } = usePostsStore();
 
-  const post = posts.find((p) => p.id === postId);
+  const { getPost, clickButton, deletePost } = usePostsStore();
 
+  const [post, setPost] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // 🔥 서버에서 글 단건 조회
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getPost(postId);
+        setPost(data);
+      } catch (e) {
+        alert("글을 불러오는 데 실패했습니다.");
+      }
+      setLoading(false);
+    }
+    load();
+  }, [postId]);
+
+  if (loading) return <p style={{ textAlign: "center" }}>불러오는 중...</p>;
   if (!post) return <p style={{ textAlign: "center" }}>글을 찾을 수 없습니다.</p>;
 
   const formatDate = (d: string) => {
@@ -33,65 +43,69 @@ export default function PostDetail() {
     });
   };
 
-  const userId = localStorage.getItem("userId");
+  const onClickButton = async (type: string) => {
+    try {
+      const updated = await clickButton(postId, type);
+      setPost((prev: any) => ({ ...prev, buttons: updated.buttons }));
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const onDelete = async () => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+
+    try {
+      await deletePost(post.id);
+      navigate("/read");
+    } catch (e: any) {
+      alert("삭제 실패: " + e.message);
+    }
+  };
+
+  const userName = localStorage.getItem("username");
 
   return (
-<div className={`writepage-bg theme-${post.emotionCategory}`}>
-
+    <div className={`writepage-bg theme-${post.emotion.toLowerCase()}`}>
       <div className="feed-wrapper">
 
-        {/* 🔙 뒤로가기 (글자 없음, PostList와 동일 스타일) */}
+        {/* 뒤로가기 */}
         <div className="step2-header">
           <div className="step1-back-wrapper">
             <button className="step-back" onClick={() => navigate(-1)}>←</button>
           </div>
-          <h3 className="step2-title">{EMOTION_LABELS[post.emotionCategory]}</h3>
+          <h3 className="step2-title">{post.emotionLabel}</h3>
         </div>
 
-        {/* ----------------------------- */}
-        {/* 카드 전체 (PostList 스타일) */}
-        {/* ----------------------------- */}
         <div className="write-wrapper detail-appear">
 
-
-          {/* 상단: 날짜 & 작성자 */}
           <div className="card-top" style={{ marginBottom: "14px" }}>
-
-{/*
-            <span className="emotion-pill">{EMOTION_LABELS[post.emotionCategory]}</span>
-            */}
             <span className="card-date">{formatDate(post.createdAt)}</span>
           </div>
 
-          {/* 작성자 */}
-          {/*
-          <div className="detail-author" style={{ fontSize: "13px", opacity: 0.75, marginBottom: "10px" }}>
-            작성자: {post.author || "익명"}
-</div>
-*/}
-          {/* 본문 */}
           <div className="card-content">
             <p className="post-content">{post.content}</p>
           </div>
-            <div className="stamp-divider"></div>
-          {/* 스탬프 */}
-          {post.emotionStamps?.length > 0 && (
+
+          <div className="stamp-divider"></div>
+
+          {/* 버튼(스탬프) */}
+          {post.buttons.length > 0 && (
             <div className="stamp-list" style={{ marginTop: "16px" }}>
-              {post.emotionStamps.map((s) => (
+              {post.buttons.map((b: any) => (
                 <button
-                  key={s.id}
+                  key={b.buttonType}
                   className="stamp-item"
-                  onClick={() => addStamp(post.id, s.id)}
+                  onClick={() => onClickButton(b.buttonType)}
                 >
-                  {s.label} &nbsp;
-                  {(post.emotionStampCounts?.[s.id] ?? 0).toString()}
+                  {b.label} &nbsp; {b.clickCount}
                 </button>
               ))}
             </div>
           )}
 
-          {/* LLM 요약 */}
-          {post.summaryByLLM && (
+          {/* AI 해석 */}
+          {post.llmReply && (
             <div
               style={{
                 marginTop: "20px",
@@ -104,13 +118,11 @@ export default function PostDetail() {
               }}
             >
               <strong>🧠 AI 해석</strong>
-              <p style={{ marginTop: "6px" }}>{post.summaryByLLM}</p>
+              <p style={{ marginTop: "6px" }}>{post.llmReply}</p>
             </div>
           )}
 
-          {/* -------------------------------------- */}
-          {/* 하단 신고/삭제 — 카드 아래 작게 */}
-          {/* -------------------------------------- */}
+          {/* 신고 / 삭제 */}
           <div
             style={{
               marginTop: "22px",
@@ -133,31 +145,24 @@ export default function PostDetail() {
               🚨
             </button>
 
-            {/* 작성자에게만 삭제 버튼 표시 */}
-            {post.authorId === userId && (
-  <button
-    style={{
-      border: "none",
-      background: "none",
-      cursor: "pointer",
-      padding: "4px 6px",
-    }}
-    onClick={() => {
-      if (window.confirm("정말 삭제하시겠습니까?")) {
-        const userId = localStorage.getItem("userId");
-        deletePost(post.id, userId!);
-        navigate("/read");
-      }
-    }}
-  >
-    🗑️
-  </button>
-)}
-
+            {/* 작성자만 삭제 가능 */}
+            {post.authorName === userName && (
+              <button
+                style={{
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  padding: "4px 6px",
+                }}
+                onClick={onDelete}
+              >
+                🗑️
+              </button>
+            )}
           </div>
+
         </div>
       </div>
     </div>
-    
   );
 }

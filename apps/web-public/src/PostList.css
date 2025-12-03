@@ -12,21 +12,58 @@
   background: linear-gradient(135deg, #fff6b2, #ffd76a);
 }
 
-.theme-sad .emotion-feed-bg {
-  background: linear-gradient(135deg, #dfe9f5, #b8c6db);
-}
-
 .theme-anger .emotion-feed-bg {
   background: linear-gradient(135deg, #ffbaba, #ff7b7b);
 }
 
-.theme-fear .emotion-feed-bg {
-  background: linear-gradient(135deg, #e4e4fa, #b4b8ff);
+.theme-sadness .emotion-feed-bg {
+  background: linear-gradient(135deg, #dfe9f5, #b8c6db);
+}
+
+[data-theme="light"] .theme-pleasure .emotion-feed-bg {
+  background: linear-gradient(135deg, #eaffc4, #c8ff8f);
 }
 
 .theme-love .emotion-feed-bg {
   background: linear-gradient(135deg, #ffdce7, #ff9bb5);
 }
+
+[data-theme="light"] .theme-hate .emotion-feed-bg {
+  background: linear-gradient(135deg, #e0e0e0, #c0c0c0);
+}
+
+.theme-ambition .emotion-feed-bg {
+  background: linear-gradient(135deg, #ffd89b, #ff9e67);
+}
+
+.theme-joy.writepage-bg {
+  background: linear-gradient(135deg, #fff6b2, #ffd76a);
+}
+
+.theme-anger.writepage-bg {
+  background: linear-gradient(135deg, #ffbaba, #ff7b7b);
+}
+
+.theme-sadness.writepage-bg {
+  background: linear-gradient(135deg, #dfe9f5, #b8c6db);
+}
+
+.theme-pleasure.writepage-bg {
+  background: linear-gradient(135deg, #ffe8b5, #ffd28a);
+}
+
+.theme-love.writepage-bg {
+  background: linear-gradient(135deg, #ffdce7, #ff9bb5);
+}
+
+.theme-hate.writepage-bg {
+  background: linear-gradient(135deg, #ffcccc, #ff9090);
+}
+
+.theme-ambition.writepage-bg {
+  background: linear-gradient(135deg, #ffd89b, #ff9e67);
+}
+
 
 /* 밤하늘 효과 (다크모드) */
 [data-theme="dark"] .emotion-feed-bg {
@@ -311,21 +348,30 @@
   background: rgba(255, 240, 150, 0.55);
 }
 
-.theme-sad .stamp-item {
-  background: rgba(210, 225, 255, 0.50);
-}
-
 .theme-anger .stamp-item {
   background: rgba(255, 200, 195, 0.55);
 }
 
-.theme-fear .stamp-item {
-  background: rgba(220, 220, 255, 0.55);
+.theme-sadness .stamp-item {
+  background: rgba(210, 225, 255, 0.50);
+}
+
+.theme-pleasure .stamp-item {
+  background: rgba(255, 227, 180, 0.55);
 }
 
 .theme-love .stamp-item {
   background: rgba(255, 210, 225, 0.55);
 }
+
+.theme-hate .stamp-item {
+  background: rgba(255, 170, 170, 0.50);
+}
+
+.theme-ambition .stamp-item {
+  background: rgba(255, 200, 150, 0.50);
+}
+
 .stamp-list {
   display: flex;
   flex-wrap: wrap;
@@ -482,21 +528,88 @@
   text-decoration: none !important;
   color: inherit;
 }
-
-/* ===============================
-   📌 페이지 전환 애니메이션
-   =============================== */
-.page-transition {
-  animation: pageFade 0.35s ease-out;
+/* 🔘 플로팅 버튼 컨테이너 */
+.floating-buttons {
+  position: fixed;
+  right: 18px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 99999; /* 매우 높게 — 무조건 보이도록 */
 }
 
-@keyframes pageFade {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* 🔘 개별 버튼 */
+.floating-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+
+  transition: all 0.2s ease;
 }
+
+/* hover */
+.floating-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+  transform: translateY(-3px);
+}
+
+/* ⭐ fixed 포지션 깨는 transform 제거 */
+.writepage-bg,
+.feed-wrapper,
+.step,
+.step2,
+.step1,
+.write-wrapper,
+.card-appear {
+  transform: none !important;
+}
+
+/* 🔘 플로팅 버튼 컨테이너 */
+.floating-buttons {
+  position: fixed;
+  right: 14px;
+  bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 999999; /* 최상단 */
+  pointer-events: auto;
+}
+
+/* 🔘 동그랗고 작은 버튼 */
+.floating-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  font-size: 20px;
+  color: #333;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+.floating-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-3px);
+}
+

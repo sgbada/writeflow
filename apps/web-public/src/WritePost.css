@@ -25,20 +25,77 @@
 /* --------------------------------------- */
 /* 감정별 배경 테마 */
 /* --------------------------------------- */
+/* ============================================
+   🌞 LIGHT 모드에서만 감정별 전체 배경
+   ============================================ */
 
-.write-wrapper.theme-joy    { background: linear-gradient(135deg, #fff6b2, #ffd76a); }
-.write-wrapper.theme-sad    { background: linear-gradient(135deg, #dfe9f5, #b8c6db); }
-.write-wrapper.theme-anger  { background: linear-gradient(135deg, #ffbaba, #ff7b7b); }
-.write-wrapper.theme-fear   { background: linear-gradient(135deg, #e4e4fa, #b4b8ff); }
-.write-wrapper.theme-love   { background: linear-gradient(135deg, #ffdce7, #ff9bb5); }
+[data-theme="light"] .writepage-bg.theme-joy {
+  background: linear-gradient(135deg, #fff6b2, #ffd76a);
+}
 
-/* dark 감정별 */
-[data-theme="dark"] .write-wrapper.theme-joy   { --neon-r:255; --neon-g:226; --neon-b:138; }
-[data-theme="dark"] .write-wrapper.theme-sad   { --neon-r:136; --neon-g:199; --neon-b:255; }
-[data-theme="dark"] .write-wrapper.theme-anger { --neon-r:255; --neon-g:107; --neon-b:107; }
-[data-theme="dark"] .write-wrapper.theme-fear  { --neon-r:157; --neon-g:141; --neon-b:247; }
-[data-theme="dark"] .write-wrapper.theme-love  { --neon-r:255; --neon-g:128; --neon-b:181; }
+[data-theme="light"] .writepage-bg.theme-anger {
+  background: linear-gradient(135deg, #ffbaba, #ff7b7b);
+}
 
+[data-theme="light"] .writepage-bg.theme-sadness {
+  background: linear-gradient(135deg, #dfe9f5, #b8c6db);
+}
+
+/* 🎨 즐거움: 연두톤 */
+[data-theme="light"] .writepage-bg.theme-pleasure {
+  background: linear-gradient(135deg, #eaffc4, #c8ff8f);
+}
+
+/* 사랑 */
+[data-theme="light"] .writepage-bg.theme-love {
+  background: linear-gradient(135deg, #ffdce7, #ff9bb5);
+}
+
+/* 🎨 미움: 회색톤 */
+[data-theme="light"] .writepage-bg.theme-hate {
+  background: linear-gradient(135deg, #e0e0e0, #c0c0c0);
+}
+
+/* 야망 */
+[data-theme="light"] .writepage-bg.theme-ambition {
+  background: linear-gradient(135deg, #ffd89b, #ff9e67);
+}
+
+/* ============================================
+   🌙 DARK MODE — 감정별 NEON 값 최신 기준
+   ============================================ */
+
+[data-theme="dark"] .write-wrapper.theme-joy {  --neon-r: 255;  --neon-g: 226;  --neon-b: 138; }
+[data-theme="dark"] .write-wrapper.theme-anger {  --neon-r: 255;  --neon-g: 107;  --neon-b: 107;}
+[data-theme="dark"] .write-wrapper.theme-sadness {
+  --neon-r: 136;
+  --neon-g: 199;
+  --neon-b: 255;
+}
+
+[data-theme="dark"] .write-wrapper.theme-pleasure {
+  --neon-r: 160;
+  --neon-g: 255;
+  --neon-b: 140;
+}
+
+[data-theme="dark"] .write-wrapper.theme-love {
+  --neon-r: 255;
+  --neon-g: 128;
+  --neon-b: 181;
+}
+
+[data-theme="dark"] .write-wrapper.theme-hate {
+  --neon-r: 200;
+  --neon-g: 200;
+  --neon-b: 200;
+}
+
+[data-theme="dark"] .write-wrapper.theme-ambition {
+  --neon-r: 255;
+  --neon-g: 175;
+  --neon-b: 110;
+}
 
 
 /* --------------------------------------- */
@@ -168,42 +225,47 @@
   cursor: pointer;
   width: 100%;
 }
+/* ============================================
+   ⭐ 글쓰기 페이지(stamp-row) 감정별 색 강제 적용 (light mode)
+   ============================================ */
 
-
-/* 기쁨 */
-.theme-joy .submit-btn,
-.theme-joy .stamp-add {
-  background: #ffd76a;
-  color: #5a4200;
+.writepage-bg.theme-joy .stamp-row button {
+  background: #ffe38a !important;
+  color: #5a4200 !important;
 }
 
-/* 슬픔 */
-.theme-sad .submit-btn,
-.theme-sad .stamp-add {
-  background: #b8c6db;
-  color: #0f2a4d;
+.writepage-bg.theme-anger .stamp-row button {
+  background: #ffb1b1 !important;
+  color: #4d0000 !important;
 }
 
-/* 분노 */
-.theme-anger .submit-btn,
-.theme-anger .stamp-add {
-  background: #ff7b7b;
-  color: #4d0000;
+.writepage-bg.theme-sadness .stamp-row button {
+  background: #bcd8ff !important;
+  color: #0f2a4d !important;
 }
 
-/* 두려움 */
-.theme-fear .submit-btn,
-.theme-fear .stamp-add {
-  background: #b4b8ff;
-  color: #181a45;
+/* 🎨 즐거움 = 연두색으로 변경 */
+.writepage-bg.theme-pleasure .stamp-row button {
+  background: #d8ffa3 !important;
+  color: #3f4f00 !important;
 }
 
-/* 사랑 */
-.theme-love .submit-btn,
-.theme-love .stamp-add {
-  background: #ff9bb5;
-  color: #4a1123;
+.writepage-bg.theme-love .stamp-row button {
+  background: #ffc1d6 !important;
+  color: #4a1123 !important;
 }
+
+/* 🎨 미움(hate) — ✔ .writepage-bg 누락 문제 수정됨 */
+.writepage-bg.theme-hate .stamp-row button {
+  background: #d0d0d0 !important;
+  color: #3a3a3a !important;
+}
+
+.writepage-bg.theme-ambition .stamp-row button {
+  background: #ffc78c !important;
+  color: #4a2900 !important;
+}
+
 
 
 .writepage-bg {
@@ -232,14 +294,19 @@
   font-weight: 500;
   backdrop-filter: blur(4px);
 }
-
-
 .theme-joy .ctrl-btn { background: #ffe8a8; color: #5a4200; }
-.theme-sad .ctrl-btn { background: #d9e7ff; color: #0a2649; }
 .theme-anger .ctrl-btn { background: #ffc8c8; color: #5a0000; }
-.theme-fear .ctrl-btn { background: #dcd9ff; color: #1c1d52; }
+.theme-sadness .ctrl-btn { background: #d9e7ff; color: #0a2649; }
+.theme-pleasure .ctrl-btn {
+  background: #d8ffa3;   /* 연두 톤 */
+  color: #3a4a00;
+}
 .theme-love .ctrl-btn { background: #ffd1e2; color: #52152b; }
-
+.theme-hate .ctrl-btn {
+  background: #d0d0d0;   /* 회색 톤 */
+  color: #3a3a3a;
+}
+.theme-ambition .ctrl-btn { background: #ffd7a4; color: #4a2a00; }
 
 
 
@@ -309,13 +376,6 @@
   font-weight: 600;
   transition: 0.2s;
 }
-
-/* 감정 테마별 버튼 색 */
-.theme-joy .stamp-row button { background: #ffe38a; color: #5a4200; }
-.theme-sad .stamp-row button { background: #bcd8ff; color: #0f2a4d; }
-.theme-anger .stamp-row button { background: #ffb1b1; color: #4d0000; }
-.theme-fear .stamp-row button  { background: #c7c4ff; color: #181a45; }
-.theme-love .stamp-row button  { background: #ffc1d6; color: #4a1123; }
 
 /* hover */
 .stamp-row button:hover { opacity: 0.9; }
@@ -476,26 +536,18 @@ button:active {
   opacity: 0.85;
 }
 
-/* 감정 테마 별로 hover glow */
-.theme-joy button:hover {
-  box-shadow: 0 0 10px rgba(255, 215, 106, 0.6);
+/* 감정별 hover glow (공통 버튼) */
+.theme-joy button:hover { box-shadow: 0 0 10px rgba(255, 215, 106, 0.6); }
+.theme-anger button:hover { box-shadow: 0 0 10px rgba(255, 123, 123, 0.6); }
+.theme-sadness button:hover { box-shadow: 0 0 10px rgba(184, 198, 219, 0.6); }
+.theme-pleasure button:hover {
+  box-shadow: 0 0 10px rgba(150, 230, 80, 0.6);  /* 연두 느낌 */
 }
-
-.theme-sad button:hover {
-  box-shadow: 0 0 10px rgba(184, 198, 219, 0.6);
+.theme-love button:hover { box-shadow: 0 0 10px rgba(255, 155, 181, 0.6); }
+.theme-hate button:hover {
+  box-shadow: 0 0 10px rgba(120, 120, 120, 0.6); /* 회색 느낌 */
 }
-
-.theme-anger button:hover {
-  box-shadow: 0 0 10px rgba(255, 123, 123, 0.6);
-}
-
-.theme-fear button:hover {
-  box-shadow: 0 0 10px rgba(180, 184, 255, 0.6);
-}
-
-.theme-love button:hover {
-  box-shadow: 0 0 10px rgba(255, 155, 181, 0.6);
-}
+.theme-ambition button:hover { box-shadow: 0 0 10px rgba(255, 175, 110, 0.6); }
 
 /* ============================================
    ⭐ 라이트 모드 — 감정 선택 버튼 hover 색상
@@ -511,94 +563,80 @@ button:active {
   transform: translateY(-2px);
   color: #000;
 }
-
-/* ⭐ 감정별 hover 색상 */
-[data-theme="light"] .emotion-buttons button:nth-child(1):hover {
-  background: #ffe48a; /* joy */
-}
-[data-theme="light"] .emotion-buttons button:nth-child(2):hover {
-  background: #c6d6f1; /* sad */
-}
-[data-theme="light"] .emotion-buttons button:nth-child(3):hover {
-  background: #ffb2b2; /* anger */
-}
-[data-theme="light"] .emotion-buttons button:nth-child(4):hover {
-  background: #cfcffd; /* fear */
-}
-[data-theme="light"] .emotion-buttons button:nth-child(5):hover {
-  background: #ffc6d9; /* love */
-}
-
-/* =======================================  
-   ⭐ 라이트 모드 감정 버튼 Hover 효과  
-   ======================================= */
-[data-theme="light"] .emotion-buttons button {
-  transition: all 0.25s ease;
-  background: #fff;
-  border: 1px solid #eee;
-}
-
-/* hover 시 기본 효과 */
-[data-theme="light"] .emotion-buttons button:hover {
-  transform: translateY(-3px) scale(1.03);
-  border-color: transparent;
-}
-
-/* 감정별 그라데이션 + glow */
+/* 감정별 그라데이션 + glow (새 감정 키 기준) */
 [data-theme="light"] .emotion-buttons button[data-emotion="joy"]:hover {
-  background: linear-gradient(135deg, #fff3a3, #ffd76a);
+  background: linear-gradient(135deg, #fff3a3, #ffd76a);   /* joy */
   box-shadow: 0 6px 16px rgba(255, 195, 55, 0.35);
 }
 
-[data-theme="light"] .emotion-buttons button[data-emotion="sad"]:hover {
-  background: linear-gradient(135deg, #dbe8ff, #b9cdf0);
-  box-shadow: 0 6px 16px rgba(120, 160, 255, 0.35);
-}
-
 [data-theme="light"] .emotion-buttons button[data-emotion="anger"]:hover {
-  background: linear-gradient(135deg, #ffb5b5, #ff7b7b);
+  background: linear-gradient(135deg, #ffb5b5, #ff7b7b);  /* anger */
   box-shadow: 0 6px 16px rgba(255, 80, 80, 0.38);
 }
 
-[data-theme="light"] .emotion-buttons button[data-emotion="fear"]:hover {
-  background: linear-gradient(135deg, #d3d1ff, #b7b9ff);
-  box-shadow: 0 6px 16px rgba(140, 130, 255, 0.35);
+[data-theme="light"] .emotion-buttons button[data-emotion="sadness"]:hover {
+  background: linear-gradient(135deg, #dbe8ff, #b9cdf0);  /* sadness */
+  box-shadow: 0 6px 16px rgba(120, 160, 255, 0.35);
+}
+
+[data-theme="light"] .emotion-buttons button[data-emotion="pleasure"]:hover {
+  background: linear-gradient(135deg, #e7ffc9, #c4ff86);
+  box-shadow: 0 6px 16px rgba(150, 230, 80, 0.35);
 }
 
 [data-theme="light"] .emotion-buttons button[data-emotion="love"]:hover {
-  background: linear-gradient(135deg, #ffd4e5, #ff9abb);
+  background: linear-gradient(135deg, #ffd4e5, #ff9abb);  /* love */
   box-shadow: 0 6px 16px rgba(255, 120, 160, 0.35);
 }
 
-/* 기쁨 */
+[data-theme="light"] .emotion-buttons button[data-emotion="hate"]:hover {
+  background: linear-gradient(135deg, #e5e5e5, #bfbfbf);
+  box-shadow: 0 6px 16px rgba(80, 80, 80, 0.35);
+}
+
+
+[data-theme="light"] .emotion-buttons button[data-emotion="ambition"]:hover {
+  background: linear-gradient(135deg, #ffd39d, #ffb46f);  /* ambition */
+  box-shadow: 0 6px 16px rgba(255, 170, 100, 0.38);
+}
+
+
+/* submit 버튼 hover */
 .theme-joy .submit-btn:hover {
   background: linear-gradient(135deg, #ffe58f, #ffcd4f);
   box-shadow: 0 6px 16px rgba(255, 209, 79, 0.45);
 }
 
-/* 슬픔 */
-.theme-sad .submit-btn:hover {
-  background: linear-gradient(135deg, #c9d7ea, #a8b8d4);
-  box-shadow: 0 6px 16px rgba(120, 150, 200, 0.35);
-}
-
-/* 분노 */
 .theme-anger .submit-btn:hover {
   background: linear-gradient(135deg, #ff9d9d, #ff6767);
   box-shadow: 0 6px 16px rgba(255, 90, 90, 0.45);
 }
 
-/* 두려움 */
-.theme-fear .submit-btn:hover {
-  background: linear-gradient(135deg, #d4d3ff, #b3b2ff);
-  box-shadow: 0 6px 16px rgba(160, 150, 255, 0.35);
+.theme-sadness .submit-btn:hover {
+  background: linear-gradient(135deg, #c9d7ea, #a8b8d4);
+  box-shadow: 0 6px 16px rgba(120, 150, 200, 0.35);
 }
 
-/* 사랑 */
+.theme-pleasure .submit-btn:hover {
+  background: linear-gradient(135deg, #e8ffc8, #caff8e);
+  box-shadow: 0 6px 16px rgba(150, 230, 80, 0.35);
+}
+
 .theme-love .submit-btn:hover {
   background: linear-gradient(135deg, #ffbfd3, #ff8eb0);
   box-shadow: 0 6px 16px rgba(255, 120, 160, 0.45);
 }
+
+.theme-hate .submit-btn:hover {
+  background: linear-gradient(135deg, #e4e4e4, #bdbdbd);
+  box-shadow: 0 6px 16px rgba(80, 80, 80, 0.38);
+}
+
+.theme-ambition .submit-btn:hover {
+  background: linear-gradient(135deg, #ffd39d, #ffb46f);
+  box-shadow: 0 6px 16px rgba(255, 170, 100, 0.38);
+}
+
 
 .submit-btn::after {
   content: "";
@@ -631,12 +669,17 @@ button:active {
     opacity: 0;
   }
 }
-
 .theme-joy .submit-btn::after { background: rgba(255,215,106,0.45); }
-.theme-sad .submit-btn::after { background: rgba(184,198,219,0.45); }
 .theme-anger .submit-btn::after { background: rgba(255,123,123,0.45); }
-.theme-fear .submit-btn::after { background: rgba(180,184,255,0.45); }
+.theme-sadness .submit-btn::after { background: rgba(184,198,219,0.45); }
+.theme-pleasure .submit-btn::after {
+  background: rgba(150, 230, 80, 0.45);
+}
 .theme-love .submit-btn::after { background: rgba(255,155,181,0.45); }
+.theme-hate .submit-btn::after {
+  background: rgba(120, 120, 120, 0.35);
+}
+.theme-ambition .submit-btn::after { background: rgba(255,170,110,0.45); }
 .step-back {
   position: absolute;
   top: 14px;
@@ -685,4 +728,45 @@ button:active {
 
 .step.step3.hidden {
   display: none !important;
+}
+
+/* 🌙 다크모드에서는 감정별 배경을 전부 무시하고, 항상 어두운 배경만 적용 */
+[data-theme="dark"] .writepage-bg.theme-joy,
+[data-theme="dark"] .writepage-bg.theme-anger,
+[data-theme="dark"] .writepage-bg.theme-sadness,
+[data-theme="dark"] .writepage-bg.theme-pleasure,
+[data-theme="dark"] .writepage-bg.theme-love,
+[data-theme="dark"] .writepage-bg.theme-hate,
+[data-theme="dark"] .writepage-bg.theme-ambition {
+  background: radial-gradient(circle at 50% 20%, #222, #0d0d0d) !important;
+}
+
+.button-select-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 15px 0;
+  justify-content: flex-start;
+}
+
+.stamp-select-btn {
+  padding: 6px 12px;
+  border-radius: 999px; /* 둥글게 */
+  border: 1px solid #ddd;
+  background: #fafafa;
+  font-size: 14px;
+  line-height: 1;
+  transition: 0.15s;
+  cursor: pointer;
+}
+
+.stamp-select-btn:hover {
+  background: #f0f0f0;
+}
+
+.stamp-select-btn.selected {
+  background: #ffe092;
+  border-color: #ffb73a;
+  color: #8a4b00;
+  font-weight: 600;
 }

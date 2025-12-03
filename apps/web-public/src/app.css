@@ -1959,26 +1959,32 @@ select:hover,
   background: var(--primary);
   color: #fff;
 }
-
-
 .write-theme-joy {
   background: linear-gradient(135deg, #fff4c2, #ffeaa7);
-}
-
-.write-theme-sad {
-  background: linear-gradient(135deg, #cfd9df, #e2ebf0);
 }
 
 .write-theme-anger {
   background: linear-gradient(135deg, #ffafaf, #ff7675);
 }
 
+.write-theme-sadness {
+  background: linear-gradient(135deg, #cfd9df, #e2ebf0);
+}
+
+.write-theme-pleasure {
+  background: linear-gradient(135deg, #ffebc0, #ffd79a);
+}
+
 .write-theme-love {
   background: linear-gradient(135deg, #ffd6e0, #ff9eb5);
 }
 
-.write-theme-fear {
-  background: linear-gradient(135deg, #dce6f2, #c7d5ea);
+.write-theme-hate {
+  background: linear-gradient(135deg, #ffb3b3, #ff8e8e);
+}
+
+.write-theme-ambition {
+  background: linear-gradient(135deg, #ffdfb0, #ffb77d);
 }
 
 .stamp-item {
@@ -2101,25 +2107,38 @@ select:hover,
   white-space: pre-wrap;
 }
 
-/* 감정별 배경 */
 .card-joy {
   background: linear-gradient(135deg, #fff9c4, #ffe082);
 }
-.card-sad {
-  background: linear-gradient(135deg, #e3f2fd, #cfd8dc);
-}
+
 .card-anger {
   background: linear-gradient(135deg, #ffcdd2, #ef9a9a);
 }
-.card-fear {
-  background: linear-gradient(135deg, #e8eaf6, #c5cae9);
+
+.card-sadness {
+  background: linear-gradient(135deg, #e3f2fd, #cfd8dc);
 }
+
+.card-pleasure {
+  background: linear-gradient(135deg, #ffeec4, #ffd69c);
+}
+
 .card-love {
   background: linear-gradient(135deg, #ffe0f0, #f8bbd0);
 }
+
+.card-hate {
+  background: linear-gradient(135deg, #ffcccc, #ff9999);
+}
+
+.card-ambition {
+  background: linear-gradient(135deg, #ffe1b5, #ffb785);
+}
+
 .card-default {
   background: #ffffff;
 }
+
 
 .card-stamps {
   margin-top: 8px;
@@ -2328,25 +2347,7 @@ select:hover,
   white-space: pre-wrap;
 }
 
-/* 감정별 배경 */
-.card-joy {
-  background: linear-gradient(135deg, #fff9c4, #ffe082);
-}
-.card-sad {
-  background: linear-gradient(135deg, #e3f2fd, #cfd8dc);
-}
-.card-anger {
-  background: linear-gradient(135deg, #ffcdd2, #ef9a9a);
-}
-.card-fear {
-  background: linear-gradient(135deg, #e8eaf6, #c5cae9);
-}
-.card-love {
-  background: linear-gradient(135deg, #ffe0f0, #f8bbd0);
-}
-.card-default {
-  background: #ffffff;
-}
+
 
 /* 스탬프 */
 .card-stamps {
@@ -2388,13 +2389,19 @@ select:hover,
   padding: 32px 18px;
   transition: background 0.4s ease;
 }
-
-/* 감정별 배경 테마 */
 .theme-joy { background: linear-gradient(135deg, #fff8b3, #ffd55c); }
-.theme-sad { background: linear-gradient(135deg, #dfe9f5, #b8c6db); }
+
 .theme-anger { background: linear-gradient(135deg, #ffc2c2, #ff8a8a); }
-.theme-fear { background: linear-gradient(135deg, #e6e6fa, #b7b7ff); }
+
+.theme-sadness { background: linear-gradient(135deg, #dfe9f5, #b8c6db); }
+
+.theme-pleasure { background: linear-gradient(135deg, #ffe8b5, #ffd28a); }
+
 .theme-love { background: linear-gradient(135deg, #ffdce7, #ff9bb5); }
+
+.theme-hate { background: linear-gradient(135deg, #ffcccc, #ff9090); }
+
+.theme-ambition { background: linear-gradient(135deg, #ffd89b, #ff9e67); }
 
 /* 스텝 전환 */
 .step {
