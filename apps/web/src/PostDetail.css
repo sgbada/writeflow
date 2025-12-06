@@ -1,0 +1,179 @@
+.detail-back-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  padding: 4px 0;
+  cursor: pointer;
+  opacity: 0.8;
+  margin-bottom: 14px;
+}
+
+.detail-card {
+  padding: 26px 22px;
+}
+
+.detail-author {
+  font-size: 14px;
+  opacity: 0.75;
+  margin-bottom: 12px;
+}
+
+.ai-summary-box {
+  background: rgba(255,255,255,0.65);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-top: 22px;
+  backdrop-filter: blur(8px);
+}
+
+[data-theme="dark"] .ai-summary-box {
+  background: rgba(255,255,255,0.12);
+  color: #eee;
+}
+
+.stamp-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 16px 0 12px;
+}
+
+[data-theme="dark"] .stamp-divider {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+
+/* PostDetail 카드와 동일 패딩/정렬 */
+.write-wrapper .card-content {
+  padding: 0 6px;
+}
+
+.write-wrapper .stamp-list {
+  padding: 0 6px;
+}
+
+/* 동일한 카드 등장 애니메이션 */
+.card-appear {
+  animation: fadein 0.4s ease-out;
+}
+
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+.detail-card .stamp-list {
+  margin-left: 6px;
+  width: calc(100% - 12px);
+}
+
+/* PostDetail 페이지는 WritePost의 step 애니메이션 금지 */
+.no-step-animation * {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+@keyframes fadeOnly {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.detail-appear {
+  animation: fadeOnly 0.35s ease-out !important;
+}
+
+.card-fade-out {
+  opacity: 0 !important;
+  transform: translateY(-10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+}
+
+/* 팝업 배경 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  animation: fadeIn 0.25s ease;
+}
+
+/* 팝업 박스 */
+.modal-box {
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(10px);
+  padding: 28px 26px;
+  border-radius: 18px;
+  max-width: 320px;
+  width: 80%;
+  text-align: center;
+  animation: popup 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+/* 다크모드 적용 */
+[data-theme="dark"] .modal-box {
+  background: rgba(30,30,30,0.75);
+  color: #e9e9e9;
+}
+
+/* 팝업 타이틀 */
+.modal-box h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+/* 텍스트 */
+.modal-box p {
+  font-size: 14px;
+  opacity: 0.85;
+  margin-bottom: 18px;
+  white-space: pre-line;
+}
+
+/* 버튼 */
+.modal-btn {
+  padding: 10px 0;
+  width: 100%;
+  font-size: 15px;
+  border-radius: 12px;
+  background: #ffd76a;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.modal-btn:hover {
+  background: #ffc43d;
+  transform: translateY(-2px);
+}
+
+/* animation */
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+@keyframes popup { from{transform:scale(.9); opacity:0;} to{transform:scale(1);opacity:1;} }
+
+/* 💛 감정 테마 기반 팝업 UI */
+.theme-joy .modal-box       { background:#fff4b5; color:#7a5500; }
+.theme-anger .modal-box     { background:#ffc7c7; color:#7a1d1d; }
+.theme-sadness .modal-box   { background:#d8e5ff; color:#1e3a7a; }
+.theme-pleasure .modal-box  { background:#ffe3b2; color:#6d3c00; }
+.theme-love .modal-box      { background:#ffd0e1; color:#7a0047; }
+.theme-hate .modal-box      { background:#ffb4b4; color:#5e0000; }
+.theme-ambition .modal-box  { background:#ffd19b; color:#7a3c00; }
+
+/* 버튼도 감정에 따라 */
+.theme-joy .modal-btn       { background:#ffe37a; }
+.theme-anger .modal-btn     { background:#ff8a8a; }
+.theme-sadness .modal-btn   { background:#a8c4ff; }
+.theme-pleasure .modal-btn  { background:#ffd27a; }
+.theme-love .modal-btn      { background:#ff99c4; }
+.theme-hate .modal-btn      { background:#ff7a7a; }
+.theme-ambition .modal-btn  { background:#ffae57; }
+
+.modal-btn:hover { opacity:.9; transform:translateY(-2px); }

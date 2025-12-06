@@ -1,0 +1,82 @@
+.home-wrapper {
+  text-align: center;
+  animation: fadein 0.6s ease-out;
+}
+
+/* 부드러운 서브 텍스트 */
+.home-sub {
+  opacity: .8;
+  font-size: 14.5px;
+  margin-bottom: 26px;
+  font-weight: 400;
+}
+
+/* 로그인/회원가입 스타일(심플) */
+.home-btn-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-btn {
+  padding: 12px 0;
+  font-size: 16px;
+  border-radius: 14px;
+  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(0,0,0,0.1);
+  font-weight: 600;
+  transition: .25s ease;
+  text-decoration: none;
+  color:#333;
+}
+
+.home-btn:hover {
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
+
+/* 로그인/가입 컬러 미묘하게 차별화 */
+.home-btn.login { background: rgba(255,255,255,.8); }
+.home-btn.signup { background: rgba(255,255,255,.9); }
+
+/* ---------- 로그인된 사용자 화면 ---------- */
+.home-action-box {
+  display:flex;
+  flex-direction: column;
+  gap:18px;        /* 버튼 간격 좁게 → 부드럽게 */
+  padding-top:6px;
+}
+
+.action-card {
+  padding: 18px 0;
+  border-radius: 18px;
+  background: rgba(255,255,255,.55);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0,0,0,.1);
+  font-size:18px;
+  font-weight:700;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  transition:.3s cubic-bezier(.22,.61,.36,1);
+  text-decoration:none;
+  color:#333;
+}
+
+/* hover interaction → 감성 포인트 💫 */
+.action-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 6px 22px rgba(0,0,0,.18);
+}
+
+/* 살짝 색감 gradient 추가(감정 서비스 분위기) */
+.theme-default .action-card:nth-child(1) { background: linear-gradient(135deg,#fff9d1,#ffe38a); }
+.theme-default .action-card:nth-child(2) { background: linear-gradient(135deg,#d6eaff,#b5d6ff); }
+
+/* 배경 흐림+투명감으로 감성 강화 */
+.writepage-bg.theme-default {
+  background: linear-gradient(135deg,#fff6db,#ffe3f6);
+}
