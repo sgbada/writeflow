@@ -42,12 +42,13 @@ export default function PostsList() {
 
 
   const navigate = useNavigate();
-  const { loadPosts } = usePostsStore();
+  const { loadPosts, clickButton } = usePostsStore();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [emotion, setEmotion] = useState<string>("JOY");
 
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [errorPopup, setErrorPopup] = useState<string | null>(null);
 
   // 서버 기반 데이터
   const [items, setItems] = useState<PostResponse[]>([]);
@@ -253,20 +254,54 @@ export default function PostsList() {
 
           <div className="stamp-divider"></div>
 
-          <div className="stamp-list">
-            {post.buttons.map((btn) => (
-              <button key={btn.buttonType} className="stamp-item">
-                {btn.label} {btn.clickCount}
-              </button>
-            ))}
-          </div>
+                  <div className="stamp-list">
+          {post.buttons.map((btn) => (
+            <button
+              key={btn.buttonType}
+              className="stamp-item"
+              onClick={async (e) => {
+                e.stopPropagation();
+                try {
+                  const updated = await clickButton(post.id, btn.buttonType);
+
+                  // 리스트 UI에 즉시 반영
+                  setItems(prev =>
+                    prev.map(p =>
+                      p.id === post.id ? { ...p, buttons: updated.buttons } : p
+                    )
+                  );
+                }  catch (e:any){
+  let msg = "스탬프 반영 실패";
+
+  try {
+    const parsed = JSON.parse(e.message);
+    msg = parsed.message ?? msg;
+  } catch {
+    msg = e?.response?.data?.message || e?.message || msg;
+  }
+
+  setErrorPopup(msg);
+}
+
+              }}
+            >
+              {btn.label} {btn.clickCount}
+            </button>
+          ))}
+        </div>
+
         </div>
       );
     })
 )}
 
 
-          {/* 플로팅 버튼 */}
+          
+          {/* 무한스크롤 로더 */}
+          <div ref={loaderRef} style={{ height: "50px" }}></div>
+        </div>
+      </div>
+      {/* 플로팅 버튼 */}
           <div className="floating-buttons">
             <button
               className="floating-btn"
@@ -285,10 +320,16 @@ export default function PostsList() {
             </button>
           </div>
 
-          {/* 무한스크롤 로더 */}
-          <div ref={loaderRef} style={{ height: "50px" }}></div>
-        </div>
-      </div>
+      {errorPopup && (
+  <div className="modal-overlay" onClick={() => setErrorPopup(null)}>
+    <div className="modal-box" onClick={(e)=>e.stopPropagation()}>
+      <h3>⚠ 알림</h3>
+      <p>{errorPopup}</p>
+      <button className="modal-btn" onClick={()=>setErrorPopup(null)}>확인</button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

@@ -158,22 +158,42 @@
 @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
 @keyframes popup { from{transform:scale(.9); opacity:0;} to{transform:scale(1);opacity:1;} }
 
-/* 💛 감정 테마 기반 팝업 UI */
-.theme-joy .modal-box       { background:#fff4b5; color:#7a5500; }
-.theme-anger .modal-box     { background:#ffc7c7; color:#7a1d1d; }
-.theme-sadness .modal-box   { background:#d8e5ff; color:#1e3a7a; }
-.theme-pleasure .modal-box  { background:#ffe3b2; color:#6d3c00; }
-.theme-love .modal-box      { background:#ffd0e1; color:#7a0047; }
-.theme-hate .modal-box      { background:#ffb4b4; color:#5e0000; }
-.theme-ambition .modal-box  { background:#ffd19b; color:#7a3c00; }
+/* ===========================================================
+   📌 Modal Tone — White Base + subtle emotion tint
+   (배경은 거의 흰색 / 버튼은 감정색 유지)
+=========================================================== */
 
-/* 버튼도 감정에 따라 */
-.theme-joy .modal-btn       { background:#ffe37a; }
-.theme-anger .modal-btn     { background:#ff8a8a; }
-.theme-sadness .modal-btn   { background:#a8c4ff; }
-.theme-pleasure .modal-btn  { background:#ffd27a; }
-.theme-love .modal-btn      { background:#ff99c4; }
-.theme-hate .modal-btn      { background:#ff7a7a; }
-.theme-ambition .modal-btn  { background:#ffae57; }
+/* Joy (노랑 기운만 남김) */
+.theme-joy .modal-box { background:rgba(255,255,240,0.92); color:#6a4a00; }
+.theme-joy .modal-btn { background:#ffeaa6; color:#6a4a00; }
 
-.modal-btn:hover { opacity:.9; transform:translateY(-2px); }
+/* Anger (핑크 기운 아주 약하게) */
+.theme-anger .modal-box { background:rgba(255,245,245,0.92); color:#5a0000; }
+.theme-anger .modal-btn { background:#ffbfbf; color:#5a0000; }
+
+/* Sadness (거의 흰색에 파랑만 살짝) */
+.theme-sadness .modal-box { background:rgba(248,252,255,0.92); color:#0f2a4d; }
+.theme-sadness .modal-btn { background:#cfe1ff; color:#0f2a4d; }
+
+/* Pleasure (연두 → "화이트 + 연두 10%" 수준) */
+.theme-pleasure .modal-box { background:rgba(250,255,240,0.92); color:#3e4e00; }
+.theme-pleasure .modal-btn { background:#ddffab; color:#3e4e00; }
+
+/* Love (화이트+연핑크 10%) */
+.theme-love .modal-box { background:rgba(255,248,252,0.92); color:#5a0f2c; }
+.theme-love .modal-btn { background:#ffcde0; color:#5a0f2c; }
+
+/* Hate (화이트+회색 10%) */
+.theme-hate .modal-box { background:rgba(250,250,250,0.92); color:#3a3a3a; }
+.theme-hate .modal-btn { background:#dcdcdc; color:#3a3a3a; }
+
+/* Ambition (화이트+살구 10%) */
+.theme-ambition .modal-box { background:rgba(255,250,240,0.92); color:#5a2f00; }
+.theme-ambition .modal-btn { background:#ffd9aa; color:#5a2f00; }
+
+/* hover subtle */
+.modal-btn:hover { 
+  opacity:.97;
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
