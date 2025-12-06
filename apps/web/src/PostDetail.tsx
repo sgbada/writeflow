@@ -88,16 +88,33 @@ useEffect(() => {
 
   try {
     await reportPost(post.id);
-    alert("신고 완료되었습니다.");
+    const updated = await getPost(post.id).catch(() => null);
 
-    // 신고 횟수 증가 반영을 위해 다시 조회(optional)
-    const updated = await getPost(post.id);
+    // 1) 서버에서 이미 숨김 처리된 경우
+    if (!updated || updated.hidden === true) {
+      setErrorPopup("🚨 신고가 누적되어 글이 숨김 처리되었습니다.");
+      setTimeout(()=> navigate("/read"), 1500); // 1.5초 뒤 목록으로 자동 이동
+      return;
+    }
+
+    // 2) 숨김 전 일반 신고
     setPost(updated);
+    setErrorPopup("🚨 신고 완료되었습니다.");
 
-  } catch (e: any) {
-    alert("신고 실패: " + e.message);
+  } catch (e:any) {
+    let msg = "신고 실패";
+
+    try {
+      const parsed = JSON.parse(e.message);
+      msg = parsed.message ?? msg;
+    } catch {
+      msg = e?.response?.data?.message || e.message || msg;
+    }
+
+    setErrorPopup(msg);
   }
 };
+
 
   const userName = localStorage.getItem("username");
 

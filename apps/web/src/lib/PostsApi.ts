@@ -43,9 +43,18 @@ if (emotion) {
     await apiDelete(`/posts/${id}`);
   },
   // 📌 신고하기
-reportPost: async (postId: number): Promise<void> => {
-  await apiPost(`/posts/${postId}/report`);
+reportPost: async (postId: number): Promise<{message:string}> => {
+  try {
+    const res = await apiPost(`/posts/${postId}/report`);
+
+    // 백엔드가 204/빈 값만 반환해도 오류 안 나도록
+    if (!res) return { message: "신고 완료" };
+    return res;
+  } catch (e:any) {
+    throw e; // Store에서 catch 가능
+  }
 },
+
 
 
   // 📌 버튼 클릭

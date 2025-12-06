@@ -42,7 +42,7 @@ export default function PostsList() {
 
 
   const navigate = useNavigate();
-  const { loadPosts, clickButton } = usePostsStore();
+  const { loadPosts, clickButton, reportPost } = usePostsStore();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [emotion, setEmotion] = useState<string>("JOY");
@@ -209,34 +209,70 @@ export default function PostsList() {
           style={{ marginBottom: "32px" }}
         >
           <div className="card-controls">
-            <button
-              className="menu-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpenMenuId(openMenuId === post.id ? null : post.id);
-              }}
-            >
-              ⋮
-            </button>
+  <button
+    className="menu-btn"
+    onClick={(e) => {
+      e.stopPropagation();
+      setOpenMenuId(openMenuId === post.id ? null : post.id);
+    }}
+  >
+    ⋮
+  </button>
 
-            {openMenuId === post.id && (
-              <div className="menu-popup">
-                <button onClick={() => alert("신고 기능 준비 중입니다.")}>
-                  🚨 신고하기
-                </button>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      `${window.location.origin}/post/${listEmotion}/${post.id}`
-                    );
-                    alert("URL이 복사되었습니다.");
-                  }}
-                >
-                  🔗 URL 복사
-                </button>
-              </div>
-            )}
-          </div>
+  {openMenuId === post.id && (
+    <div className="menu-popup">
+
+      {/* 🔥 신고 기능 */}
+      <button
+        onClick={async (e) => {
+          e.stopPropagation();
+          if (!window.confirm("정말 신고하시겠습니까?")) return;
+
+          try {
+            await reportPost(post.id);
+
+            // 숨김 여부 확인
+            const updated = await fetch("/api/posts/" + post.id)
+              .then(r => r.json())
+              .catch(() => null);
+
+            if (!updated || updated.hidden) {
+              setItems(prev => prev.filter(p => p.id !== post.id));
+              setErrorPopup("🚨 신고 누적 → 글이 숨김 처리되었습니다.");
+              return;
+            }
+
+            setErrorPopup("🚨 신고 완료되었습니다.");
+          
+          } catch (e:any) {
+            let msg = "신고 실패";
+
+            try { msg = JSON.parse(e.message).message }
+            catch { msg = e?.message || msg }
+
+            setErrorPopup(msg);
+          }
+        }}
+      >
+        🚨 신고하기
+      </button>
+
+      {/* 🔗 URL 복사 */}
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(
+            `${window.location.origin}/post/${listEmotion}/${post.id}`
+          );
+          alert("URL이 복사되었습니다.");
+        }}
+      >
+        🔗 URL 복사
+      </button>
+    
+    </div>
+  )}
+</div>
+
 
           <Link
             to={`/post/${listEmotion}/${post.id}`}

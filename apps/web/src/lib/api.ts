@@ -54,10 +54,21 @@ export async function apiPost(url: string, body?: any) {
     });
     throw new Error(errorText || 'API 요청 실패');
   }
+ // 🔥 body가 없는 204/200 대비
+  const text = await res.text();
+  if (!text) {
+    console.log("⚠ 응답 body 없음(204 or empty) — JSON 파싱 생략");
+    return { message: "OK" }; // 원하는 값으로 반환
+  }
 
-  const data = await res.json();
-  console.log('✅ API 응답 데이터:', data);
-  return data;
+  try {
+    const json = JSON.parse(text);
+    console.log('✅ API 응답 JSON:', json);
+    return json;
+  } catch (e) {
+    console.log("⚠ JSON 변환 불가 — raw text 반환");
+    return { message: text };
+  }
 }
 
 export async function apiDelete(url: string) {

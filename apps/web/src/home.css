@@ -77,6 +77,45 @@
 .theme-default .action-card:nth-child(2) { background: linear-gradient(135deg,#d6eaff,#b5d6ff); }
 
 /* 배경 흐림+투명감으로 감성 강화 */
+/* 🌞 Light mode */
 .writepage-bg.theme-default {
   background: linear-gradient(135deg,#fff6db,#ffe3f6);
+}
+
+/* 🌙 Dark mode */
+[data-theme="dark"] .writepage-bg.theme-default {
+  background: linear-gradient(135deg,#2b2b33,#1e1e26);
+  color: #f5f5f7;
+}
+
+/* 버튼/카드도 어두운 버전 필요하면 */
+[data-theme="dark"] .action-card {
+  background: rgba(40,40,50,.65);
+  border: 1px solid rgba(255,255,255,.08);
+  color: #ddd;
+}
+
+[data-theme="dark"] .action-card:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,.55);
+  transform: translateY(-3px) scale(1.02);
+}
+
+/* 홈 로그인 버튼도 다크 스타일 */
+[data-theme="dark"] .home-btn {
+  background: rgba(50,50,60,.8);
+  color: #ddd;
+  border: 1px solid rgba(255,255,255,.08);
+}
+[data-theme="dark"] .home-btn:hover {
+  background: rgba(70,70,80,.9);
+}
+
+/* 홈 - 글 읽기 / 글 쓰기 카드 텍스트 더 진하게 */
+.action-card {
+  color:#000 !important;
+}
+
+/* Hover 때도 유지 */
+.action-card:hover {
+  color:#000 !important;
 }
