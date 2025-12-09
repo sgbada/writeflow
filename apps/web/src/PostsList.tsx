@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { usePostsStore } from "./store/posts";
 import type { PostResponse } from "./lib/types";
+import { authApi } from "./lib/authApi";  
 
 
 import "./WritePost.css";
@@ -62,6 +63,17 @@ export default function PostsList() {
   const params = new URLSearchParams(location.search);
   const emotionFromUrl = params.get("emotion"); // "joy" 등
 
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  // 로그인 사용자 로드
+useEffect(() => {
+  const saved = localStorage.getItem("user");
+  if (saved) setCurrentUser(JSON.parse(saved)); // 성능/속도 가장 안정적
+  else {
+    authApi.getCurrentUser()
+      .then(u => setCurrentUser(u))
+      .catch(() => setCurrentUser(null));
+  }
+}, []);
 
   // URL 감정 → step 전환 + 서버에서 불러오기
   useEffect(() => {
@@ -221,7 +233,17 @@ export default function PostsList() {
 
   {openMenuId === post.id && (
     <div className="menu-popup">
-
+      {/* 🔗 URL 복사 */}
+<button
+  onClick={() => {
+    navigator.clipboard.writeText(
+      `${window.location.origin}/post/${listEmotion}/${post.id}`
+    );
+    alert("URL이 복사되었습니다.");
+  }}
+>
+  🔗 URL 복사
+</button>
       {/* 🔥 신고 기능 */}
       <button
         onClick={async (e) => {
@@ -257,17 +279,29 @@ export default function PostsList() {
         🚨 신고하기
       </button>
 
-      {/* 🔗 URL 복사 */}
-      <button
-        onClick={() => {
-          navigator.clipboard.writeText(
-            `${window.location.origin}/post/${listEmotion}/${post.id}`
-          );
-          alert("URL이 복사되었습니다.");
-        }}
-      >
-        🔗 URL 복사
-      </button>
+      
+
+{/* 🗑 내 글 삭제 버튼 (로그인 유저 == 작성자일 때만) */}
+{currentUser?.username === post.authorName && (
+  <button
+  className="delete-btn"
+  onClick={async (e)=>{
+    e.stopPropagation();
+    if(!confirm("정말 삭제하시겠습니까?")) return;
+    try{
+      await usePostsStore.getState().deletePost(post.id);
+      setItems(prev => prev.filter(p=>p.id !== post.id)); 
+      setErrorPopup("🗑 삭제 완료");
+    }catch(err){
+      setErrorPopup("삭제 실패");
+    }
+  }}
+>
+  <span className="icon-trash">🗑</span> 내 글 삭제
+</button>
+
+)}
+
     
     </div>
   )}

@@ -629,3 +629,32 @@
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
+
+.menu-popup button {
+  background: none;
+  border: none;
+  font-size: 14px;
+  text-align: left;
+  padding: 6px 4px;
+  cursor: pointer;
+  display:flex;
+  align-items:center;
+  gap:8px;             /* ← 아이콘과 텍스트 간 간격 */
+}
+
+/* SVG 아이콘 공통 스타일 */
+.menu-icon svg {
+  width:18px;
+  height:18px;
+  stroke:#333;
+}
+
+/* 삭제/신고 강조 컬러 */
+.menu-icon.danger svg {
+  stroke:#d9534f;
+}
+
+.menu-popup button:hover {
+  background: rgba(0,0,0,0.06);
+  border-radius: 6px;
+}

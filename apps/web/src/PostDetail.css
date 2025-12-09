@@ -197,3 +197,26 @@
   transform:translateY(-1px);
   box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
+
+.menu-btn-detail{
+  font-size:22px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:3px 6px;
+}
+
+/* 상세 페이지 메뉴 팝업 오프셋 */
+.detail-menu{
+  top:28px !important;  /* 날짜 기준 살짝 아래 */
+  right:0 !important;
+}
+
+/* 삭제 강조효과 (원하면 유지, 싫으면 삭제해도됨) */
+.detail-menu .delete-btn{
+  color:#d9534f;
+}
+
+.detail-menu .delete-btn:hover{
+  background:rgba(255,0,0,0.08);
+}

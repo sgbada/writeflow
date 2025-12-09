@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { usePostsStore } from "./store/posts";
 import { useEffect, useState } from "react";
+import { authApi } from "./lib/authApi"; 
 import "./WritePost.css";
 import "./PostList.css";
 import "./PostDetail.css";
@@ -16,8 +17,14 @@ const { getPost, clickButton, deletePost, reportPost } = usePostsStore();
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [errorPopup, setErrorPopup] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
- 
+  useEffect(() => {
+  authApi.getCurrentUser()
+    .then(u => setCurrentUser(u))
+    .catch(() => setCurrentUser(null));
+}, []);
 useEffect(() => {
    setPost(null);
   setLoading(true);
@@ -34,6 +41,19 @@ useEffect(() => {
 
   load();
 }, [postId]);
+// 삼점 메뉴 외부 클릭 시 닫힘 처리
+useEffect(() => {
+  const handleClick = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest(".menu-popup") && !target.closest(".menu-btn-detail")) {
+      setMenuOpen(false);
+    }
+  };
+
+  document.addEventListener("click", handleClick);
+  return () => document.removeEventListener("click", handleClick);
+}, []);
+
 
 
   if (loading) return <p style={{ textAlign: "center" }}>불러오는 중...</p>;
@@ -132,15 +152,47 @@ useEffect(() => {
 
         <div className="write-wrapper detail-appear">
 
-          <div className="card-top" style={{ marginBottom: "14px" }}>
-            <span className="card-date">{formatDate(post.createdAt)}</span>
-          </div>
+        {/* 카드 상단 날짜 + 메뉴(⋮) */}
+<div className="card-top" style={{ 
+  marginBottom: "14px",
+  display:"flex",
+  justifyContent:"space-between",
+  alignItems:"center"
+}}>
+  <span className="card-date">{formatDate(post.createdAt)}</span>
 
-          <div className="card-content">
-            <p className="post-content">{post.content}</p>
-          </div>
+  {/* ⋮ 메뉴 버튼 */}
+  <button 
+    className="menu-btn-detail"
+    onClick={() => setMenuOpen(prev => !prev)}
+  >⋮</button>
 
-          <div className="stamp-divider"></div>
+  {menuOpen && (
+    <div className="menu-popup detail-menu">
+      <button onClick={()=>{
+        navigator.clipboard.writeText(window.location.href);
+        setErrorPopup("🔗 URL 복사 완료");
+      }}>🔗 URL 공유</button>
+
+      <button onClick={onReport}>🚨 신고</button>
+
+      {currentUser?.username === post.authorName && (
+        <button className="delete-btn" onClick={onDelete}>
+          🗑 내 글 삭제
+        </button>
+      )}
+    </div>
+  )}
+</div>
+
+
+{/* 본문 */}
+<div className="card-content">
+  <p className="post-content">{post.content}</p>
+</div>
+
+<div className="stamp-divider"></div>
+
 
           {/* 버튼(스탬프) */}
           {post.buttons.length > 0 && (
@@ -157,65 +209,6 @@ useEffect(() => {
             </div>
           )}
 
-          {/* AI 해석 */}
-          {post.llmReply && (
-            <div
-              style={{
-                marginTop: "20px",
-                padding: "14px 16px",
-                borderRadius: "16px",
-                background: "rgba(255,255,255,0.55)",
-                backdropFilter: "blur(8px)",
-                fontSize: "14px",
-                lineHeight: "1.45",
-              }}
-            >
-              <strong>🧠 AI 해석</strong>
-              <p style={{ marginTop: "6px" }}>{post.llmReply}</p>
-            </div>
-          )}
-
-          {/* 신고 / 삭제 */}
-          <div
-            style={{
-              marginTop: "22px",
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "14px",
-              fontSize: "13px",
-              opacity: 0.75,
-            }}
-          >
-            <button
-            style={{
-              border: "none",
-              background: "none",
-              cursor: "pointer",
-              padding: "4px 6px",
-            }}
-            onClick={onReport}
-          >
-            🚨
-          </button>
-
-
-            {/* 작성자만 삭제 가능 */}
-            {post.authorName === userName && (
-              <button
-                style={{
-                  border: "none",
-                  background: "none",
-                  cursor: "pointer",
-                  padding: "4px 6px",
-                }}
-                onClick={onDelete}
-              >
-                🗑️
-              </button>
-            )}
-
-
-          </div>
 
         </div>
         {errorPopup && (
