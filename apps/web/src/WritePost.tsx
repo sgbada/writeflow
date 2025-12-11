@@ -270,33 +270,21 @@ export default function WritePost() {
             {customStamps.length > 0 && (
               <div className="button-select-grid" style={{ marginBottom: "20px" }}>
                 {customStamps.map((stamp) => (
-                  <div
-                    key={stamp.id}
-                    className="stamp-select-btn selected"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      paddingRight: "8px"
-                    }}
+                <div
+                  key={stamp.id}
+                  className={`custom-stamp-item theme-${emotionCategory}`}
+                >
+                  <span>{stamp.label}</span>
+                  <button
+                    type="button"
+                    className="stamp-remove-btn"
+                    onClick={() => removeStamp(stamp.id)}
                   >
-                    <span>{stamp.label}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeStamp(stamp.id)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        fontSize: "16px",
-                        padding: "0 4px",
-                        opacity: 0.7
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                    ×
+                  </button>
+                </div>
+              ))}
+
               </div>
             )}
 

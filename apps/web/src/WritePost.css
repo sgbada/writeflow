@@ -794,334 +794,94 @@ button:active {
   color: #fff2d0;
 }
 
-/* ============================================
-   📌 사용자 정의 스탬프 스타일 (감정별)
-   ============================================ */
-
-.custom-stamps-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 15px 0 20px;
-}
-
+/* =======================================================
+   ✨ 컴팩트 + 둥근(Pill) 태그 스타일
+   ======================================================= */
 .custom-stamp-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  border-radius: 18px;
-  font-size: 14px;
+
+  padding: 7px 14px;               /* ⭐ 적당한 크기 */
+  border-radius: 20px;            /* ⭐ pill 형태 */
+  font-size: 14px;                /* ⭐ 가독성 좋은 크기 */
   font-weight: 600;
-  border: 2px solid transparent;
-  transition: all 0.2s ease;
+
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(6px);
+
+  border: 1px solid rgba(0,0,0,0.12);
+
   cursor: default;
-  position: relative;
+  transition: 0.2s ease;
 }
 
+.custom-stamp-item:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+}
+
+/* 삭제 버튼 */
 .stamp-remove-btn {
   all: unset;
+  font-size: 15px;
   cursor: pointer;
-  font-size: 18px;
-  font-weight: 700;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+  opacity: 0.6;
+  padding: 0 5px;
   border-radius: 50%;
-  opacity: 0.7;
-  transition: all 0.15s ease;
-  margin-left: 2px;
+  transition: 0.15s ease;
 }
 
 .stamp-remove-btn:hover {
   opacity: 1;
-  background: rgba(0, 0, 0, 0.1);
-  transform: scale(1.15);
+  background: rgba(0,0,0,0.12);
 }
 
 /* ============================================
-   🎨 라이트 모드 - 감정별 스탬프 색상
+   🎨 감정별 색상 — PostList와 동일 계열 유지
    ============================================ */
-
-/* 기쁨 - 노란색 */
-[data-theme="light"] .custom-stamp-item.theme-joy {
-  background: linear-gradient(135deg, #fff8d7, #ffe692);
-  color: #6a5200;
-  border-color: #ffd76a;
-  box-shadow: 0 2px 8px rgba(255, 215, 106, 0.3);
+.theme-joy .custom-stamp-item {
+  background: rgba(255, 240, 150, 0.55);
 }
 
-[data-theme="light"] .custom-stamp-item.theme-joy:hover {
-  background: linear-gradient(135deg, #ffe692, #ffd76a);
-  box-shadow: 0 4px 12px rgba(255, 215, 106, 0.4);
-  transform: translateY(-2px);
+.theme-anger .custom-stamp-item {
+  background: rgba(255, 200, 195, 0.55);
 }
 
-/* 분노 - 빨간색 */
-[data-theme="light"] .custom-stamp-item.theme-anger {
-  background: linear-gradient(135deg, #ffd4d4, #ffb3b3);
-  color: #5a0000;
-  border-color: #ff9090;
-  box-shadow: 0 2px 8px rgba(255, 123, 123, 0.3);
+.theme-sadness .custom-stamp-item {
+  background: rgba(210, 225, 255, 0.55);
 }
 
-[data-theme="light"] .custom-stamp-item.theme-anger:hover {
-  background: linear-gradient(135deg, #ffb3b3, #ff9090);
-  box-shadow: 0 4px 12px rgba(255, 123, 123, 0.4);
-  transform: translateY(-2px);
+.theme-pleasure .custom-stamp-item {
+  background: rgba(215, 255, 150, 0.55);
 }
 
-/* 슬픔 - 파란색 */
-[data-theme="light"] .custom-stamp-item.theme-sadness {
-  background: linear-gradient(135deg, #e8f2ff, #c8d9f0);
-  color: #0f2a4d;
-  border-color: #b8c6db;
-  box-shadow: 0 2px 8px rgba(184, 198, 219, 0.3);
+.theme-love .custom-stamp-item {
+  background: rgba(255, 210, 225, 0.55);
 }
 
-[data-theme="light"] .custom-stamp-item.theme-sadness:hover {
-  background: linear-gradient(135deg, #c8d9f0, #b8c6db);
-  box-shadow: 0 4px 12px rgba(184, 198, 219, 0.4);
-  transform: translateY(-2px);
+/* ⭐ 미움 = 회색 계열로 수정 완료 */
+.theme-hate .custom-stamp-item {
+  background: rgba(200, 200, 200, 0.55);
+  color: #333;
 }
 
-/* 즐거움 - 연두색 */
-[data-theme="light"] .custom-stamp-item.theme-pleasure {
-  background: linear-gradient(135deg, #f3ffd7, #d8ffa3);
-  color: #3f4f00;
-  border-color: #c8ff8f;
-  box-shadow: 0 2px 8px rgba(200, 255, 143, 0.3);
+.theme-ambition .custom-stamp-item {
+  background: rgba(255, 200, 150, 0.55);
 }
 
-[data-theme="light"] .custom-stamp-item.theme-pleasure:hover {
-  background: linear-gradient(135deg, #d8ffa3, #c8ff8f);
-  box-shadow: 0 4px 12px rgba(200, 255, 143, 0.4);
-  transform: translateY(-2px);
-}
-
-/* 사랑 - 핑크색 */
-[data-theme="light"] .custom-stamp-item.theme-love {
-  background: linear-gradient(135deg, #ffe8f2, #ffc9dd);
-  color: #5a0f2c;
-  border-color: #ff9bb5;
-  box-shadow: 0 2px 8px rgba(255, 155, 181, 0.3);
-}
-
-[data-theme="light"] .custom-stamp-item.theme-love:hover {
-  background: linear-gradient(135deg, #ffc9dd, #ff9bb5);
-  box-shadow: 0 4px 12px rgba(255, 155, 181, 0.4);
-  transform: translateY(-2px);
-}
-
-/* 미움 - 회색 */
-[data-theme="light"] .custom-stamp-item.theme-hate {
-  background: linear-gradient(135deg, #efefef, #d5d5d5);
-  color: #3a3a3a;
-  border-color: #c0c0c0;
-  box-shadow: 0 2px 8px rgba(192, 192, 192, 0.3);
-}
-
-[data-theme="light"] .custom-stamp-item.theme-hate:hover {
-  background: linear-gradient(135deg, #d5d5d5, #c0c0c0);
-  box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
-  transform: translateY(-2px);
-}
-
-/* 야망 - 주황색 */
-[data-theme="light"] .custom-stamp-item.theme-ambition {
-  background: linear-gradient(135deg, #ffe4c4, #ffc89b);
-  color: #5a2f00;
-  border-color: #ff9e67;
-  box-shadow: 0 2px 8px rgba(255, 158, 103, 0.3);
-}
-
-[data-theme="light"] .custom-stamp-item.theme-ambition:hover {
-  background: linear-gradient(135deg, #ffc89b, #ff9e67);
-  box-shadow: 0 4px 12px rgba(255, 158, 103, 0.4);
-  transform: translateY(-2px);
-}
 
 /* ============================================
-   🌙 다크 모드 - 감정별 스탬프 색상 (네온 효과)
+   🌙 다크모드 (PostList와 동일)
    ============================================ */
-
-/* 기쁨 */
-[data-theme="dark"] .custom-stamp-item.theme-joy {
-  background: rgba(255, 226, 138, 0.15);
-  color: #ffe28a;
-  border-color: rgba(255, 226, 138, 0.35);
-  box-shadow: 0 0 12px rgba(255, 226, 138, 0.25);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-joy:hover {
-  background: rgba(255, 226, 138, 0.25);
-  box-shadow: 0 0 20px rgba(255, 226, 138, 0.4);
-  transform: translateY(-2px);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-joy .stamp-remove-btn:hover {
-  background: rgba(255, 226, 138, 0.2);
-}
-
-/* 분노 */
-[data-theme="dark"] .custom-stamp-item.theme-anger {
-  background: rgba(255, 107, 107, 0.15);
-  color: #ff9090;
-  border-color: rgba(255, 107, 107, 0.35);
-  box-shadow: 0 0 12px rgba(255, 107, 107, 0.25);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-anger:hover {
-  background: rgba(255, 107, 107, 0.25);
-  box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
-  transform: translateY(-2px);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-anger .stamp-remove-btn:hover {
-  background: rgba(255, 107, 107, 0.2);
-}
-
-/* 슬픔 */
-[data-theme="dark"] .custom-stamp-item.theme-sadness {
-  background: rgba(136, 199, 255, 0.15);
-  color: #88c7ff;
-  border-color: rgba(136, 199, 255, 0.35);
-  box-shadow: 0 0 12px rgba(136, 199, 255, 0.25);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-sadness:hover {
-  background: rgba(136, 199, 255, 0.25);
-  box-shadow: 0 0 20px rgba(136, 199, 255, 0.4);
-  transform: translateY(-2px);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-sadness .stamp-remove-btn:hover {
-  background: rgba(136, 199, 255, 0.2);
-}
-
-/* 즐거움 */
-[data-theme="dark"] .custom-stamp-item.theme-pleasure {
-  background: rgba(160, 255, 140, 0.15);
-  color: #a0ff8c;
-  border-color: rgba(160, 255, 140, 0.35);
-  box-shadow: 0 0 12px rgba(160, 255, 140, 0.25);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-pleasure:hover {
-  background: rgba(160, 255, 140, 0.25);
-  box-shadow: 0 0 20px rgba(160, 255, 140, 0.4);
-  transform: translateY(-2px);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-pleasure .stamp-remove-btn:hover {
-  background: rgba(160, 255, 140, 0.2);
-}
-
-/* 사랑 */
-[data-theme="dark"] .custom-stamp-item.theme-love {
-  background: rgba(255, 128, 181, 0.15);
-  color: #ff80b5;
-  border-color: rgba(255, 128, 181, 0.35);
-  box-shadow: 0 0 12px rgba(255, 128, 181, 0.25);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-love:hover {
-  background: rgba(255, 128, 181, 0.25);
-  box-shadow: 0 0 20px rgba(255, 128, 181, 0.4);
-  transform: translateY(-2px);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-love .stamp-remove-btn:hover {
-  background: rgba(255, 128, 181, 0.2);
-}
-
-/* 미움 */
-[data-theme="dark"] .custom-stamp-item.theme-hate {
-  background: rgba(200, 200, 200, 0.15);
-  color: #c8c8c8;
-  border-color: rgba(200, 200, 200, 0.35);
-  box-shadow: 0 0 12px rgba(200, 200, 200, 0.25);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-hate:hover {
-  background: rgba(200, 200, 200, 0.25);
-  box-shadow: 0 0 20px rgba(200, 200, 200, 0.4);
-  transform: translateY(-2px);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-hate .stamp-remove-btn:hover {
-  background: rgba(200, 200, 200, 0.2);
-}
-
-/* 야망 */
-[data-theme="dark"] .custom-stamp-item.theme-ambition {
-  background: rgba(255, 175, 110, 0.15);
-  color: #ffaf6e;
-  border-color: rgba(255, 175, 110, 0.35);
-  box-shadow: 0 0 12px rgba(255, 175, 110, 0.25);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-ambition:hover {
-  background: rgba(255, 175, 110, 0.25);
-  box-shadow: 0 0 20px rgba(255, 175, 110, 0.4);
-  transform: translateY(-2px);
-}
-
-[data-theme="dark"] .custom-stamp-item.theme-ambition .stamp-remove-btn:hover {
-  background: rgba(255, 175, 110, 0.2);
-}
-
-/* ============================================
-   ✨ 스탬프 입력창 스타일 개선
-   ============================================ */
-
-.stamp-input-area input {
-  transition: all 0.2s ease;
-}
-
-.stamp-input-area input:focus {
-  outline: none;
-  border-color: rgba(0, 0, 0, 0.25);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="dark"] .stamp-input-area input {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+[data-theme="dark"] .custom-stamp-item {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
   color: #eee;
 }
 
-[data-theme="dark"] .stamp-input-area input:focus {
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.1);
-}
-
-.stamp-input-area button {
-  transition: all 0.2s ease;
-}
-
-.stamp-input-area button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-[data-theme="dark"] .stamp-input-area button {
-  background: rgba(255, 255, 255, 0.12);
-  color: #eee;
-}
-
-[data-theme="dark"] .stamp-input-area button:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* 글자수 카운터 */
-.stamp-input-area > div:last-child {
-  color: inherit;
-  opacity: 0.7;
-}
-
-[data-theme="dark"] .stamp-input-area > div:last-child {
-  color: #bbb;
+[data-theme="dark"] .custom-stamp-item:hover {
+  background: rgba(255,255,255,0.2);
 }
