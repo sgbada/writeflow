@@ -74,6 +74,18 @@ useEffect(() => {
       .catch(() => setCurrentUser(null));
   }
 }, []);
+useEffect(() => {
+  // 뒤로가기 방지 + 메인으로 리다이렉트
+  const handlePopState = () => {
+    if (window.location.pathname === "/read") {
+      navigate("/", { replace: true });
+    }
+  };
+
+  window.addEventListener("popstate", handlePopState);
+  return () => window.removeEventListener("popstate", handlePopState);
+}, [navigate]);
+
 
   // URL 감정 → step 전환 + 서버에서 불러오기
   useEffect(() => {
@@ -92,6 +104,11 @@ useEffect(() => {
       setStep(1);
     }
   }, [emotionFromUrl]);
+  useEffect(() => {
+  if (!emotionFromUrl) {
+    navigate("/read", { replace: true });
+  }
+}, [emotionFromUrl, navigate]);
 
  /* -------------------- 서버 페이지 로드 -------------------- */
   async function loadPage(loadPageNum: number, emo: string) {
@@ -197,7 +214,13 @@ useEffect(() => {
 
           <div className="step2-header">
             <div className="step1-back-wrapper">
-              <button className="step-back" onClick={() => navigate("/read")}>←</button>
+              <button
+  className="step-back"
+  onClick={() => navigate("/read", { replace: true })}
+>
+  ←
+</button>
+
             </div>
             <h3 className="step2-title">
               {EMOTION_LABELS[emotion]}의 기록들
