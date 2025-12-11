@@ -28,49 +28,64 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+protected void doFilterInternal(HttpServletRequest request,
+                                HttpServletResponse response,
+                                FilterChain filterChain)
+        throws ServletException, IOException {
 
-
-        String header = request.getHeader("Authorization");
-
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-
-            try {
-                String subject = jwtTokenProvider.getSubject(token);
-
-                // subject를 userId라고 가정하고 Long으로 파싱
-                Long userId = Long.parseLong(subject);
-
-                Optional<User> optionalUser = userRepository.findById(userId);
-                if (optionalUser.isPresent()
-                        && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                    User user = optionalUser.get();
-
-                    UserPrincipal principal = UserPrincipal.from(user);
-
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    principal,
-                                    null,
-                                    principal.getAuthorities()
-                            );
-                    authentication.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
-            } catch (Exception e) {
-                // 토큰 형식이 잘못되었거나, userId 파싱/조회 실패 → 그냥 익명으로 둔다.
-            }
-        }
-
-        filterChain.doFilter(request, response);
+    // ✅ 디버깅 로그 추가
+    System.out.println("=== JWT Filter Debug ===");
+    System.out.println("Request URI: " + request.getRequestURI());
+    System.out.println("Authorization Header: " + request.getHeader("Authorization"));
+    System.out.println("All Headers:");
+    java.util.Enumeration<String> headerNames = request.getHeaderNames();
+    while (headerNames.hasMoreElements()) {
+        String headerName = headerNames.nextElement();
+        System.out.println("  " + headerName + ": " + request.getHeader(headerName));
     }
+    System.out.println("=======================");
+
+    String header = request.getHeader("Authorization");
+
+    if (header != null && header.startsWith("Bearer ")) {
+        String token = header.substring(7);
+
+        try {
+            String subject = jwtTokenProvider.getSubject(token);
+            System.out.println("✅ JWT Token Valid - User ID: " + subject);
+
+            Long userId = Long.parseLong(subject);
+
+            Optional<User> optionalUser = userRepository.findById(userId);
+            if (optionalUser.isPresent()
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                User user = optionalUser.get();
+
+                UserPrincipal principal = UserPrincipal.from(user);
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                principal,
+                                null,
+                                principal.getAuthorities()
+                        );
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                System.out.println("✅ Authentication Set Successfully");
+            }
+        } catch (Exception e) {
+            System.out.println("❌ JWT Token Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    } else {
+        System.out.println("⚠️ No Authorization header or invalid format");
+    }
+
+    filterChain.doFilter(request, response);
+}
 }
 
