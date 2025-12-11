@@ -15,6 +15,11 @@ export async function apiGet(url: string) {
     },
     credentials: "include",
   });
+  if (res.status === 403) {
+    alert("로그인이 필요한 서비스입니다.");
+    window.location.href = "/login";  // 필요에 따라 '/auth/login'
+    return; // 아래 코드 실행 방지
+  }
 
   if (!res.ok) {
     const errorText = await res.text();
