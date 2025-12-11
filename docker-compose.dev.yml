@@ -24,10 +24,9 @@ services:
     depends_on:
       - gateway
     ports:
-      - "5173:80"   # localhost:5173에서 접근 가능
+      - "3000:80"
     networks:
       - writeflow-net
-
 
   # Java 인증 서버 (api-auth-java)
   api-auth-java:

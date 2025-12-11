@@ -14,6 +14,9 @@ export default function WritePost() {
     }, [navigate])
 
   const { createPost } = usePostsStore();
+  /*const [stampInput, setStampInput] = useState("");
+const [selectedButtons, setSelectedButtons] = useState<string[]>([]);
+ */
   const BUTTON_OPTIONS = [
   { code: "EMPATHY", label: "공감" },
   { code: "COMFORT", label: "위로" },
@@ -60,19 +63,6 @@ const updateHeight = (value: string) => {
   setEmotionCategory("");
   setStep(1);
 }, []);
-
-
-
-  // ---------------------------------------------------
-  // 🔥 더미 LLM 요약
-  // ---------------------------------------------------
-  const fakeLLMSummary = (text: string) => {
-    if (text.includes("슬프") || text.includes("힘들"))
-      return "마음이 무거운 하루였네요.";
-    if (text.includes("기쁨") || text.includes("좋아"))
-      return "행복한 감정이 느껴져요.";
-    return "당신의 감정이 잘 기록되었어요.";
-  };
 
   // ---------------------------------------------------
   // 🔥 뒤로가기 버튼 (Step2 → Step1)
