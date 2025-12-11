@@ -1,5 +1,5 @@
 // ✅ 게이트웨이(80 포트)를 통해 모든 요청 전송
-const BASE_URL = "http://localhost/api";
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 function authHeaders() {
   const token = localStorage.getItem("token"); // ✅ 'token' 키로 저장된 JWT 토큰

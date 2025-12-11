@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export interface SignupRequest {
   email: string

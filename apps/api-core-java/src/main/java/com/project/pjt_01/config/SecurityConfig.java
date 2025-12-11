@@ -25,15 +25,25 @@ public class SecurityConfig {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-    // CORS 설정 추가 - 프리플라이트 요청 허용
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // 프론트엔드 주소
+        
+        // ✅ Docker 환경 추가
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:5173",      // Vite 개발 서버
+            "http://127.0.0.1:5173",      // Vite 개발 서버 (IP)
+            "http://localhost:3000",      // Docker web 컨테이너
+            "http://127.0.0.1:3000",      // Docker web 컨테이너 (IP)
+            "http://localhost",           // Gateway
+            "http://localhost:80"         // Gateway (포트 명시)
+        ));
+        
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*")); // 모든 헤더 허용
+        configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // 프리플라이트 캐시 시간 (초)
+        configuration.setMaxAge(3600L);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -43,12 +53,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 적용
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm ->
                         sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Swagger, H2 콘솔, 루트 페이지는 오픈
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -56,17 +65,13 @@ public class SecurityConfig {
                                 "/h2-console/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
-                        // OPTIONS 요청은 인증 없이 허용 (CORS 프리플라이트)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // 나머지 API는 인증 필요
-                        .requestMatchers("/api/**").authenticated()
+                        // ✅ /posts 엔드포인트 (Gateway에서 /api/ 제거됨)
+                        .requestMatchers("/posts/**").authenticated()
                         .anyRequest().permitAll()
                 );
 
-        // H2 콘솔용 frame 옵션 허용
         http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
-
-        // JWT 필터 등록
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
