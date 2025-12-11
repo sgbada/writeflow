@@ -16,6 +16,18 @@ services:
       - db-data:/var/lib/postgresql/data
     networks:
       - writeflow-net
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: writeflow-web
+    depends_on:
+      - gateway
+    ports:
+      - "5173:80"   # localhost:5173에서 접근 가능
+    networks:
+      - writeflow-net
+
 
   # Java 인증 서버 (api-auth-java)
   api-auth-java:
