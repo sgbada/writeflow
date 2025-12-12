@@ -7,6 +7,8 @@ COPY build.gradle settings.gradle ./
 COPY gradle ./gradle
 COPY gradlew ./
 
+RUN chmod +x gradlew
+
 # ✅ 의존성 다운로드 (캐시 활용)
 RUN ./gradlew dependencies --no-daemon
 
