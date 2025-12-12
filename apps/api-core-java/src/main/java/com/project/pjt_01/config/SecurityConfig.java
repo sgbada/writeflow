@@ -36,7 +36,10 @@ public class SecurityConfig {
             "http://localhost:3000",      // Docker web 컨테이너
             "http://127.0.0.1:3000",      // Docker web 컨테이너 (IP)
             "http://localhost",           // Gateway
-            "http://localhost:80"         // Gateway (포트 명시)
+            "http://localhost:80",         // Gateway (포트 명시)
+            "https://writeflow-ten.vercel.app",
+            "https://*.vercel.app"  // ✅ 추가
+    
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
