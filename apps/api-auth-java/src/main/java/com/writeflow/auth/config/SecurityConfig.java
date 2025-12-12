@@ -29,20 +29,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // ✅ Docker 환경 추가
         configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:5173",      // Vite 개발 서버
-            "http://127.0.0.1:5173",      // Vite 개발 서버 (IP)
-            "http://localhost:3000",      // Docker web 컨테이너
-            "http://127.0.0.1:3000",      // Docker web 컨테이너 (IP)
-            "http://localhost",           // Gateway
-            "http://localhost:80"         // Gateway (포트 명시)
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost",
+            "http://localhost:80"
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // ✅ 프리플라이트 캐시 추가
+        configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -57,7 +56,8 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/signup", "/login", "/refresh").permitAll() // ✅ /api/auth/ 제거된 경로
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()  // ✅ Actuator 허용
+                        .requestMatchers("/signup", "/login", "/refresh").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().permitAll()
                 );

@@ -32,6 +32,20 @@ jwt:
 server:
   port: 8081   # 게이트웨이와 포트 분리
 
+# ✅ Actuator 설정 (dev 프로필)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  health:
+    defaults:
+      enabled: true
+
 ---
 spring:
   config:
@@ -53,3 +67,17 @@ jwt:
 
 server:
   port: ${PORT:8081}
+
+# ✅ Actuator 설정 (prod 프로필)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    defaults:
+      enabled: true

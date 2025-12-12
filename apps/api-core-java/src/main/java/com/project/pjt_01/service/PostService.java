@@ -27,6 +27,53 @@ public class PostService {
     private final ButtonClickRepository buttonClickRepository;
     private final PostReportRepository postReportRepository;
 
+    // 감정별 메시지 매핑
+    private String getEmotionMessage(Emotion emotion, MessageType type) {
+        return switch (emotion) {
+            case JOY -> switch (type) {
+                case ALREADY_CLICKED -> "이미 함께 기뻐했어요 💛";
+                case ALREADY_REPORTED -> "소중한 의견 감사해요 🌸";
+                case HIDDEN_POST -> "이 기쁨은 잠시 쉬고 있어요 ✨";
+            };
+            case SADNESS -> switch (type) {
+                case ALREADY_CLICKED -> "당신의 위로가 전해졌어요 💙";
+                case ALREADY_REPORTED -> "알려주셔서 고마워요 🌙";
+                case HIDDEN_POST -> "이 슬픔은 조용히 묻어두었어요 🤍";
+            };
+            case ANGER -> switch (type) {
+                case ALREADY_CLICKED -> "이미 공감을 표했어요 🧡";
+                case ALREADY_REPORTED -> "함께 지켜나가요 🛡";
+                case HIDDEN_POST -> "이 분노는 가라앉혔어요 💫";
+            };
+            case PLEASURE -> switch (type) {
+                case ALREADY_CLICKED -> "함께 즐거워했답니다 💚";
+                case ALREADY_REPORTED -> "더 나은 공간을 만들어갈게요 🌿";
+                case HIDDEN_POST -> "이 즐거움은 잠시 멈춰있어요 🎵";
+            };
+            case LOVE -> switch (type) {
+                case ALREADY_CLICKED -> "사랑을 보냈어요 💗";
+                case ALREADY_REPORTED -> "따뜻한 마음 감사해요 💝";
+                case HIDDEN_POST -> "이 사랑은 조용히 간직했어요 🌹";
+            };
+            case HATE -> switch (type) {
+                case ALREADY_CLICKED -> "마음을 표현했어요 🖤";
+                case ALREADY_REPORTED -> "의견을 들었어요 🌑";
+                case HIDDEN_POST -> "이 미움은 덮어두었어요 ⚫";
+            };
+            case AMBITION -> switch (type) {
+                case ALREADY_CLICKED -> "응원을 보냈어요 ❤️‍🔥";
+                case ALREADY_REPORTED -> "더 좋은 환경을 만들어요 💪";
+                case HIDDEN_POST -> "이 야망은 잠시 멈췄어요 🔥";
+            };
+        };
+    }
+
+    private enum MessageType {
+        ALREADY_CLICKED,
+        ALREADY_REPORTED,
+        HIDDEN_POST
+    }
+
     // 글 작성
     public PostResponse createPost(Long userId, PostCreateRequest req) {
         User author = userRepository.findById(userId)
@@ -36,25 +83,20 @@ public class PostService {
         Post post = new Post(author, req.content(), emotion);
         postRepository.save(post);
 
-        // 글 작성 시 활성화할 버튼 목록이 비어 있으면 예외
         if (req.buttons() == null || req.buttons().isEmpty()) {
             throw new IllegalArgumentException("최소 1개 이상의 버튼을 선택해야 합니다.");
         }
 
-        // 요청으로 넘어온 버튼 문자열들을 Enum으로 변환 (한글/영문 모두 허용) + 중복 제거
         List<ButtonType> buttonTypes = req.buttons().stream()
                 .map(ButtonType::from)
                 .distinct()
                 .toList();
 
-        // 선택된 버튼들에 대해서만 집계 row 생성
         for (ButtonType type : buttonTypes) {
             PostButtonStat stat = new PostButtonStat(post, type);
             postButtonStatRepository.save(stat);
             post.addButtonStat(stat);
         }
-
-        // TODO: 여기서 LLM 호출 → post.setLlmReply(...) 후 저장하는 로직 연결 가능
 
         List<PostButtonStat> stats = postButtonStatRepository.findByPost(post);
         return PostResponse.from(post, stats);
@@ -67,7 +109,8 @@ public class PostService {
                 .orElseThrow(() -> new IllegalArgumentException("글을 찾을 수 없습니다."));
 
         if (post.isHidden()) {
-            throw new IllegalStateException("숨김 처리된 글입니다.");
+            String message = getEmotionMessage(post.getEmotion(), MessageType.HIDDEN_POST);
+            throw new IllegalStateException(message);
         }
 
         List<PostButtonStat> stats = postButtonStatRepository.findByPost(post);
@@ -77,7 +120,6 @@ public class PostService {
     // 전체 글 목록 (무한스크롤용) - 숨김 글 제외
     @Transactional(readOnly = true)
     public PostListResponse getPosts(String emotionValue, Pageable pageable) {
-
         Page<Post> page;
         if (emotionValue == null || emotionValue.isBlank()) {
             page = postRepository.findByHiddenFalseOrderByCreatedAtDesc(pageable);
@@ -144,28 +186,27 @@ public class PostService {
                 .orElseThrow(() -> new IllegalArgumentException("글을 찾을 수 없습니다."));
 
         if (post.isHidden()) {
-            throw new IllegalStateException("숨김 처리된 글에는 버튼을 누를 수 없습니다.");
+            String message = getEmotionMessage(post.getEmotion(), MessageType.HIDDEN_POST);
+            throw new IllegalStateException(message);
         }
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         if (buttonClickRepository.existsByPostAndUser(post, user)) {
-            throw new IllegalStateException("이미 이 글에 버튼을 클릭했습니다.");
+            String message = getEmotionMessage(post.getEmotion(), MessageType.ALREADY_CLICKED);
+            throw new IllegalStateException(message);
         }
 
         ButtonType type = ButtonType.from(buttonTypeStr);
 
-        // 이 글에서 해당 버튼이 활성화되어 있는지 확인
         PostButtonStat stat = postButtonStatRepository
                 .findByPostAndButtonType(post, type)
                 .orElseThrow(() -> new IllegalArgumentException("이 글에서 활성화되지 않은 버튼입니다."));
 
-        // 클릭 로그 저장
         ButtonClick click = new ButtonClick(post, user, type);
         buttonClickRepository.save(click);
 
-        // 집계 증가
         stat.increase();
 
         List<PostButtonStat> stats = postButtonStatRepository.findByPost(post);
@@ -183,16 +224,15 @@ public class PostService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         if (postReportRepository.findByPostAndUser(post, user).isPresent()) {
-            throw new IllegalStateException("이미 신고한 글입니다.");
+            String message = getEmotionMessage(post.getEmotion(), MessageType.ALREADY_REPORTED);
+            throw new IllegalStateException(message);
         }
 
         PostReport report = new PostReport(post, user);
         postReportRepository.save(report);
 
-        // Post 엔티티 내부 카운트 증가
         post.increaseReportCount();
 
-        // 실제 신고 개수 기준으로 숨김 처리
         long reportCount = postReportRepository.countByPost(post);
         if (reportCount >= REPORT_THRESHOLD) {
             post.hide();
@@ -202,14 +242,12 @@ public class PostService {
     // 감정 비율 통계 (숨김되지 않은 글 기준)
     @Transactional(readOnly = true)
     public List<EmotionStatResponse> getEmotionStats() {
-        // 숨김되지 않은 글만 대상으로 통계 계산
         List<Post> visiblePosts = postRepository.findAll().stream()
                 .filter(p -> !p.isHidden())
                 .toList();
 
         long total = visiblePosts.size();
 
-        // 글이 하나도 없으면 모든 감정에 대해 0 반환
         if (total == 0) {
             return Arrays.stream(Emotion.values())
                     .map(e -> new EmotionStatResponse(
@@ -221,11 +259,9 @@ public class PostService {
                     .toList();
         }
 
-        // 감정별 개수 집계
         Map<Emotion, Long> counts = visiblePosts.stream()
                 .collect(Collectors.groupingBy(Post::getEmotion, Collectors.counting()));
 
-        // 비율 계산
         return Arrays.stream(Emotion.values())
                 .map(e -> {
                     long count = counts.getOrDefault(e, 0L);
