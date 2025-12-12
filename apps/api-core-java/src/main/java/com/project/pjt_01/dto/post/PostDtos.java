@@ -25,9 +25,17 @@ public class PostDtos {
     ) {
         public static ButtonStatDto from(PostButtonStat stat) {
             ButtonType t = stat.getButtonType();
+
+            // 🆕 글에서 저장해둔 사용자 정의 이름 우선 사용
+            String label = stat.getButtonLabel();
+            if (label == null || label.isBlank()) {
+                // 기존 데이터 호환용: label이 없으면 enum 기본 한글 라벨 사용
+                label = t.getKoreanLabel();
+            }
+
             return new ButtonStatDto(
-                    t.name(),
-                    t.getKoreanLabel(),
+                    t.name(),       // 내부 코드 (EMPATHY, COMFORT, ...)
+                    label,          // 사용자에게 보여줄 이름
                     stat.getClickCount()
             );
         }

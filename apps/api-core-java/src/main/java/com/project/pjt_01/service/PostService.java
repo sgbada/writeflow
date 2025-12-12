@@ -31,7 +31,7 @@ public class PostService {
     private String getEmotionMessage(Emotion emotion, MessageType type) {
         return switch (emotion) {
             case JOY -> switch (type) {
-                case ALREADY_CLICKED -> "이미 함께 기뻐했어요 💛";
+                case ALREADY_CLICKED -> "이미 공감을 표했어요 💛";
                 case ALREADY_REPORTED -> "소중한 의견 감사해요 🌸";
                 case HIDDEN_POST -> "이 기쁨은 잠시 쉬고 있어요 ✨";
             };
@@ -46,22 +46,22 @@ public class PostService {
                 case HIDDEN_POST -> "이 분노는 가라앉혔어요 💫";
             };
             case PLEASURE -> switch (type) {
-                case ALREADY_CLICKED -> "함께 즐거워했답니다 💚";
+                case ALREADY_CLICKED -> "이미 공감을 표했어요 💚";
                 case ALREADY_REPORTED -> "더 나은 공간을 만들어갈게요 🌿";
                 case HIDDEN_POST -> "이 즐거움은 잠시 멈춰있어요 🎵";
             };
             case LOVE -> switch (type) {
-                case ALREADY_CLICKED -> "사랑을 보냈어요 💗";
+                case ALREADY_CLICKED -> "이미 사랑을 보냈어요 💗";
                 case ALREADY_REPORTED -> "따뜻한 마음 감사해요 💝";
                 case HIDDEN_POST -> "이 사랑은 조용히 간직했어요 🌹";
             };
             case HATE -> switch (type) {
-                case ALREADY_CLICKED -> "마음을 표현했어요 🖤";
+                case ALREADY_CLICKED -> "이미 마음을 표현했어요 🖤";
                 case ALREADY_REPORTED -> "의견을 들었어요 🌑";
                 case HIDDEN_POST -> "이 미움은 덮어두었어요 ⚫";
             };
             case AMBITION -> switch (type) {
-                case ALREADY_CLICKED -> "응원을 보냈어요 ❤️‍🔥";
+                case ALREADY_CLICKED -> "이미 응원을 보냈어요 ❤️‍🔥";
                 case ALREADY_REPORTED -> "더 좋은 환경을 만들어요 💪";
                 case HIDDEN_POST -> "이 야망은 잠시 멈췄어요 🔥";
             };
@@ -83,17 +83,49 @@ public class PostService {
         Post post = new Post(author, req.content(), emotion);
         postRepository.save(post);
 
-        if (req.buttons() == null || req.buttons().isEmpty()) {
-            throw new IllegalArgumentException("최소 1개 이상의 버튼을 선택해야 합니다.");
+        // -----------------------------
+        // 🆕 버튼 이름 검증 및 정제
+        // -----------------------------
+        if (req.buttons() == null) {
+            throw new IllegalArgumentException("최소 1개 이상의 버튼을 입력해야 합니다.");
         }
 
-        List<ButtonType> buttonTypes = req.buttons().stream()
-                .map(ButtonType::from)
+        // null/공백 제거 + trim + 중복 제거
+        List<String> labels = req.buttons().stream()
+                .map(label -> label == null ? "" : label.trim())
+                .filter(label -> !label.isEmpty())
                 .distinct()
                 .toList();
 
-        for (ButtonType type : buttonTypes) {
-            PostButtonStat stat = new PostButtonStat(post, type);
+        if (labels.isEmpty()) {
+            throw new IllegalArgumentException("최소 1개 이상의 버튼을 입력해야 합니다.");
+        }
+
+        if (labels.size() > 5) {
+            throw new IllegalArgumentException("버튼은 최대 5개까지 설정할 수 있습니다.");
+        }
+
+        //  각 이름 길이 제한
+        for (String label : labels) {
+            if (label.length() > 20) { // 필요하면 줄여도 됨
+                throw new IllegalArgumentException("버튼 이름은 20자 이내여야 합니다.");
+            }
+        }
+
+        // -----------------------------
+        // 🆕 내부 ButtonType과 매핑
+        // -----------------------------
+        ButtonType[] allTypes = ButtonType.values();
+        if (labels.size() > allTypes.length) {
+            // 이론상 labels는 5개까지만 오고, enum은 7개라서 걸릴 일은 없지만 안전장치
+            throw new IllegalArgumentException("사용 가능한 버튼 수를 초과했습니다.");
+        }
+
+        for (int i = 0; i < labels.size(); i++) {
+            ButtonType internalType = allTypes[i];   // EMPATHY, COMFORT, SAD, ...
+            String label = labels.get(i);            // 사용자가 입력한 실제 이름
+
+            PostButtonStat stat = new PostButtonStat(post, internalType, label);
             postButtonStatRepository.save(stat);
             post.addButtonStat(stat);
         }

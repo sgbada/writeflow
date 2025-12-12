@@ -58,13 +58,16 @@ export default function WritePost() {
 
   // 스탬프 추가 함수
   const addCustomStamp = () => {
-    if (!stampInput.trim()) {
+    const trimmedInput = stampInput.trim();
+    
+    if (!trimmedInput) {
       setErrorPopup("스탬프 내용을 입력해 주세요.");
       return;
     }
 
-    if (stampInput.length > 6) {
-      setErrorPopup("스탬프는 최대 5개까지 추가할 수 있습니다.");
+    // ✅ 7자 제한
+    if (trimmedInput.length > 7) {
+      setErrorPopup("스탬프는 최대 7자까지 입력할 수 있습니다.");
       return;
     }
 
@@ -73,9 +76,19 @@ export default function WritePost() {
       return;
     }
 
+    // ✅ 중복 체크 (대소문자 구분 없이)
+    const isDuplicate = customStamps.some(
+      stamp => stamp.label.toLowerCase() === trimmedInput.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      setErrorPopup("이미 추가한 스탬프입니다.");
+      return;
+    }
+
     const newStamp: CustomStamp = {
       id: Date.now().toString(),
-      label: stampInput.trim()
+      label: trimmedInput
     };
 
     setCustomStamps([...customStamps, newStamp]);
@@ -117,26 +130,11 @@ export default function WritePost() {
       return;
     }
 
-    // ⚠️ 백엔드 API가 준비되기 전까지는 임시로 기본 버튼 사용
-    // TODO: 백엔드에서 사용자 정의 스탬프 API 지원 시 아래 코드로 교체
-    // const payload = {
-    //   content: content,
-    //   emotion: emotionCategory.toUpperCase(),
-    //   customButtons: customStamps.map(s => s.label)
-    // };
-
-    // 현재는 기존 API 형식 유지 (EMPATHY, COMFORT 등)
-    alert("⚠️ 백엔드 API 준비 중입니다.\n사용자 정의 스탬프 기능은 곧 사용 가능합니다.");
-    
-    // 임시: 기본 버튼으로 대체하여 제출
     const payload = {
       content: content,
       emotion: emotionCategory.toUpperCase(),
-      buttons: ["EMPATHY", "COMFORT", "HAPPY"] // 임시 기본값
+      buttons: customStamps.map(s => s.label)
     };
-
-    console.log('📝 입력된 사용자 정의 스탬프:', customStamps.map(s => s.label));
-    console.log('📤 실제 전송 데이터 (임시):', payload);
 
     try {
       const newPost = await createPost(payload);
@@ -217,7 +215,7 @@ export default function WritePost() {
             </div>
             <div className="write-controls">
             <p className="stamp-guide">
-              감정 스탬프 추가 (최소 1개 ~ 최대 5개, 각 6자 이내)
+              감정 스탬프 추가 (최소 1개 ~ 최대 5개, 각 7자 이내)
             </p>
           </div>
 
@@ -230,7 +228,8 @@ export default function WritePost() {
                   value={stampInput}
                   onChange={(e) => {
                     const val = e.target.value;
-                    if (val.length <= 6) {
+                    // ✅ 7자로 변경
+                    if (val.length <= 7) {
                       setStampInput(val);
                     }
                   }}
@@ -240,8 +239,8 @@ export default function WritePost() {
                       addCustomStamp();
                     }
                   }}
-                  placeholder="스탬프 입력 (최대 6자)"
-                  maxLength={6}
+                  placeholder="스탬프 입력 (최대 7자)"
+                  maxLength={7}
                   style={{
                     flex: 1,
                     padding: "10px 14px",
@@ -268,7 +267,7 @@ export default function WritePost() {
                 </button>
               </div>
               <div style={{ fontSize: "12px", opacity: 0.7, marginTop: "6px" }}>
-                {stampInput.length}/6자 • {customStamps.length}/5개
+                {stampInput.length}/7자 • {customStamps.length}/5개
               </div>
             </div>
 
