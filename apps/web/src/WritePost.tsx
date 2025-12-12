@@ -29,6 +29,8 @@ export default function WritePost() {
   const [content, setContent] = useState("");
   const [stampInput, setStampInput] = useState("");
   const [customStamps, setCustomStamps] = useState<CustomStamp[]>([]);
+  const [errorPopup, setErrorPopup] = useState<string | null>(null);
+
 
 
   const MAX_CHAR = 220;
@@ -57,17 +59,17 @@ export default function WritePost() {
   // 스탬프 추가 함수
   const addCustomStamp = () => {
     if (!stampInput.trim()) {
-      alert("스탬프 내용을 입력해주세요.");
+      setErrorPopup("스탬프 내용을 입력해 주세요.");
       return;
     }
 
     if (stampInput.length > 6) {
-      alert("스탬프는 최대 6자까지 입력 가능합니다.");
+      setErrorPopup("스탬프는 최대 5개까지 추가할 수 있습니다.");
       return;
     }
 
     if (customStamps.length >= 5) {
-      alert("스탬프는 최대 5개까지 추가할 수 있습니다.");
+      setErrorPopup("스탬프는 최대 5개까지 추가할 수 있습니다.");
       return;
     }
 
@@ -100,18 +102,18 @@ export default function WritePost() {
     e.preventDefault();
 
     if (!emotionCategory) {
-      alert("감정을 먼저 선택해 주세요.");
+      setErrorPopup("감정을 먼저 선택해 주세요.");
       setStep(1);
       return;
     }
 
     if (!content.trim()) {
-      alert("내용을 입력해주세요.");
+      setErrorPopup("내용을 입력해 주세요.");
       return;
     }
 
     if (customStamps.length === 0) {
-      alert("최소 1개 이상의 스탬프를 추가해주세요.");
+      setErrorPopup("감정을 표현할 스탬프를 최소 1개 이상 추가해 주세요.");
       return;
     }
 
@@ -170,8 +172,8 @@ export default function WritePost() {
         {/* STEP 1 - 감정 선택 */}
         <div className={`step step1 ${step === 1 ? "active" : "hidden"}`}>
           <button className="step-back" onClick={() => navigate(-1)}>←</button>
-          <h2>오늘 당신의 감정은?</h2>
-          <p className="subtitle">하루의 분위기를 가장 잘 표현하는 감정을 선택해 주세요.</p>
+          <h2>지금, 어떤 마음이 드시나요?</h2>
+          <p className="subtitle">오늘 당신의 마음을 가장 닮은 감정을 골라주세요.</p>
 
           <div className="emotion-buttons">
             <button data-emotion="joy" onClick={() => chooseEmotion("joy")}>😊 기쁨</button>
@@ -186,11 +188,9 @@ export default function WritePost() {
 
         {/* STEP 2 - 글 작성 */}
         <div className={`step step2 ${step === 2 ? "active" : "hidden"}`}>
-          <h3>당신의 감정을 기록해보세요</h3>
+          <h3>당신의 감정을 기록해 보세요</h3>
 
-          <div className="write-controls">
-            <h4>감정 스탬프 추가 (최소 1개 ~ 최대 5개, 각 6자 이내)</h4>
-          </div>
+          
 
           <form onSubmit={handleSubmit} className="write-form">
             <div className="textarea-wrapper">
@@ -215,9 +215,15 @@ export default function WritePost() {
             <div className="char-counter">
               {countGraphemes(content)}/{MAX_CHAR}
             </div>
+            <div className="write-controls">
+            <p className="stamp-guide">
+              감정 스탬프 추가 (최소 1개 ~ 최대 5개, 각 6자 이내)
+            </p>
+          </div>
+
 
             {/* 스탬프 입력 영역 */}
-            <div className="stamp-input-area" style={{ marginTop: "20px", marginBottom: "16px" }}>
+            <div className="stamp-input-area">
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <input
                   type="text"
@@ -300,11 +306,13 @@ export default function WritePost() {
 
         {/* STEP 3 - 등록 완료 화면 */}
         <div className={`step step3 ${step === 3 ? "active" : "hidden"}`} style={{ textAlign: "center", paddingTop: "40px", paddingBottom: "60px" }}>
-          <h2 style={{ marginBottom: "20px" }}>✓ 등록이 완료되었습니다.</h2>
+          <h2 style={{ marginBottom: "20px" }}>✨ 마음을 꺼내 주셔서 고마워요.</h2>
 
-          <p style={{ opacity: 0.8, marginBottom: "32px" }}>
-            소중한 감정을 기록해주셔서 감사합니다.
+          <p className="complete-message">
+            <span>당신의 감정은 소중하게 간직될 거예요.</span>
+            <span>이 순간을 함께해 주셔서 감사합니다.</span>
           </p>
+
 
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             <button
@@ -325,8 +333,20 @@ export default function WritePost() {
             </button>
           </div>
         </div>
-
+             
       </div>
+       {errorPopup && (
+  <div className="modal-overlay" onClick={() => setErrorPopup(null)}>
+    <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+      <h3>⚠ 알림</h3>
+      <p>{errorPopup}</p>
+      <button className="modal-btn" onClick={() => setErrorPopup(null)}>
+        확인
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

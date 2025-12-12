@@ -189,10 +189,10 @@ useEffect(() => {
             <div className="step1-back-wrapper">
               <button className="step-back" onClick={() => navigate(-1)}>←</button>
             </div>
-            <h3>읽고 싶은 감정을 선택하세요</h3>
+            <h3>어떤 마음을 만나고 싶으세요?</h3>
           </div>
 
-          <p className="subtitle">해당 감정으로 작성된 글만 보여드립니다.</p>
+          <p className="subtitle">같은 감정을 느낀 다른 사람들의 이야기를 들어볼게요.</p>
 
           <div className="emotion-buttons">
   <button data-emotion="joy" onClick={() => chooseEmotion("joy")}>😊 기쁨</button>

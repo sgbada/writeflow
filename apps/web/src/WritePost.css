@@ -885,3 +885,112 @@ button:active {
 [data-theme="dark"] .custom-stamp-item:hover {
   background: rgba(255,255,255,0.2);
 }
+
+.complete-message {
+  opacity: 0.85;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;              /* 🔥 여기서 줄 간격 조절 */
+  line-height: 1.4;      /* 전체 텍스트 리듬 */
+}
+.stamp-guide {
+  font-size: 13px;
+  color: rgba(0,0,0,0.6);
+  margin: 4px 0 6px 0; /* 🔥 핵심: 위아래 간격 직접 제어 */
+  line-height: 1.3;
+}
+
+/* 팝업 배경 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  animation: fadeIn 0.25s ease;
+}
+
+/* 팝업 박스 */
+.modal-box {
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(10px);
+  padding: 28px 26px;
+  border-radius: 18px;
+  max-width: 320px;
+  width: 80%;
+  text-align: center;
+  animation: popup 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+/* 다크모드 */
+[data-theme="dark"] .modal-box {
+  background: rgba(30,30,30,0.75);
+  color: #e9e9e9;
+}
+
+/* 제목 */
+.modal-box h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+/* 본문 */
+.modal-box p {
+  font-size: 14px;
+  opacity: 0.85;
+  margin-bottom: 18px;
+  white-space: pre-line;
+}
+
+/* 버튼 */
+.modal-btn {
+  padding: 10px 0;
+  width: 100%;
+  font-size: 15px;
+  border-radius: 12px;
+  background: #ffd76a;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.modal-btn:hover {
+  opacity: .97;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes popup {
+  from { transform: scale(.9); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.theme-joy .modal-box { background:rgba(255,255,240,0.92); color:#6a4a00; }
+.theme-joy .modal-btn { background:#ffeaa6; color:#6a4a00; }
+
+.theme-anger .modal-box { background:rgba(255,245,245,0.92); color:#5a0000; }
+.theme-anger .modal-btn { background:#ffbfbf; color:#5a0000; }
+
+.theme-sadness .modal-box { background:rgba(248,252,255,0.92); color:#0f2a4d; }
+.theme-sadness .modal-btn { background:#cfe1ff; color:#0f2a4d; }
+
+.theme-pleasure .modal-box { background:rgba(250,255,240,0.92); color:#3e4e00; }
+.theme-pleasure .modal-btn { background:#ddffab; color:#3e4e00; }
+
+.theme-love .modal-box { background:rgba(255,248,252,0.92); color:#5a0f2c; }
+.theme-love .modal-btn { background:#ffcde0; color:#5a0f2c; }
+
+.theme-hate .modal-box { background:rgba(250,250,250,0.92); color:#3a3a3a; }
+.theme-hate .modal-btn { background:#dcdcdc; color:#3a3a3a; }
+
+.theme-ambition .modal-box { background:rgba(255,250,240,0.92); color:#5a2f00; }
+.theme-ambition .modal-btn { background:#ffd9aa; color:#5a2f00; }
