@@ -37,7 +37,7 @@ public class SecurityConfig {
             "http://localhost",
             "http://localhost:80",
             "https://*.vercel.app",
-            "https://writeflow-ten.vercel.app",
+            "https://writeflow-ten.vercel.app"
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
