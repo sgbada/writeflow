@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+// ✅ 명확한 환경변수 분리
+const AUTH_API_URL = import.meta.env.VITE_AUTH_API_URL || 'https://writeflow-auth.onrender.com';
+const CORE_API_URL = import.meta.env.VITE_CORE_API_URL || 'https://writeflow-core.onrender.com/api';
 
 export interface SignupRequest {
   email: string
@@ -28,10 +30,13 @@ export interface UserInfo {
 
 class AuthApi {
   async signup(data: SignupRequest): Promise<{ message: string }> {
-    console.log('회원가입 요청 데이터:', data)
+    console.log('🔐 회원가입 요청:', {
+      data,
+      url: `${AUTH_API_URL}/signup`
+    })
 
     try {
-      const response = await fetch(`${API_BASE}/auth/signup`, {
+      const response = await fetch(`${AUTH_API_URL}/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -39,13 +44,12 @@ class AuthApi {
         body: JSON.stringify(data),
       })
 
-      console.log('회원가입 응답 상태:', response.status, response.statusText)
+      console.log('📥 회원가입 응답:', response.status, response.statusText)
 
       const responseText = await response.text()
-      console.log('회원가입 응답 본문:', responseText)
+      console.log('📄 응답 본문:', responseText)
 
       if (!response.ok) {
-        // 응답이 JSON인지 확인
         let errorMessage = '회원가입에 실패했습니다'
         try {
           const errorJson = JSON.parse(responseText)
@@ -56,23 +60,25 @@ class AuthApi {
         throw new Error(errorMessage)
       }
 
-      // 성공 응답 파싱
       try {
         return JSON.parse(responseText)
       } catch {
         return { message: '회원가입 성공' }
       }
     } catch (error: any) {
-      console.error('회원가입 에러 상세:', error)
+      console.error('❌ 회원가입 에러:', error)
       throw error
     }
   }
 
   async login(data: LoginRequest): Promise<TokenResponse> {
-    console.log('로그인 요청 데이터:', data)
+    console.log('🔐 로그인 요청:', {
+      username: data.username,
+      url: `${AUTH_API_URL}/login`
+    })
 
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await fetch(`${AUTH_API_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,10 +86,10 @@ class AuthApi {
         body: JSON.stringify(data),
       })
 
-      console.log('로그인 응답 상태:', response.status, response.statusText)
+      console.log('📥 로그인 응답:', response.status, response.statusText)
 
       const responseText = await response.text()
-      console.log('로그인 응답 본문:', responseText)
+      console.log('📄 응답 본문:', responseText)
 
       if (!response.ok) {
         let errorMessage = '로그인에 실패했습니다'
@@ -98,14 +104,14 @@ class AuthApi {
 
       return JSON.parse(responseText)
     } catch (error: any) {
-      console.error('로그인 에러 상세:', error)
+      console.error('❌ 로그인 에러:', error)
       throw error
     }
   }
 
   async refreshToken(refreshToken: string): Promise<TokenResponse> {
     try {
-      const response = await fetch(`${API_BASE}/auth/refresh`, {
+      const response = await fetch(`${AUTH_API_URL}/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,19 +125,17 @@ class AuthApi {
 
       return response.json()
     } catch (error: any) {
-      console.error('토큰 갱신 에러:', error)
+      console.error('❌ 토큰 갱신 에러:', error)
       throw error
     }
   }
 
-  // JWT 토큰에서 사용자 정보 추출
   async getCurrentUser(): Promise<UserInfo> {
     const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('로그인이 필요합니다');
     }
     try {
-      // JWT 디코딩
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(
@@ -141,17 +145,16 @@ class AuthApi {
           .join('')
       );
       const payload = JSON.parse(jsonPayload);
-      // ✅ 사용자명(username)과 닉네임(nickname) 필드 확인
-      // D부분 JWT 토큰 구조에 맞게 필드명 조정
+      
       return {
-            id: payload.userId || payload.id || 0,
-            username: payload.username || '',
-            nickname: payload.username || '',
-            email: '',
-            createdAt: payload.createdAt || new Date().toISOString(),
-          };
+        id: payload.userId || payload.id || 0,
+        username: payload.username || '',
+        nickname: payload.username || '',
+        email: '',
+        createdAt: payload.createdAt || new Date().toISOString(),
+      };
     } catch (error) {
-      console.error('JWT 디코딩 에러:', error);
+      console.error('❌ JWT 디코딩 에러:', error);
       throw new Error('사용자 정보를 가져올 수 없습니다');
     }
   }
@@ -186,3 +189,12 @@ class AuthApi {
 }
 
 export const authApi = new AuthApi()
+
+// 🔍 개발/디버깅용
+if (typeof window !== 'undefined') {
+  console.log('🌐 API 설정:', {
+    AUTH_API_URL,
+    CORE_API_URL,
+    environment: import.meta.env.MODE
+  });
+}

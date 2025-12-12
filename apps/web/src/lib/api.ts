@@ -1,4 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "/api";
+// ✅ Core API URL (게시글 등)
+const CORE_API_URL = import.meta.env.VITE_CORE_API_URL || 'https://writeflow-core.onrender.com/api';
 
 function authHeaders() {
   const token = localStorage.getItem("token");
@@ -6,10 +7,9 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-// 🔍 요청 전 상태 로깅
 function logRequest(method: string, url: string, body?: any) {
   console.group(`📤 ${method} ${url}`);
-  console.log('🌐 Full URL:', BASE_URL + url);
+  console.log('🌐 Full URL:', CORE_API_URL + url);
   console.log('🔑 Token:', localStorage.getItem("token") ? '✅ 존재' : '❌ 없음');
   console.log('📦 Body:', body);
   console.log('🏷️ Origin:', window.location.origin);
@@ -19,7 +19,7 @@ function logRequest(method: string, url: string, body?: any) {
 export async function apiGet(url: string) {
   logRequest('GET', url);
   
-  const res = await fetch(BASE_URL + url, {
+  const res = await fetch(CORE_API_URL + url, {
     headers: {
       ...authHeaders(),
     },
@@ -59,7 +59,7 @@ export async function apiPost(url: string, body?: any) {
 
   console.log('📋 전송 헤더:', headers);
 
-  const res = await fetch(BASE_URL + url, {
+  const res = await fetch(CORE_API_URL + url, {
     method: "POST",
     headers,
     body: body ? JSON.stringify(body) : undefined,
@@ -72,7 +72,6 @@ export async function apiPost(url: string, body?: any) {
     headers: Object.fromEntries(res.headers.entries())
   });
 
-  // CORS 에러 감지
   if (res.type === 'opaque' || res.type === 'opaqueredirect') {
     console.error('🚨 CORS 에러 감지! opaque response');
   }
@@ -110,7 +109,7 @@ export async function apiPost(url: string, body?: any) {
 export async function apiDelete(url: string) {
   logRequest('DELETE', url);
   
-  const res = await fetch(BASE_URL + url, {
+  const res = await fetch(CORE_API_URL + url, {
     method: "DELETE",
     headers: {
       ...authHeaders(),
@@ -131,17 +130,15 @@ export async function apiDelete(url: string) {
   return true;
 }
 
-// 🔍 CORS 문제 진단 헬퍼
 export async function diagnoseCORS() {
   console.group('🔍 CORS 진단');
   
   console.log('1️⃣ 현재 Origin:', window.location.origin);
-  console.log('2️⃣ API Base URL:', BASE_URL);
+  console.log('2️⃣ Core API URL:', CORE_API_URL);
   console.log('3️⃣ Token 존재:', !!localStorage.getItem('token'));
   
   try {
-    // OPTIONS 요청 테스트
-    const res = await fetch(BASE_URL + '/posts', {
+    const res = await fetch(CORE_API_URL + '/posts', {
       method: 'OPTIONS',
       headers: {
         'Origin': window.location.origin,
@@ -164,8 +161,13 @@ export async function diagnoseCORS() {
   console.groupEnd();
 }
 
-// 개발 환경에서 자동 진단
 if (import.meta.env.DEV) {
   (window as any).diagnoseCORS = diagnoseCORS;
   console.log('💡 CORS 진단: window.diagnoseCORS() 실행');
 }
+
+// 🔍 개발/디버깅용
+console.log('🌐 Core API 설정:', {
+  CORE_API_URL,
+  environment: import.meta.env.MODE
+});
