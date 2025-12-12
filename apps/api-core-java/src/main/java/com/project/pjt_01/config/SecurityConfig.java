@@ -30,8 +30,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // ✅ 모든 origin 허용 (Nginx에서 제어하므로)
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        // ✅ Vercel 도메인 허용
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "https://*.vercel.app"  // 모든 Vercel 배포 도메인 허용
+        ));
         
         configuration.setAllowedMethods(Arrays.asList(
             "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
