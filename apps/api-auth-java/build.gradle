@@ -21,10 +21,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'  // ✅ 이거 추가!
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     
     // ✅ Actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    
+    // ✅ Lombok 추가 (누락되어 있었음!)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
     
     // Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
@@ -39,4 +43,9 @@ dependencies {
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+}
+
+// ✅ 인코딩 명시 (안전장치)
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
 }

@@ -29,17 +29,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // ✅ Docker 환경 추가
+        // Allow origins for Docker and production
         configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:5173",      // Vite 개발 서버
-            "http://127.0.0.1:5173",      // Vite 개발 서버 (IP)
-            "http://localhost:3000",      // Docker web 컨테이너
-            "http://127.0.0.1:3000",      // Docker web 컨테이너 (IP)
-            "http://localhost",           // Gateway
-            "http://localhost:80",         // Gateway (포트 명시)
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost",
+            "http://localhost:80",
             "https://writeflow-ten.vercel.app",
-            "https://*.vercel.app"  // ✅ 추가
-    
+            "https://*.vercel.app"
         ));
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
@@ -71,7 +70,6 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // ✅ /posts 엔드포인트 (Gateway에서 /api/ 제거됨)
                         .requestMatchers("/posts/**").authenticated()
                         .anyRequest().permitAll()
                 );
