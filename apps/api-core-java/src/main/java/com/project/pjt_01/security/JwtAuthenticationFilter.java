@@ -28,64 +28,62 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-protected void doFilterInternal(HttpServletRequest request,
-                                HttpServletResponse response,
-                                FilterChain filterChain)
-        throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
-    // ✅ 디버깅 로그 추가
-    System.out.println("=== JWT Filter Debug ===");
-    System.out.println("Request URI: " + request.getRequestURI());
-    System.out.println("Authorization Header: " + request.getHeader("Authorization"));
-    System.out.println("All Headers:");
-    java.util.Enumeration<String> headerNames = request.getHeaderNames();
-    while (headerNames.hasMoreElements()) {
-        String headerName = headerNames.nextElement();
-        System.out.println("  " + headerName + ": " + request.getHeader(headerName));
-    }
-    System.out.println("=======================");
+        String requestURI = request.getRequestURI();
+        String authHeader = request.getHeader("Authorization");
 
-    String header = request.getHeader("Authorization");
+        // ✅ 디버그 로그 (필요시 주석 처리)
+        System.out.println("=== JWT Filter ===");
+        System.out.println("URI: " + requestURI);
+        System.out.println("Authorization: " + (authHeader != null ? "Present" : "Absent"));
 
-    if (header != null && header.startsWith("Bearer ")) {
-        String token = header.substring(7);
-
-        try {
-            String subject = jwtTokenProvider.getSubject(token);
-            System.out.println("✅ JWT Token Valid - User ID: " + subject);
-
-            Long userId = Long.parseLong(subject);
-
-            Optional<User> optionalUser = userRepository.findById(userId);
-            if (optionalUser.isPresent()
-                    && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                User user = optionalUser.get();
-
-                UserPrincipal principal = UserPrincipal.from(user);
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                principal,
-                                null,
-                                principal.getAuthorities()
-                        );
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                System.out.println("✅ Authentication Set Successfully");
-            }
-        } catch (Exception e) {
-            System.out.println("❌ JWT Token Error: " + e.getMessage());
-            e.printStackTrace();
+        // OPTIONS 요청은 바로 통과
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            System.out.println("OPTIONS request - skipping authentication");
+            filterChain.doFilter(request, response);
+            return;
         }
-    } else {
-        System.out.println("⚠️ No Authorization header or invalid format");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+
+            try {
+                String subject = jwtTokenProvider.getSubject(token);
+                Long userId = Long.parseLong(subject);
+
+                Optional<User> optionalUser = userRepository.findById(userId);
+                if (optionalUser.isPresent() 
+                        && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                    User user = optionalUser.get();
+                    UserPrincipal principal = UserPrincipal.from(user);
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    principal,
+                                    null,
+                                    principal.getAuthorities()
+                            );
+                    authentication.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    System.out.println("✅ Authentication set for user: " + userId);
+                }
+            } catch (Exception e) {
+                // ✅ 토큰 파싱 실패는 로그만 남기고 계속 진행
+                // (인증이 필요한 엔드포인트는 Spring Security가 차단)
+                System.out.println("⚠️ JWT validation failed: " + e.getMessage());
+            }
+        } else {
+            System.out.println("⚠️ No Authorization header");
+        }
+
+        filterChain.doFilter(request, response);
     }
-
-    filterChain.doFilter(request, response);
 }
-}
-
