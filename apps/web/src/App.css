@@ -295,7 +295,6 @@ ul.post-list + .pagination {
     margin-top: 5px;
     font-size: 14px;
 }
-/* 상단 헤더 */
 .app-header {
     display: flex;
     justify-content: space-between;
@@ -307,7 +306,6 @@ ul.post-list + .pagination {
     top: 0;
     z-index: 1000;
 }
-
 .site-title {
     font-size: 20px;
     font-weight: 700;
@@ -2608,4 +2606,36 @@ html, body {
     .site-title {
         font-size: 18px;
     }
+}
+
+/* 📱 모바일 카드 좌우 여백 */
+@media (max-width: 480px) {
+  .list-card,
+  .emotion-card {
+    margin-left: 6px;
+    margin-right: 6px;
+  }
+}
+.mypage-btn {
+  max-width: 110px;        /* ← 여기 중요 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-nav {
+  display: flex;
+  gap: 12px;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .user-nav {
+    font-size: 14px;
+    gap: 8px;
+  }
+
+  .mypage-btn {
+    max-width: 90px;
+    font-size: 13px;
+  }
 }
