@@ -2608,27 +2608,17 @@ html, body {
     }
 }
 
-
-.mypage-btn {
-  max-width: 110px;        /* ← 여기 중요 */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-nav {
-  display: flex;
-  gap: 12px;
-  white-space: nowrap;
-}
+/* ===============================
+   📱 MOBILE: 상단 네비 완전 제거
+================================ */
 @media (max-width: 480px) {
   .user-nav {
-    font-size: 14px;
-    gap: 8px;
+    display: none !important;
   }
-
-  .mypage-btn {
-    max-width: 90px;
-    font-size: 13px;
+}
+@media (max-width: 480px) {
+  .write-wrapper {
+    width: calc(100% - 12px);
+    margin: 0 auto;
   }
 }
