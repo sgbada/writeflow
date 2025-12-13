@@ -295,7 +295,6 @@ ul.post-list + .pagination {
     margin-top: 5px;
     font-size: 14px;
 }
-
 /* 상단 헤더 */
 .app-header {
     display: flex;
@@ -2588,4 +2587,25 @@ html, body {
   .profile-content {
     padding: 20px;
   }
+}
+/* 📱 모바일 대응 */
+@media (max-width: 768px) {
+    .app-header {
+        padding: 12px 16px;
+        flex-wrap: nowrap;
+    }
+}
+
+.site-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .site-title {
+        font-size: 18px;
+    }
 }
