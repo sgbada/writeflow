@@ -71,8 +71,8 @@ function Layout() {
           {/* 로그인한 경우 탭을 오른쪽 정렬로 표시 */}
           {user && (
             <nav className="main-nav user-nav">
-              <Link to="/read" className="nav-link">글 읽기</Link>
-              <Link to="/write" className="nav-link">글 쓰기</Link>
+              <Link to="/read" className="nav-link">감정 읽기</Link>
+              <Link to="/write" className="nav-link">감정 쓰기</Link>
               <Link to="/profile" className="nav-link">마이페이지</Link>
             </nav>
           )}
@@ -91,8 +91,8 @@ function Layout() {
               {menuOpen && (
                 <div className="dropdown-menu">
                   <Link to="/profile" onClick={() => setMenuOpen(false)}>마이페이지</Link>
-                  <Link to="/write" onClick={() => setMenuOpen(false)}>새 글 작성</Link>
-                  <Link to="/my-posts" onClick={() => setMenuOpen(false)}>내 글 모음</Link>
+                  <Link to="/write" onClick={() => setMenuOpen(false)}>감정 쓰기</Link>
+                  <Link to="/my-posts" onClick={() => setMenuOpen(false)}>감정 읽기</Link>
                   <button onClick={handleLogout}>로그아웃</button>
                 </div>
               )}
