@@ -2608,14 +2608,7 @@ html, body {
     }
 }
 
-/* 📱 모바일 카드 좌우 여백 */
-@media (max-width: 480px) {
-  .list-card,
-  .emotion-card {
-    margin-left: 6px;
-    margin-right: 6px;
-  }
-}
+
 .mypage-btn {
   max-width: 110px;        /* ← 여기 중요 */
   white-space: nowrap;
